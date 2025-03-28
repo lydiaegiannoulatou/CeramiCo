@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 
 const saltRound = Number(process.env.SALT_ROUND);
-
+const secretKey = process.env.SECRET_KEY
 //LOGIN USER
 const loginUser = async (req, res) => {
   try {
@@ -27,6 +27,14 @@ const loginUser = async (req, res) => {
     if (!isPasswordCorrect) {
       return res.status(500).send({ msg: "Wrong password. Please try again" });
     }
+//__________token___________
+let payload = {
+  userId : isUserRegistered._id,
+  email : isUserRegistered.email,
+} 
+let token = await jwt.sign(payload, secretKey )
+console.log(token);
+
     return res.send({ msg: "Login Successfully!" });
   } catch (error) {
     console.log(error);

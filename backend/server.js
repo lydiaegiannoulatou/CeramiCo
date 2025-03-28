@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
+const authMiddleware = require('./middleware/authMiddleware')
 const main = require('./config/connection')
 const userRoutes = require ("./routes/userRoutes")
 
@@ -18,6 +19,8 @@ app.use(cors());
 main();
 
 app.use("/user", userRoutes);
-
+// app.get("/testRoute", authMiddleware, (req, res) => {
+//     res.send("hi");
+// });
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));
