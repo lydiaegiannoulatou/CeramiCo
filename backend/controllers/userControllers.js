@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 
 const saltRound = Number(process.env.SALT_ROUND);
-const secretKey = process.env.SECRET_KEY
+const secretKey = process.env.SECRET_KEY;
 //LOGIN USER
 const loginUser = async (req, res) => {
   try {
@@ -11,14 +11,16 @@ const loginUser = async (req, res) => {
     const identifier = email || username;
     if (!identifier || !password) {
       return res
-        .status(409)
+        .status(400)
         .send({ msg: "Username/Email and Password are required fields" });
     }
-    let isUserRegistered = await User.findOne({ $or: [{ email }, { username }] });
+    let isUserRegistered = await User.findOne({
+      $or: [{ email }, { username }], // $or -> MongoDB or operator
+    });
     if (!isUserRegistered) {
       return res
         .status(400)
-        .send({ msg: "User not found, please create an account first." });
+        .send({ msg: "User not found. Please check your Username/Email or create a new account."});
     }
     let isPasswordCorrect = await bcrypt.compare(
       password,
@@ -27,20 +29,18 @@ const loginUser = async (req, res) => {
     if (!isPasswordCorrect) {
       return res.status(500).send({ msg: "Wrong password. Please try again" });
     }
-//__________token___________
-let payload = {
-  userId : isUserRegistered._id,
-  email : isUserRegistered.email,
-} 
-let token = await jwt.sign(payload, secretKey )
-console.log(token);
+    //__________token___________
+    let payload = {
+      userId: isUserRegistered._id,
+      email: isUserRegistered.email,
+    };
+    let token = await jwt.sign(payload, secretKey);
+    console.log(token);
 
-    return res.send({ msg: "Login Successfully!" });
+    return res.send({ msg: "Login Successfully!", token });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({ error, msg: "Cannot login right now, please try later" });
+    res.status(500).send({ error, msg: "Cannot login right now, please try later" });
   }
 };
 
