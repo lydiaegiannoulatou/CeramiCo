@@ -1,9 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
+  const navigate = useNavigate()
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +38,7 @@ const Login = () => {
       );
       localStorage.setItem("token", response.data.token);
       alert(response.data.msg);
+      navigate("/")
     } catch (error) {
       alert(error.response.data.msg);
       console.log(error);
