@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { data, Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
@@ -37,6 +37,7 @@ const Login = () => {
         userInfo
       );
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.role)
       alert(response.data.msg);
       navigate("/")
     } catch (error) {

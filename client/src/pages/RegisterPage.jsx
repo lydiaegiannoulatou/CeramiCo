@@ -52,8 +52,13 @@ const Register = () => {
         newUserInfo
       );
 
-      alert(response.data.msg);
-      navigate("/");
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        alert(response.data.msg);
+        navigate("/");
+      } else {
+        setError("Registration was successful, but no token was received.");
+      }
     } catch (error) {
       alert(error.response.data.msg);
       console.log(error);

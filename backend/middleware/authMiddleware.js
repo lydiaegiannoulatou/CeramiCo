@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 function authMiddleware(req, res, next) {
   let authHeader = req.headers.authorization;
-//   console.log(authHeader);
+  //   console.log(authHeader);
   if (!authHeader) return res.status(401).send({ msg: "Unauthorized User" });
 
   let clientToken = authHeader.split(" ")[1];
@@ -13,9 +13,17 @@ function authMiddleware(req, res, next) {
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.log(error);    
-    return res.status(500).send(error, { msg: "Unauthorized User" });
+    console.log(error);
+    return res.status(401).send(error, { msg: "Unauthorized User" });
   }
 }
 
-module.exports = authMiddleware;
+function adminAccess(req, res, next) {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    return res.status(403).send({ msg: "Only admin users can access" });
+  }
+}
+
+module.exports = { authMiddleware, adminAccess };
