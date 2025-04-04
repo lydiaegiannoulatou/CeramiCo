@@ -6,6 +6,8 @@ import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
 import WorkshopPage from "./pages/WorkshopPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
+import ProfilePage from "./pages/ProfilePage"
+import Cart from "./pages/CartPage";
 import "./App.css";
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
         <Route path="/shop" element = {<ShopPage />}/>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile" element = {<ProfilePage />} />
+        <Route path="/cart" element = {<Cart />}/>
       </Routes>
     </Router>
   );

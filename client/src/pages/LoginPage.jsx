@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import { data, Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
   const navigate = useNavigate()
@@ -36,8 +37,15 @@ const Login = () => {
         "http://localhost:3050/user/login",
         userInfo
       );
+
+      //____store token
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role)
+      // localStorage.setItem("role", response.data.role)
+      //___decode token
+      const decodedToken = jwtDecode(response.data.token)
+      console.log(("Decoded Token:", decodedToken));
+      localStorage.setItem("role",decodedToken.role)
+      
       alert(response.data.msg);
       navigate("/")
     } catch (error) {

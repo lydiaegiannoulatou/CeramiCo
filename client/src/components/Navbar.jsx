@@ -48,8 +48,9 @@ const Navbar = () => {
             <li>
               <Link to="/shop">Shop</Link>
             </li>
-            <li>My Profile</li>
-            <li>My Cart</li>
+            <li>
+              <Link to="/profile">My Profile</Link></li>
+            <li> <Link to="/cart">My Cart</Link></li>
             <li>
               <Link onClick={handleLogout} to="/">
                 Logout

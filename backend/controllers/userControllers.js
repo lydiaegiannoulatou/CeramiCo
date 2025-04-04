@@ -18,9 +18,9 @@ const loginUser = async (req, res) => {
       $or: [{ email }, { username }], // $or -> MongoDB or operator
     });
     if (!isUserRegistered) {
-      return res
-        .status(400)
-        .send({ msg: "User not found. Please check your Username/Email or create a new account."});
+      return res.status(400).send({
+        msg: "User not found. Please check your Username/Email or create a new account.",
+      });
     }
     let isPasswordCorrect = await bcrypt.compare(
       password,
@@ -33,21 +33,24 @@ const loginUser = async (req, res) => {
     let payload = {
       userId: isUserRegistered._id,
       email: isUserRegistered.email,
+      role: isUserRegistered.role,
     };
-    let token = await jwt.sign(payload, secretKey);
+    let token = await jwt.sign(payload, secretKey, { expiresIn: "2h" });
     console.log(token);
 
     return res.send({ msg: "Login Successfully!", token });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ error, msg: "Cannot login right now, please try later" });
+    res
+      .status(500)
+      .send({ error, msg: "Cannot login right now, please try later" });
   }
 };
 
 //USER REGISTRATION
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, username, address, phone, enrolled } =
+    const { name, email, password, username, address, phone, enrolled, role } =
       req.body;
     if (!name || !email || !password || !username) {
       return res
@@ -69,6 +72,7 @@ const registerUser = async (req, res) => {
       address,
       phone,
       enrolled,
+      role,
     });
     console.log("registration successfully");
 
@@ -81,4 +85,30 @@ const registerUser = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, registerUser };
+//GET USER
+
+const userProfile = async (req, res) => {
+  try {
+    // Get user data using the userId from the JWT token
+    const user = await User.findById(req.user.userId).select("-password"); // Exclude the password from the result
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).send({ msg: "User not found." });
+    }
+
+    res.json({
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      address: user.address,
+      phone: user.phone,
+      role: user.role
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: "Server error." });
+  }
+};
+
+module.exports = { loginUser, registerUser, userProfile };

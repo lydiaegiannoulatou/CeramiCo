@@ -1,6 +1,6 @@
 import React from "react";
-import axios from "axios";
-import { useState } from "react";
+// import axios from "axios";
+// import { useState } from "react";
 
 function Shop() {
 //   const [products, setProducts] = UseState([]);
