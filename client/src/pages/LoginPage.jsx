@@ -40,7 +40,7 @@ const Login = () => {
 
       //____store token
       localStorage.setItem("token", response.data.token);
-      // localStorage.setItem("role", response.data.role)
+      localStorage.setItem("role", response.data.role)
       //___decode token
       const decodedToken = jwtDecode(response.data.token)
       console.log(("Decoded Token:", decodedToken));

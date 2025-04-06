@@ -22,6 +22,7 @@ const Navbar = () => {
     try {
       if (localStorage.getItem("token")) {
         localStorage.removeItem("token");
+        localStorage.removeItem("role")
         navigate("/login");
       }
     } catch (error) {

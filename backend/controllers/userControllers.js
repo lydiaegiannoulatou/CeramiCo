@@ -90,6 +90,7 @@ const registerUser = async (req, res) => {
 const userProfile = async (req, res) => {
   try {
     // Get user data using the userId from the JWT token
+    console.log("req.user:", req.user); //
     const user = await User.findById(req.user.userId).select("-password"); // Exclude the password from the result
 
     // Check if the user exists
