@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import AdminShopPage from "../components/AdminShopPage"; 
 
 const ShopPage = () => {
@@ -30,8 +31,9 @@ const ShopPage = () => {
         {products.map((product) => (
           <div key={product._id} className="border p-4 rounded-lg shadow hover:shadow-md transition">
             <img src={product.images[0]} alt={product.title} className="w-full h-48 object-cover rounded" />
-            <h2 className="text-xl font-semibold mt-2">{product.title}</h2>
-            <p className="text-gray-500">{product.category}</p>
+            <Link to={`/product/${product._id}`} className="text-xl font-semibold mt-2 block">
+              {product.title}
+            </Link>
             <p className="text-green-600 font-bold">{product.price}€</p>
           </div>
         ))}

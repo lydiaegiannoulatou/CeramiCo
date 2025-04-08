@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.post("/login", loginUser);
 router.post("/register", registerUser);
-router.get("/profile", userProfile)
-// router.post("/update/_id");
-// router.post("/delete/_id");
+router.get("/profile/:id", userProfile)
+// router.post("/update/:id");
+// router.post("/delete/:id");
 
 module.exports = router;

@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-// import React, { useContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 
 const Navbar = () => {
@@ -11,33 +10,34 @@ const Navbar = () => {
     if (localStorage.getItem("token")) {
       token = localStorage.getItem("token");
       decodedToken = jwtDecode(token);
-      console.log(decodedToken);
+      console.log(decodedToken); // You can inspect the decoded token here
     }
   } catch (error) {
     console.log(error);
   }
-  //_____handle log out
 
+  // Handle log out
   function handleLogout() {
     try {
       if (localStorage.getItem("token")) {
         localStorage.removeItem("token");
-        localStorage.removeItem("role")
+        localStorage.removeItem("role");
         navigate("/login");
       }
     } catch (error) {
       console.log(error);
     }
   }
+
+  // Ensure you have a valid token and decoded token
+  const userId = decodedToken ? decodedToken.userId : null; // Access the user ID from the token if available
+
   return (
     <div className="flex justify-between items-center p-4 bg-orange-800">
       <h3 className="text-xl font-bold">
         <Link to="/">CeramiCo</Link>
       </h3>
-      <ul
-        style={{ display: "flex", justifyContent: "space-between" }}
-        className="flex space-x-6 list-none"
-      >
+      <ul style={{ display: "flex", justifyContent: "space-between" }} className="flex space-x-6 list-none">
         {token ? (
           <>
             <li>
@@ -49,9 +49,14 @@ const Navbar = () => {
             <li>
               <Link to="/shop">Shop</Link>
             </li>
+            {userId && ( // Only show the profile link if there's a valid user ID
+              <li>
+                <Link to={`/profile/${userId}`}>My Profile</Link>
+              </li>
+            )}
             <li>
-              <Link to="/profile">My Profile</Link></li>
-            <li> <Link to="/cart">My Cart</Link></li>
+              <Link to="/cart">My Cart</Link>
+            </li>
             <li>
               <Link onClick={handleLogout} to="/">
                 Logout
@@ -69,7 +74,6 @@ const Navbar = () => {
             <li>
               <Link to="/shop">Shop</Link>
             </li>
-
             <li>
               <Link to="/login">Login</Link>
             </li>

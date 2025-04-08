@@ -4,6 +4,7 @@ import Login from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
+import ProductPage from "./pages/ProductPage";
 import WorkshopPage from "./pages/WorkshopPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ProfilePage from "./pages/ProfilePage"
@@ -21,9 +22,10 @@ function App() {
         <Route path="exhibitions" element={<ExhibitionsPage />} />
         <Route path="/workshops" element={<WorkshopPage />}/>
         <Route path="/shop" element = {<ShopPage />}/>
+        <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/profile" element = {<ProfilePage />} />
+        <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/cart" element = {<Cart />}/>
       </Routes>
     </Router>

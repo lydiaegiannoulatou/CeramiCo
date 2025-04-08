@@ -1,11 +1,37 @@
 
 
 const HomePage =() => {
-    return(
-        <div>
-        <h1>Welcome to Home Page!</h1>
+    return (
+        <>
+        <div className="relative h-[350px]">
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage:
+                "url('https://res.cloudinary.com/drszm8sem/image/upload/v1744102566/ceramic-pottery-tools-still-life1_mozolb.jpg')",
+            }}
+          />
+    
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+    
+          {/* Text Content */}
+          <div className="relative z-10 flex items-end h-full p-6 text-white">
+            <div>
+              <h1 className="text-4xl font-bold">Welcome to CeramiCo</h1>
+              <p className="mt-2 text-lg">
+              Where clay meets soul.
+              Explore handcrafted pottery made with intention, and join our workshops to shape your own story—one spin at a time.
+              </p>
+            </div>
+          </div>
         </div>
-    )
-}
+        <div>
+            <h2 className="text-2xl font-bold">Gallery</h2>
+        </div>
+        </>
+      );
+    };
 
 export default HomePage

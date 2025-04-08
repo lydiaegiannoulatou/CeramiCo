@@ -89,11 +89,11 @@ const registerUser = async (req, res) => {
 
 const userProfile = async (req, res) => {
   try {
-    // Get user data using the userId from the JWT token
-    console.log("req.user:", req.user); //
-    const user = await User.findById(req.user.userId).select("-password"); // Exclude the password from the result
+    const { id } = req.params;  // Get user id from the URL parameters
+    console.log("User ID from URL:", id);
 
-    // Check if the user exists
+    const user = await User.findById(id).select("-password"); // Exclude password field
+
     if (!user) {
       return res.status(404).send({ msg: "User not found." });
     }
@@ -111,5 +111,6 @@ const userProfile = async (req, res) => {
     res.status(500).send({ msg: "Server error." });
   }
 };
+
 
 module.exports = { loginUser, registerUser, userProfile };

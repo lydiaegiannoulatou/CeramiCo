@@ -4,7 +4,7 @@ const router = express.Router()
 const {authMiddleware, adminAccess } = require("../middleware/authMiddleware")
 
 router.get("/", getAllProducts)
-router.get("/product",getOneProduct)
+router.get("/product/:id",getOneProduct)
 router.post("/products/add",addNewProduct)//admin
 router.put("/products/update/:id", updateProduct, authMiddleware, adminAccess)//admin
 router.delete("/products/delete/:id", deleteProduct, authMiddleware,adminAccess)//admin

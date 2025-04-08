@@ -1,15 +1,16 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 const ProfilePage = () => {
+  const { id } = useParams();
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axios.get("http://localhost:3050/user/profile", {
+        const { data } = await axios.get(`http://localhost:3050/user/profile/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`, // ✅ Send token
           },
@@ -22,7 +23,7 @@ const ProfilePage = () => {
     };
 
     fetchUser(); // Call the function
-  }, [navigate]); // Dependency array ensures it runs only on mount
+  }, [id]); // Dependency array ensures it runs only on mount
 
   useEffect(() => {
     if (user) console.log("Updated user data:", user);
