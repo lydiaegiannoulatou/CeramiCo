@@ -51,6 +51,8 @@ const Register = () => {
         "http://localhost:3050/user/register",
         newUserInfo
       );
+      console.log("response:",response);
+      
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);

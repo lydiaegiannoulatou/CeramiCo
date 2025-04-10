@@ -64,7 +64,7 @@ const registerUser = async (req, res) => {
       });
     }
     let hashedPassword = await bcrypt.hash(password, saltRound);
-    await User.create({
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
@@ -74,9 +74,19 @@ const registerUser = async (req, res) => {
       enrolled,
       role,
     });
+
+//Generate token
+    const payload = {
+      userId: newUser._id,
+      email: newUser.email,
+      role: newUser.role,
+    };
+
+    const token = jwt.sign(payload, secretKey, { expiresIn: "2h" });
+
     console.log("registration successfully");
 
-    return res.status(201).send({ msg: "Thank you for registering!" });
+    return res.status(201).send({ msg: "Thank you for registering!", token });
   } catch (error) {
     console.log(error);
     res

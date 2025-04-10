@@ -7,6 +7,8 @@ import ImageCarousel from "../components/ImageCarousel"; // Import the ImageCaro
 const ProductPage = () => {
   const { id } = useParams(); // Get the product ID from the URL
   const [product, setProduct] = useState();
+  const [error, setError] = useState(null);
+  const [isAdding, setIsAdding] = useState(false); // Track adding status (e.g., loading)
 
   useEffect(() => {
     // Fetch the product data using the ID from the route
@@ -15,6 +17,45 @@ const ProductPage = () => {
       .then((res) => setProduct(res.data))
       .catch((err) => console.error("Error fetching product", err));
   }, [id]);
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token'); // Get token from localStorage
+    
+    if (!token) {
+      // Handle case when the user is not logged in
+      setError('You need to be logged in to add items to the cart.');
+      return;
+    }
+
+    setIsAdding(true); // Set adding state to true while the request is in progress
+    try {
+      // Send a request to add the product to the cart
+      const response = await axios
+      .post(
+        'http://localhost:3050/cart/add-to-cart',  
+        {
+          product_id: product._id,
+          quantity: 1, // You can modify this to be dynamic if needed
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`, // Send token in Authorization header
+          },
+        }
+      );
+
+      if (response.data.success) {
+        alert('Product added to the cart successfully!');
+      } else {
+        setError(response.data.msg || 'Failed to add product to cart.');
+      }
+    } catch (err) {
+      console.error('Error adding product to cart:', err);
+      setError('There was an error adding the product to the cart. Please try again later.');
+    } finally {
+      setIsAdding(false); // Reset adding state
+    }
+  };
 
   if (!product) {
     return <div>Loading...</div>;
@@ -36,8 +77,17 @@ const ProductPage = () => {
           <div className="text-xl font-bold text-green-600 mb-6">
             {product.price}€
           </div>
-          <button className="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
-            Add to Cart
+
+          {/* Error message if any */}
+          {error && <div className="text-red-500">{error}</div>}
+
+          {/* Add to Cart button */}
+          <button 
+            onClick={handleAddToCart}
+            className="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
+            disabled={isAdding} // Disable button while adding to cart
+          >
+            {isAdding ? 'Adding to Cart...' : 'Add to Cart'}
           </button>
         </div>
       </div>
