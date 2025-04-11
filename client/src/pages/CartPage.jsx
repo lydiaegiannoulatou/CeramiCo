@@ -9,66 +9,81 @@ const Cart = () => {
   // Fetch the cart when the component mounts
   useEffect(() => {
     const fetchCart = async () => {
-      const token = localStorage.getItem('token'); // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      console.log("Token from localStorage:", token);
+
+      if (!token) {
+        setError("No token found. Please log in.");
+        setLoading(false);
+        return;
+      }
 
       try {
-        const response = await axios.get('/api/cart/get-cart', {
+        const response = await axios.get('http://localhost:3050/cart/get-cart', {
           headers: {
-            'Authorization': `Bearer ${token}`, // Pass token in Authorization header
+            'Authorization': `Bearer ${token}`,
           },
         });
 
-        if (response.data.success) {
-          setCart(response.data.cart); // Set the cart data to state
+        console.log("Response from cart API:", response.data);
+
+        // Check for success message and retrieve cart
+        if (response.data && response.data.cart) {
+          setCart(response.data.cart); // Set the cart data
         } else {
-          setError(response.data.msg); // Set error message if cart retrieval failed
+          setError("Cart data not found.");
         }
       } catch (err) {
-        console.log(err);
-        
-        setError('Error fetching cart data.'); // Set general error message
+        console.log("Error fetching cart:", err);
+        setError('Error fetching cart data.');
       } finally {
-        setLoading(false); // Set loading to false after the request
+        setLoading(false);
       }
     };
 
-    fetchCart(); // Call the fetch function
-  }, []);
+    fetchCart();
+  }, []); // Empty dependency array to run once on mount
 
-  // If cart is still loading, display a loading message
   if (loading) {
-    return <div>Loading your cart...</div>;
+    return <div className="text-center py-6">Loading your cart...</div>;
   }
 
-  // If there is an error, display the error message
   if (error) {
-    return <div>{error}</div>;
+    return <div className="text-center py-6 text-red-500">{error}</div>;
   }
 
-  // If no cart data found
+  // If no cart data found or cart is empty
   if (!cart || cart.items.length === 0) {
-    return <div>Your cart is empty.</div>;
+    return <div className="text-center py-6">Your cart is empty.</div>;
   }
 
   return (
-    <div className="cart-page">
-      <h1>Your Cart</h1>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">Your Cart</h1>
 
       {/* Cart items */}
-      <div className="cart-items">
+      <div className="space-y-6">
         {cart.items.map((item) => {
           const { product_id, quantity } = item;
           return (
-            <div key={product_id._id} className="cart-item">
+            <div
+              key={product_id._id}
+              className="flex items-center border-b pb-4 mb-4 last:mb-0 last:border-b-0"
+            >
               <img
                 src={product_id.images[0]} // Display the first image of the product
                 alt={product_id.title}
-                className="product-image"
+                className="w-24 h-24 object-cover rounded-lg mr-6"
               />
-              <div className="cart-item-details">
-                <h2>{product_id.title}</h2>
-                <p>Price: ${product_id.price}</p>
-                <p>Quantity: {quantity}</p>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold">{product_id.title}</h2>
+                <p className="text-lg text-gray-600">Price: €{product_id.price}</p>
+                <p className="text-lg text-gray-600">Quantity: {quantity}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-green-600">
+                  €{(product_id.price * quantity).toFixed(2)}
+                </p>
               </div>
             </div>
           );
@@ -76,13 +91,18 @@ const Cart = () => {
       </div>
 
       {/* Total Price */}
-      <div className="cart-total">
-        <h2>Total: ${cart.items.reduce((acc, item) => acc + item.quantity * item.product_id.price, 0).toFixed(2)}</h2>
+      <div className="flex justify-between items-center py-4 mt-6 border-t">
+        <h2 className="text-2xl font-semibold">Total:</h2>
+        <p className="text-xl font-bold text-green-600">
+          €{cart.items.reduce((acc, item) => acc + item.quantity * item.product_id.price, 0).toFixed(2)}
+        </p>
       </div>
 
       {/* Checkout Button */}
-      <div className="cart-actions">
-        <button className="checkout-button">Proceed to Checkout</button>
+      <div className="text-center mt-6">
+        <button className="bg-blue-500 text-white py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300">
+          Proceed to Checkout
+        </button>
       </div>
     </div>
   );

@@ -30,16 +30,19 @@ const ProductPage = () => {
     setIsAdding(true); // Set adding state to true while the request is in progress
     try {
       // Send a request to add the product to the cart
-      const response = await axios
-      .post(
+      const response = await axios.post(
         'http://localhost:3050/cart/add-to-cart',  
         {
-          product_id: product._id,
-          quantity: 1, // You can modify this to be dynamic if needed
+          items: [
+            {
+              product_id: product._id,
+              quantity: 1, // Modify if needed
+            },
+          ],
         },
         {
           headers: {
-            'Authorization': `Bearer ${token}`, // Send token in Authorization header
+            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -50,7 +53,7 @@ const ProductPage = () => {
         setError(response.data.msg || 'Failed to add product to cart.');
       }
     } catch (err) {
-      console.error('Error adding product to cart:', err);
+      console.log('Error adding product to cart:', err);
       setError('There was an error adding the product to the cart. Please try again later.');
     } finally {
       setIsAdding(false); // Reset adding state
