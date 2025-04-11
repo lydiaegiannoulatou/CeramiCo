@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { FaTrash, FaArrowUp, FaArrowDown } from 'react-icons/fa'; // Import React Icons
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const [cart, setCart] = useState(null); // Store the cart data
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
+  const navigate = useNavigate(); 
 
   // Fetch the cart when the component mounts
   useEffect(() => {
@@ -57,6 +60,74 @@ const Cart = () => {
     return <div className="text-center py-6">Your cart is empty.</div>;
   }
 
+  // Handle updating quantity
+  const handleUpdateQuantity = async (productId, quantity) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No token found. Please log in.');
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        'http://localhost:3050/cart/update-quantity',
+        {
+          product_id: productId,  
+          quantity: quantity,     
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.cart) {
+        setCart(response.data.cart); // Update the cart state
+      } else {
+        setError('Failed to update item quantity.');
+      }
+    } catch (err) {
+      console.log("Error updating quantity:", err);
+      setError('There was an error updating the quantity.');
+    }
+  };
+
+  // Handle removing a product
+  const handleRemoveProduct = async (productId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('No token found. Please log in.');
+      return;
+    }
+  
+    try {
+      const response = await axios.delete('http://localhost:3050/cart/remove-item', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          product_id: productId, // ✅ THIS GOES IN `data` FIELD
+        },
+      });
+  
+      if (response.data.cart) {
+        setCart(response.data.cart); // ✅ Cart state updates
+      } else {
+        setError('Failed to remove product from cart.');
+      }
+    } catch (err) {
+      console.log("Error removing product:", err.response?.data || err.message);
+      setError('There was an error removing the product.');
+    }
+  };
+  
+    const handleCheckout = () => {
+  
+    navigate("/checkout");
+  };
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">Your Cart</h1>
@@ -78,12 +149,41 @@ const Cart = () => {
               <div className="flex-1">
                 <h2 className="text-xl font-semibold">{product_id.title}</h2>
                 <p className="text-lg text-gray-600">Price: €{product_id.price}</p>
-                <p className="text-lg text-gray-600">Quantity: {quantity}</p>
+                
+                {/* Quantity update buttons */}
+                <div className="flex items-center space-x-2 text-lg text-gray-600">
+                  <button
+                    onClick={() => handleUpdateQuantity(product_id._id, quantity - 1)}
+                    className="text-blue-500 hover:text-blue-700"
+                    disabled={quantity <= 1}
+                  >
+                    <FaArrowDown />
+                  </button>
+                  <span>Quantity: {quantity}</span>
+                  <button
+                    onClick={() => handleUpdateQuantity(product_id._id, quantity + 1)}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    <FaArrowUp />
+                  </button>
+                </div>
               </div>
+
+              {/* Product total price */}
               <div className="text-right">
                 <p className="text-xl font-bold text-green-600">
                   €{(product_id.price * quantity).toFixed(2)}
                 </p>
+              </div>
+
+              {/* Delete button */}
+              <div className="ml-4">
+                <button
+                  onClick={() => handleRemoveProduct(product_id._id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <FaTrash />
+                </button>
               </div>
             </div>
           );
@@ -100,7 +200,7 @@ const Cart = () => {
 
       {/* Checkout Button */}
       <div className="text-center mt-6">
-        <button className="bg-blue-500 text-white py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300">
+        <button onClick={handleCheckout} className="bg-blue-500 text-white py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300">
           Proceed to Checkout
         </button>
       </div>
