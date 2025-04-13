@@ -9,6 +9,8 @@ const productSchema = new mongoose.Schema(
     keywords: { type: [String], required: true },
     stock: { type: Number, required: true },
     images: { type: [String], default: [] },
+    stripeProductId: { type: String, default: null },
+    stripePriceId: { type: String, default: null },
   },
   {
     timestamps: true,

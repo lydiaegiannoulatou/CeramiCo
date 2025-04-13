@@ -1,120 +1,113 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const Payment = require('../models/paymentModel');
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+const Order = require('../models/orderModel');
+const Product = require('../models/productModel');
 const Cart = require('../models/cartModel');
-const Order = require('../models/orderModel'); // Import the Order model
 
-// Create checkout session
+// Create Checkout Session
 const createCheckoutSession = async (req, res) => {
-  try {
-    const userId = req.user.userId;
+  const { items, shippingAddress } = req.body;
+  const userId = req.user.userId; 
 
-    // Fetch the user's cart
-    const cart = await Cart.findOne({ user_id: userId }).populate(
-      'items.product_id',
-      'price title'
+  try {
+    // Validate and format line_items
+    const line_items = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findById(item.product_id);
+        if (!product) throw new Error(`Product not found: ${item.product_id}`);
+        
+        if (!product.stripePriceId) {
+          throw new Error(`Product ${item.product_id} does not have a valid Stripe price ID.`);
+        }
+
+        return {
+          price: product.stripePriceId,
+          quantity: item.quantity,
+        };
+      })
     );
 
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).send({ msg: 'Your cart is empty' });
-    }
+    // Calculate total cost
+    const totalCost = items.reduce((total, item) => {
+      return total + item.price * item.quantity;
+    }, 0);
 
-    // Prepare the line items for Stripe Checkout
-    const lineItems = cart.items.map((item) => ({
-      price_data: {
-        currency: 'eur',
-        product_data: {
-          name: item.product_id.title,
-        },
-        unit_amount: Math.round(item.product_id.price * 100), // Stripe uses cents
-      },
-      quantity: item.quantity,
-    }));
-
-    // Create the Stripe Checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: lineItems,
-      success_url: `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL}/cart`,
-      metadata: {
-        userId: userId,
-      },
+    // Create a PaymentIntent (this will generate a client secret)
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: totalCost * 100, // Convert to smallest unit (e.g., cents for USD)
+      currency: 'eur', // or your currency of choice
+      metadata: { userId, items: JSON.stringify(items), shippingAddress: JSON.stringify(shippingAddress) },
     });
 
-    // Return the session URL to redirect the user to Stripe Checkout
-    res.status(200).send({ url: session.url });
-  } catch (error) {
-    console.error('Error creating checkout session:', error);
-    res.status(500).send({ msg: 'Error creating checkout session' });
+    // Save the order to the database (with the payment intent)
+    const newOrder = new Order({
+      user_id: userId,
+      items,
+      totalCost,
+      paymentStatus: 'pending',
+      shippingAddress,
+      stripePaymentIntentId: paymentIntent.id,
+    });
+
+    await newOrder.save();
+
+    // Send the client secret and session URL to the frontend
+    res.status(200).json({
+      clientSecret: paymentIntent.client_secret,  // Return the client secret to use on the frontend
+      url: `${process.env.DOMAIN}/success?session_id=${paymentIntent.id}`,  // You can customize this success URL
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: err.message || 'Error creating checkout session' });
   }
 };
 
-// Handle Stripe webhook to verify payment success
-const handleStripeWebhook = async (req, res) => {
-  const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
-  const sig = req.headers['stripe-signature'];
+// Stripe Webhook (to handle payment updates)
+const stripeWebhook = async (req, res) => {
+  console.log('🚨 Stripe webhook received');
+  console.log('Headers:', req.headers);
+  console.log('Raw body:', req.rawBody?.toString?.());
 
+  const sig = req.headers['stripe-signature'];
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-  } catch (err) {
-    console.log('Webhook signature verification failed.');
-    return res.status(400).send(`Webhook error: ${err.message}`);
-  }
-
-  // Handle the checkout.session.completed event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = session.metadata.userId;
-
-    // Fetch the cart and create a payment record
-    const cart = await Cart.findOne({ user_id: userId }).populate(
-      'items.product_id',
-      'price title'
+    event = stripe.webhooks.constructEvent(
+      req.rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
     );
-
-    const orderItems = cart.items.map(item => ({
-      product_id: item.product_id._id,
-      quantity: item.quantity,
-      price: item.product_id.price,
-    }));
-
-    const totalCost = cart.items.reduce((acc, item) => acc + (item.quantity * item.product_id.price), 0);
-
-    // Create the payment record
-    const payment = new Payment({
-      user_id: userId,
-      orderItems,
-      paymentMethod: 'stripe',
-      totalCost,
-      currency: 'EUR',
-      paymentStatus: 'succeeded',
-    });
-
-    await payment.save();
-
-    // Create the order record
-    const order = new Order({
-      user_id: userId,
-      items: orderItems,
-      totalCost,
-      paymentStatus: 'succeeded',
-      orderStatus: 'processing', // Can be updated later
-    });
-
-    await order.save();
-
-    // Empty the cart after a successful order
-    cart.items = [];
-    await cart.save();
+    console.log('✅ Verified webhook event:', event.type);
+  } catch (err) {
+    console.error('❌ Stripe webhook error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  res.status(200).send({ received: true });
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    console.log(`💰 PaymentIntent for ${paymentIntent.amount_received} was successful!`);
+
+    // Update the order status to 'succeeded' in your database
+    try {
+      const order = await Order.findOne({ stripePaymentIntentId: paymentIntent.id });
+      if (order) {
+        order.paymentStatus = 'succeeded';
+        await order.save();
+
+        // Clear the cart for the user after successful payment
+        await Cart.findOneAndDelete({ user_id: order.user_id });
+      }
+    } catch (err) {
+      console.error('Error during webhook processing:', err);
+    }
+  }
+
+  res.status(200).send('Webhook received');
 };
 
 module.exports = {
   createCheckoutSession,
-  handleStripeWebhook,
+  stripeWebhook,
 };

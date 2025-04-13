@@ -77,6 +77,10 @@ const ProductPage = () => {
             {product.keywords.join(", ")}
           </p>
           <p className="text-lg text-gray-800 mb-4">{product.description}</p>
+          <div>
+            <p>Stock: {product.stock}</p>
+          </div>
+
           <div className="text-xl font-bold text-green-600 mb-6">
             {product.price}€
           </div>

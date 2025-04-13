@@ -9,7 +9,7 @@ import WorkshopPage from "./pages/WorkshopPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
-// import CheckoutPage from "./components/CheckoutPage";
+import Checkout from "./components/Checkout";
 import "./App.css";
 
 function App() {
@@ -28,7 +28,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/cart" element = {<Cart />}/>
-        {/* <Route path="/checkout" element={<CheckoutPage />} /> */}
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
     </Router>
   );

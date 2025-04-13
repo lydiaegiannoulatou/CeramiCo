@@ -1,33 +1,40 @@
 const mongoose = require('mongoose');
 
-// Define the Order schema
+const shippingAddressSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  addressLine1: { type: String, required: true },
+  addressLine2: { type: String },
+  city: { type: String, required: true },
+  postalCode: { type: String, required: true },
+  country: { type: String, required: true },
+  phone: { type: String },
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Assuming you have a User model
+      ref: 'User',
       required: true,
     },
     items: [
       {
         product_id: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product', // Assuming you have a Product model
+          ref: 'Product',
           required: true,
         },
-        quantity: {
-          type: Number,
-          required: true,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true }, // In cents
       },
     ],
     totalCost: {
       type: Number,
-      required: true,
+      required: true, // In cents
+    },
+    currency: {
+      type: String,
+      default: 'EUR',
     },
     paymentStatus: {
       type: String,
@@ -36,20 +43,25 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['processing', 'shipped', 'delivered'],
+      enum: ['processing', 'shipped', 'delivered', 'canceled'],
       default: 'processing',
     },
-    shippingAddress: {
-      type: String, // Optionally, you can use a more complex schema for address
-      required: false,
+    shippingAddress: shippingAddressSchema,
+    
+    // Stripe-specific fields
+    stripeSessionId: {
+      type: String,
+      required: true,
+    },
+    stripePaymentIntentId: {
+      type: String,
     },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 
-// Create the Order model
 const Order = mongoose.model('Order', orderSchema);
 
 module.exports = Order;

@@ -1,4 +1,5 @@
 const Product = require("../models/productModel");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 //___get all products
 const getAllProducts = async (req, res) => {
@@ -30,6 +31,20 @@ const addNewProduct = async (req, res) => {
   try {
     const { title, price, category, description, keywords, stock, images } =
       req.body;
+     // 1. Create product on Stripe
+     const stripeProduct = await stripe.products.create({
+      name: title,
+      description,
+    });
+
+    // 2. Create price on Stripe (in cents)
+    const stripePrice = await stripe.prices.create({
+      unit_amount:  Math.round(price * 100), // Make sure this is in cents (e.g., 1999 = $19.99)
+      currency: 'eur',
+      product: stripeProduct.id,
+    });
+
+    // 3. Save product to MongoDB with Stripe IDs
     const newProduct = new Product({
       title,
       price,
@@ -38,7 +53,10 @@ const addNewProduct = async (req, res) => {
       keywords,
       stock,
       images,
+      stripeProductId: stripeProduct.id,
+      stripePriceId: stripePrice.id,
     });
+
     await newProduct.save();
     res
       .status(201)
