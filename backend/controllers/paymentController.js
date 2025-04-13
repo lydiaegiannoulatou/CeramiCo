@@ -8,7 +8,7 @@ const Cart = require('../models/cartModel');
 // Create Checkout Session
 const createCheckoutSession = async (req, res) => {
   const { items, shippingAddress } = req.body;
-  const userId = req.user.userId; 
+  const userId = req.user.userId;
 
   try {
     // Validate and format line_items
@@ -16,7 +16,7 @@ const createCheckoutSession = async (req, res) => {
       items.map(async (item) => {
         const product = await Product.findById(item.product_id);
         if (!product) throw new Error(`Product not found: ${item.product_id}`);
-        
+
         if (!product.stripePriceId) {
           throw new Error(`Product ${item.product_id} does not have a valid Stripe price ID.`);
         }
@@ -28,49 +28,47 @@ const createCheckoutSession = async (req, res) => {
       })
     );
 
-    // Calculate total cost
+    // Create Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items,
+      customer_email: req.user.email,
+      success_url: `${process.env.DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.DOMAIN}/cancel`,
+    });
+
+    // Calculate totalCost
     const totalCost = items.reduce((total, item) => {
       return total + item.price * item.quantity;
     }, 0);
 
-    // Create a PaymentIntent (this will generate a client secret)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalCost * 100, // Convert to smallest unit (e.g., cents for USD)
-      currency: 'eur', // or your currency of choice
-      metadata: { userId, items: JSON.stringify(items), shippingAddress: JSON.stringify(shippingAddress) },
-    });
-
-    // Save the order to the database (with the payment intent)
+    // Save order to DB
     const newOrder = new Order({
       user_id: userId,
       items,
       totalCost,
       paymentStatus: 'pending',
       shippingAddress,
-      stripePaymentIntentId: paymentIntent.id,
+      stripeSessionId: session.id,
     });
 
     await newOrder.save();
 
-    // Send the client secret and session URL to the frontend
-    res.status(200).json({
-      clientSecret: paymentIntent.client_secret,  // Return the client secret to use on the frontend
-      url: `${process.env.DOMAIN}/success?session_id=${paymentIntent.id}`,  // You can customize this success URL
-    });
-
+    // Respond with session URL for redirect
+    res.status(200).json({ url: session.url });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: err.message || 'Error creating checkout session' });
   }
 };
 
+
+
 // Stripe Webhook (to handle payment updates)
 const stripeWebhook = async (req, res) => {
-  console.log('🚨 Stripe webhook received');
-  console.log('Headers:', req.headers);
-  console.log('Raw body:', req.rawBody?.toString?.());
-
   const sig = req.headers['stripe-signature'];
+
   let event;
 
   try {
@@ -79,26 +77,34 @@ const stripeWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log('✅ Verified webhook event:', event.type);
+    
+    console.log('✅ Webhook received:', event.type);
   } catch (err) {
-    console.error('❌ Stripe webhook error:', err.message);
+    console.error('Webhook error:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    console.log(`💰 PaymentIntent for ${paymentIntent.amount_received} was successful!`);
+  if (event.type === 'checkout.session.completed') {
+    console.log('📦 checkout.session.completed event received');
 
-    // Update the order status to 'succeeded' in your database
+    const session = event.data.object;
     try {
-      const order = await Order.findOne({ stripePaymentIntentId: paymentIntent.id });
+      // 1. Update the order
+      const order = await Order.findOne({ stripeSessionId: session.id });
+      console.log('Webhook session.id:', session.id);
+      console.log('Fetched order:', order);
+
       if (order) {
         order.paymentStatus = 'succeeded';
+        order.stripePaymentIntentId = session.payment_intent;
         await order.save();
 
-        // Clear the cart for the user after successful payment
+        // 2. Clear the cart for that user
+        console.log(`✅ Payment succeeded and cart cleared for user: ${order.user_id}`);
         await Cart.findOneAndDelete({ user_id: order.user_id });
       }
+
+      console.log(`✅ Payment succeeded and cart cleared for user: ${order.user_id}`);
     } catch (err) {
       console.error('Error during webhook processing:', err);
     }

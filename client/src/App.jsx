@@ -9,6 +9,7 @@ import WorkshopPage from "./pages/WorkshopPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
+import Success from "./components/Success";
 import Checkout from "./components/Checkout";
 import "./App.css";
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/cart" element = {<Cart />}/>
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/success" element = {<Success />} />
       </Routes>
     </Router>
   );

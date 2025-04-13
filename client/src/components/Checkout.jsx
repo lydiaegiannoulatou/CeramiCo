@@ -50,20 +50,15 @@ const Checkout = () => {
           shippingAddress,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (response.data.url) {
-        window.location.href = response.data.url;
-      } else {
-        alert("Checkout failed.");
-      }
+      // Redirect to Stripe Checkout
+      window.location.href = response.data.url;
     } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Something went wrong.");
+      console.error("Error redirecting to Stripe Checkout:", err);
+      alert("Checkout failed.");
     }
   };
 
@@ -75,33 +70,23 @@ const Checkout = () => {
       <div className="md:w-1/2">
         <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
         {cart.items.map((item) => (
-  <div
-    key={item.product_id._id}
-    className="flex items-center border-b py-4 gap-4"
-  >
-    {/* Product Image */}
-    <img
-      src={item.product_id.images[0]}
-      alt={item.product_id.title}
-      className="w-20 h-20 object-cover rounded"
-    />
-
-    {/* Product Details */}
-    <div className="flex-1">
-      <p className="font-semibold">{item.product_id.title}</p>
-      <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-      <p className="text-sm font-medium">
-        Subtotal: €{(item.quantity * item.product_id.price).toFixed(2)}
-      </p>
-    </div>
-  </div>
-))}
-
+          <div key={item.product_id._id} className="flex items-center border-b py-4 gap-4">
+            <img
+              src={item.product_id.images[0]}
+              alt={item.product_id.title}
+              className="w-20 h-20 object-cover rounded"
+            />
+            <div className="flex-1">
+              <p className="font-semibold">{item.product_id.title}</p>
+              <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+              <p className="text-sm font-medium">
+                Subtotal: €{(item.quantity * item.product_id.price).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
         <p className="text-xl font-bold mt-4">
-          Total: €
-          {cart.items
-            .reduce((acc, item) => acc + item.quantity * item.product_id.price, 0)
-            .toFixed(2)}
+          Total: €{cart.items.reduce((acc, item) => acc + item.quantity * item.product_id.price, 0).toFixed(2)}
         </p>
       </div>
 
@@ -135,7 +120,7 @@ const Checkout = () => {
           onClick={handleCheckout}
           className="mt-6 w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
         >
-          Pay with Stripe
+          Proceed to Payment
         </button>
       </div>
     </div>

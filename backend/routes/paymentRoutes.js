@@ -5,5 +5,4 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 
 router.post("/checkout", authMiddleware, createCheckoutSession);
 
-
 module.exports = router;

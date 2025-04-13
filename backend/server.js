@@ -12,14 +12,10 @@ const port = process.env.PORT || 8000;
 
 
 
-app.post('/payment/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-    console.log('Webhook hit!');
-    console.log('Request body:', req.body);  // Logs body of incoming request
-    res.status(200).send('OK');
-  });
+
   
   
-// app.post('/payment/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
+app.post('/payment/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.json());
 app.use(cors());
