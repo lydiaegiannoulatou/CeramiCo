@@ -34,7 +34,7 @@ const createCheckoutSession = async (req, res) => {
       mode: 'payment',
       line_items,
       customer_email: req.user.email,
-      success_url: `${process.env.DOMAIN}/success/${CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.DOMAIN}/cancel`,
     });
 

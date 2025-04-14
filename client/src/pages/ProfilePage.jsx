@@ -1,57 +1,14 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import AdminProfile from '../components/AdminProfile';
+import UserProfile from '../components/UserProfile';
 
 const ProfilePage = () => {
-  const { id } = useParams();
-  const [user, setUser] = useState(null);
-  const navigate = useNavigate();
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get(`http://localhost:3050/user/profile/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Send token
-          },
-        });
-        setUser(data); // Store user data in state
-        
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
+  const { user } = useContext(AuthContext);
 
-    fetchUser(); // Call the function
-  }, [id]); // Dependency array ensures it runs only on mount
+  if (!user) return <p>Loading profile...</p>;
 
-  useEffect(() => {
-    if (user) console.log("Updated user data:", user);
-  }, [user]);
-
-  if (!user) return <p>Loading...</p>;
-console.log(user.role);
-
-  return (
-    <div className="container">
-      <h2>Welcome, {user.name}!</h2>
-
-      {user.role === "admin" ? (
-        <div>
-          <h3>Admin Panel</h3>
-          <button onClick={() => navigate("/admin/products")}>
-            Manage Products
-          </button>
-          <button onClick={() => navigate("/admin/users")}>Manage Users</button>
-        </div>
-      ) : (
-        <div>
-          <h3>Your Orders</h3>
-          <button onClick={() => navigate("/orders")}>View Orders</button>
-        </div>
-      )}
-    </div>
-  );
+  return user.role === 'admin' ? <AdminProfile /> : <UserProfile />;
 };
 
 export default ProfilePage;
