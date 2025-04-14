@@ -6,6 +6,8 @@ const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const orderRoutes = require("./routes/orderRoutes")
+
 const {stripeWebhook} = require("./controllers/paymentController")
 const app = express();
 const port = process.env.PORT || 8000;
@@ -26,5 +28,7 @@ app.use("/user", userRoutes);
 app.use("/shop", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/order", orderRoutes)
+
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

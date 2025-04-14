@@ -32,10 +32,14 @@ const Cart = () => {
 
         // Check for success message and retrieve cart
         if (response.data && response.data.cart) {
-          setCart(response.data.cart); // Set the cart data
+          setCart(response.data.cart);
+        } else if (response.status === 200) {
+          // In case backend returns { cart: { items: [] } } or similar
+          setCart({ items: [] });
         } else {
           setError("Cart data not found.");
         }
+        
       } catch (err) {
         console.log("Error fetching cart:", err);
         setError('Error fetching cart data.');

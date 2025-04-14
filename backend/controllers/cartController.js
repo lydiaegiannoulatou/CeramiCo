@@ -50,27 +50,25 @@ const addToCart = async (req, res) => {
 //GET CART
 const getCart = async (req, res) => {
   try {
-    const userId = req.user.userId; // Get the logged-in user's ID from the decoded JWT
+    const userId = req.user.userId;
 
-    // Find the cart by the user's ID
-    const cart = await Cart.findOne({ user_id: userId }).populate(
+    let cart = await Cart.findOne({ user_id: userId }).populate(
       "items.product_id",
       "title price images"
-    ); // Populate product data (like title, price, and images)
+    );
 
+  
     if (!cart) {
-      return res.status(404).send({ msg: "Cart not found" });
+      return res.status(200).send({ msg: "Cart is empty", cart: { items: [] } });
     }
 
-    // Send the cart data along with product details
     res.status(200).send({ msg: "Cart retrieved successfully", cart });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({ msg: "Could not retrieve cart, please try again later" });
+    res.status(500).send({ msg: "Could not retrieve cart, please try again later" });
   }
 };
+
 
 // DELETE PRODUCT FROM CART
 
