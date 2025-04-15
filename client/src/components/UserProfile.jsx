@@ -37,12 +37,29 @@ const UserProfile = () => {
 
       setOrders(prev =>
         prev.map(order =>
-          order._id === orderId ? { ...order, status: 'refunded' } : order
+          order._id === orderId
+            ? { ...order, orderStatus: 'canceled', paymentStatus: 'cancelled' }
+            : order
         )
       );
     } catch (err) {
       console.error("Error cancelling order:", err);
       alert("Unable to cancel order.");
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'processing':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'shipped':
+      case 'delivered':
+        return 'bg-green-100 text-green-700';
+      case 'canceled':
+      case 'refunded':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -68,7 +85,7 @@ const UserProfile = () => {
               >
                 🧾 Order ID: {order._id}
               </button>
-              <span className={`text-sm px-2 py-1 rounded-full ${order.orderStatus === 'refunded' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+              <span className={`text-sm px-2 py-1 rounded-full ${getStatusColor(order.orderStatus)}`}>
                 {order.orderStatus}
               </span>
             </div>
@@ -85,7 +102,7 @@ const UserProfile = () => {
               ))}
             </div>
 
-            {(order.orderStatus === 'processing'|| order.orderStatus === 'paid') && (
+            {(order.orderStatus === 'processing' || order.paymentStatus === 'paid') && (
               <button
                 onClick={() => handleCancelOrder(order._id)}
                 className="mt-3 text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
@@ -110,6 +127,7 @@ const UserProfile = () => {
             <h3 className="text-xl font-bold mb-4">Order Details</h3>
             <p><strong>Order ID:</strong> {selectedOrder._id}</p>
             <p><strong>Status:</strong> {selectedOrder.orderStatus}</p>
+            <p><strong>Payment:</strong> {selectedOrder.paymentStatus}</p>
             <p><strong>Total Items:</strong> {selectedOrder.items.length}</p>
 
             <div className="mt-4 space-y-3">

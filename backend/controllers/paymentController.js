@@ -51,6 +51,7 @@ const createCheckoutSession = async (req, res) => {
       paymentStatus: 'pending',
       shippingAddress,
       stripeSessionId: session.id,
+      currency: 'EUR',
     });
 
     await newOrder.save();
@@ -95,7 +96,7 @@ const stripeWebhook = async (req, res) => {
       console.log('Fetched order:', order);
 
       if (order) {
-        order.paymentStatus = 'succeeded';
+        order.paymentStatus = 'paid';
         order.stripePaymentIntentId = session.payment_intent;
         await order.save();
 

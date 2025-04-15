@@ -5,25 +5,26 @@ import AdminShopPage from "../components/AdminShopPage";
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState(""); // Holds the user's role (admin or user)
 
-  // Fetch products from the backend
+  // Fetch products and user role when the component mounts
   useEffect(() => {
     axios
       .get("http://localhost:3050/shop")
       .then((res) => setProducts(res.data))
       .catch((err) => console.error("Error fetching products", err));
 
-    // Check the user's role 
-    const role = localStorage.getItem("role"); 
-    setUserRole(role); 
+    // Check user role from localStorage
+    const role = localStorage.getItem("role");
+    setUserRole(role);
   }, []);
 
+  // If the user is an admin, render the admin view (AdminShopPage)
   if (userRole === "admin") {
     return <AdminShopPage />;
   }
 
-  // If not an admin, render the regular products page
+  // Otherwise, render the regular product list for non-admin users
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Our Products</h1>
