@@ -10,14 +10,13 @@ import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
 import Checkout from "./pages/Checkout";
-import "./App.css";
 import SuccessPage from "./pages/SuccessPage";
+import "./App.css";
+
 
 function App() {
   return (
     <Router>
-      {" "}
-      {/* Use Router instead of BrowserRouter */}
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />

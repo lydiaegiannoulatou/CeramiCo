@@ -1,110 +1,56 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
-import OrderSummary from './OrderSummary';
 
 const UserProfile = () => {
   const { user } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: ''
-  });
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email
-      });
-
-      axios
-        .get(`http://localhost:3050/orders/user/${user.id}`)
-        .then(res => {
-          setOrders(res.data.orders);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error("Error fetching user orders:", err);
-          setLoading(false);
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`http://localhost:3050/order/user`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-    }
+        setOrders(res.data.orders);
+      } catch (err) {
+        console.error("Error fetching user orders:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) fetchOrders();
   }, [user]);
 
-  const handleEdit = () => setEditing(true);
-  const handleCancel = () => setEditing(false);
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:3050/order/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const handleSave = () => {
-    axios
-      .put(`http://localhost:3050/users/${user.id}`, formData)
-      .then(() => setEditing(false))
-      .catch(err => console.error("Error updating profile:", err));
-  };
-
-  const handleDeleteAccount = () => {
-    if (window.confirm("Are you sure you want to delete your account?")) {
-      axios
-        .delete(`http://localhost:3050/users/${user.id}`)
-        .then(() => {
-          localStorage.removeItem('token');
-          window.location.href = '/';
-        })
-        .catch(err => console.error("Error deleting account:", err));
+      setOrders(prev =>
+        prev.map(order =>
+          order._id === orderId ? { ...order, status: 'refunded' } : order
+        )
+      );
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      alert("Unable to cancel order.");
     }
   };
 
-  if (!user) return <p>Loading user info...</p>;
+  const closeModal = () => setSelectedOrder(null);
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">👤 Your Profile</h1>
-
-      {editing ? (
-        <div className="space-y-4">
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
-          <input
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
-          <button onClick={handleSave} className="bg-green-500 text-white px-4 py-2 rounded">
-            Save
-          </button>
-          <button onClick={handleCancel} className="ml-2 text-gray-600">
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <p><strong>Name:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-          <button onClick={handleEdit} className="text-blue-500 underline">
-            Edit Info
-          </button>
-        </div>
-      )}
-
-      <hr className="my-6" />
-
-      <button
-        onClick={handleDeleteAccount}
-        className="text-red-500 hover:underline"
-      >
-        🗑️ Delete Account
-      </button>
-
-      <hr className="my-6" />
+      <h1 className="text-3xl font-bold mb-6">👤 Your Profile</h1>
 
       <h2 className="text-2xl font-semibold mb-4">📦 Your Orders</h2>
 
@@ -113,7 +59,77 @@ const UserProfile = () => {
       ) : orders.length === 0 ? (
         <p>You have no orders yet.</p>
       ) : (
-        orders.map(order => <OrderSummary key={order._id} order={order} />)
+        orders.map(order => (
+          <div key={order._id} className="bg-white border rounded-xl p-4 mb-4 shadow-md">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => setSelectedOrder(order)}
+                className="text-blue-600 font-medium hover:underline"
+              >
+                🧾 Order ID: {order._id}
+              </button>
+              <span className={`text-sm px-2 py-1 rounded-full ${order.orderStatus === 'refunded' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                {order.orderStatus}
+              </span>
+            </div>
+
+            <div className="flex gap-4 mt-3 overflow-x-auto">
+              {order.items.map(item => (
+                <div key={item.product_id._id} className="w-20 h-20 flex-shrink-0">
+                  <img
+                    src={item.product_id.images[0]}
+                    alt={item.product_id.title}
+                    className="object-cover rounded-lg w-full h-full border"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {(order.orderStatus === 'processing'|| order.orderStatus === 'paid') && (
+              <button
+                onClick={() => handleCancelOrder(order._id)}
+                className="mt-3 text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              >
+                Cancel Order
+              </button>
+            )}
+          </div>
+        ))
+      )}
+
+      {/* Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full relative shadow-lg">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-3 text-gray-500 hover:text-black text-xl"
+            >
+              &times;
+            </button>
+            <h3 className="text-xl font-bold mb-4">Order Details</h3>
+            <p><strong>Order ID:</strong> {selectedOrder._id}</p>
+            <p><strong>Status:</strong> {selectedOrder.orderStatus}</p>
+            <p><strong>Total Items:</strong> {selectedOrder.items.length}</p>
+
+            <div className="mt-4 space-y-3">
+              {selectedOrder.items.map(item => (
+                <div key={item.product_id._id} className="flex items-center gap-3 border-b pb-2">
+                  <img
+                    src={item.product_id.images[0]}
+                    alt={item.product_id.title}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                  <div>
+                    <p className="font-medium">{item.product_id.title}</p>
+                    <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    <p className="text-sm text-gray-800">Price: ${item.product_id.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

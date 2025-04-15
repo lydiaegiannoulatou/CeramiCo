@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { getOrder } = require("../controllers/orderController");
-const { authMiddleware} = require("../middleware/authMiddleware")
+const { getOrder, getOrdersByUser, cancelOrder } = require("../controllers/orderController");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
-router.get("/success/:sessionId", getOrder);
+router.get("/success/:sessionId", authMiddleware, getOrder);
+router.get("/user", authMiddleware, getOrdersByUser);
+router.delete("/:orderId", authMiddleware, cancelOrder);
 
 module.exports = router;

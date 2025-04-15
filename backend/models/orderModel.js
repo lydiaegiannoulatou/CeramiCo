@@ -1,27 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const shippingAddressSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  addressLine1: { type: String, required: true },
-  addressLine2: { type: String },
-  city: { type: String, required: true },
-  postalCode: { type: String, required: true },
-  country: { type: String, required: true },
-  phone: { type: String },
-}, { _id: false });
+const shippingAddressSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true },
+    addressLine1: { type: String, required: true },
+    addressLine2: { type: String },
+    city: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    country: { type: String, required: true },
+    phone: { type: String },
+  },
+  { _id: false }
+);
 
 const orderSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     items: [
       {
         product_id: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
+          ref: "Product",
           required: true,
         },
         quantity: { type: Number, required: true },
@@ -34,20 +37,23 @@ const orderSchema = new mongoose.Schema(
     },
     currency: {
       type: String,
-      default: 'EUR',
+      default: "EUR",
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'succeeded', 'failed', 'canceled'],
-      default: 'pending',
+      enum: ["pending", "paid", "shipped", "cancelled", "refunded"],
+      default: "pending",
+    },
+    paymentIntentId: {
+      type: String,
     },
     orderStatus: {
       type: String,
-      enum: ['processing', 'shipped', 'delivered', 'canceled'],
-      default: 'processing',
+      enum: ["processing", "shipped", "delivered", "canceled"],
+      default: "processing",
     },
     shippingAddress: shippingAddressSchema,
-    
+
     // Stripe-specific fields
     stripeSessionId: {
       type: String,
@@ -62,6 +68,6 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-const Order = mongoose.model('Order', orderSchema);
+const Order = mongoose.model("Order", orderSchema);
 
 module.exports = Order;

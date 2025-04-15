@@ -1,5 +1,7 @@
 const Order = require("../models/orderModel");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
 
+// GET A SINGLE ORDER
 const getOrder = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -18,4 +20,66 @@ const getOrder = async (req, res) => {
   }
 };
 
-module.exports = { getOrder };
+// GET ALL ORDERS FOR A USER
+const getOrdersByUser = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const orders = await Order.find({ user_id: userId })
+      .sort({ createdAt: -1 })
+      .populate("items.product_id", "title images price");
+
+    res.status(200).send({ msg: "Orders fetched successfully", orders });
+  } catch (error) {
+    console.error("Error fetching orders for user:", error);
+    res.status(500).send({ msg: "Something went wrong" });
+  }
+};
+
+// CANCEL ORDER (AND REFUND IF NEEDED)
+const cancelOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+console.log(orderId);
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ msg: "Order not found" });
+    }
+
+    // Ensure the logged-in user owns this order
+    if (order.user_id.toString() !== req.user.userId) {
+      return res.status(403).json({ msg: "You are not authorized to cancel this order." });
+    }
+
+    // Only refund if the order is paid and not already refunded/cancelled
+    if (order.status === "paid") {
+      if (!order.paymentIntentId) {
+        return res.status(400).json({ msg: "No paymentIntentId found for this order" });
+      }
+
+      const refund = await stripe.refunds.create({
+        payment_intent: order.paymentIntentId,
+      });
+
+      order.status = "refunded";
+      await order.save();
+
+      return res.status(200).json({ msg: "Order refunded successfully", refund });
+    } else {
+      order.status = "cancelled";
+      await order.save();
+
+      return res.status(200).json({ msg: "Order cancelled successfully" });
+    }
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res.status(500).json({ msg: "Could not cancel order", error });
+  }
+};
+
+module.exports = {
+  getOrder,
+  getOrdersByUser,
+  cancelOrder,
+};
