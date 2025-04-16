@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config();
 const cors = require("cors");
 
 const main = require("./config/connection");
@@ -7,6 +8,7 @@ const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const orderRoutes = require("./routes/orderRoutes")
+const adminRoutes = require("./routes/adminRoutes")
 
 const {stripeWebhook} = require("./controllers/paymentController")
 const app = express();
@@ -29,6 +31,7 @@ app.use("/shop", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/order", orderRoutes)
+app.use("/admin", adminRoutes)
 
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

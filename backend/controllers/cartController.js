@@ -40,7 +40,7 @@ const addToCart = async (req, res) => {
     // ✅ Populate before returning
     const populatedCart = await Cart.findOne({ user_id: userId }).populate("items.product_id", "title price images");
 
-    res.status(200).send({ msg: "Product added to cart successfully", cart: populatedCart });
+    res.status(200).send({success: true,msg: "Product added to cart successfully", cart: populatedCart });
   } catch (error) {
     console.error(error);
     res.status(500).send({ msg: "Could not add product to cart, please try again later" });

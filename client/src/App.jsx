@@ -11,6 +11,10 @@ import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
 import Checkout from "./pages/Checkout";
 import SuccessPage from "./pages/SuccessPage";
+import OrderPage from "./pages/OrderPage";
+import NewsletterPage from "./pages/NewsletterPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 
@@ -30,7 +34,10 @@ function App() {
         <Route path="/cart" element = {<Cart />}/>
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<SuccessPage />} />
+        <Route path="/admin/orders" element={<OrderPage />} />
+        <Route path="/admin/newsletter" element={<NewsletterPage />} />
       </Routes>
+      <ToastContainer position="top-right" autoClose={1500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
     </Router>
   );
 }

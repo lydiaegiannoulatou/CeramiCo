@@ -5,7 +5,8 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null); // Add user state
+  const [user, setUser] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false); // NEW
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         } else {
           setIsLoggedIn(true);
-          setUser(decodedToken); // Store the user info from the token
+          setUser(decodedToken);
         }
       } catch (error) {
         console.error("Invalid token:", error);
@@ -34,6 +35,8 @@ export const AuthProvider = ({ children }) => {
       setIsLoggedIn(false);
       setUser(null);
     }
+
+    setIsAuthReady(true);
   }, []);
 
   return (
@@ -41,8 +44,9 @@ export const AuthProvider = ({ children }) => {
       value={{
         isLoggedIn,
         setIsLoggedIn,
-        user,          
-        setUser,        
+        user,
+        setUser,
+        isAuthReady, 
       }}
     >
       {children}

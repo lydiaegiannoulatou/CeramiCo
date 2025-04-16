@@ -4,11 +4,11 @@ import AdminProfile from '../components/AdminProfile';
 import UserProfile from '../components/UserProfile';
 
 const ProfilePage = () => {
-  const { user } = useContext(AuthContext);
+  const { user, isAuthReady } = useContext(AuthContext);
 
-  if (!user) return <p>Loading profile...</p>;
+  if (!isAuthReady) return <p>Loading profile...</p>;
 
-  return user.role === 'admin' ? <AdminProfile /> : <UserProfile />;
+  return user?.role === 'admin' ? <AdminProfile /> : <UserProfile />;
 };
 
 export default ProfilePage;
