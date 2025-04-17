@@ -5,6 +5,7 @@ import AddProductModal from "./AddProductModal";
 
 const AdminShopPage = () => {
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -46,17 +47,28 @@ const AdminShopPage = () => {
     setForm({ ...form, images: imageUrls });
   };
 
-
-  const addProduct = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         ...form,
         keywords: form.keywords.map((k) => k.trim()),
       };
-      await axios.post("http://localhost:3050/shop/products/add", payload);
+
+      if (selectedProduct) {
+        await axios.put(
+          `http://localhost:3050/shop/products/update/${selectedProduct._id}`,
+          payload
+        );
+        console.log("Product updated successfully");
+      } else {
+        await axios.post("http://localhost:3050/shop/products/add", payload);
+        console.log("Product added successfully");
+      }
+
       getProducts();
       setIsOpen(false);
+      setSelectedProduct(null);
       setForm({
         title: "",
         price: "",
@@ -67,7 +79,7 @@ const AdminShopPage = () => {
         images: [],
       });
     } catch (err) {
-      console.error("Add product error", err);
+      console.error("Submit product error", err);
     }
   };
 
@@ -81,30 +93,60 @@ const AdminShopPage = () => {
     }
   };
 
+  const handleUpdate = (product) => {
+    setSelectedProduct(product);
+    setForm({
+      ...product,
+      keywords: product.keywords || [],
+      images: product.images || [],
+    });
+    setIsOpen(true);
+  };
+
   return (
     <div className="p-6">
       {/* Add Product Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setSelectedProduct(null); // Clear any existing product on "Add"
+          setForm({
+            title: "",
+            price: "",
+            category: "",
+            description: "",
+            keywords: [],
+            stock: "",
+            images: [],
+          });
+          setIsOpen(true);
+        }}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-6"
       >
         Add Product
       </button>
 
       {/* Product List */}
-      <ProductList products={products} onDelete={handleDelete} />
+      <ProductList
+        products={products}
+        onDelete={handleDelete}
+        onUpdate={handleUpdate}
+        isAdmin={true}
+      />
 
-      {/* Add Product Modal */}
+      {/* Add/Edit Product Modal */}
       <AddProductModal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => {
+          setIsOpen(false);
+          setSelectedProduct(null);
+        }}
         form={form}
         setForm={setForm}
         categories={categories}
         keywordsList={keywordsList}
         onFormChange={handleChange}
         onImageUpload={handleImageUpload}
-        onSubmit={addProduct}
+        onSubmit={handleSubmit}
       />
     </div>
   );

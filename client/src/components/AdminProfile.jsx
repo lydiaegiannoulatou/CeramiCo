@@ -14,8 +14,8 @@ const adminSections = [
   },
   {
     title: "Exhibitions",
-    description: "Stats about orders, users, workshops",
-    route: "/admin/stats",
+    description: "Manage exhibitions",
+    route: "/exhibitions",
   }, 
   {
     title: "Orders",

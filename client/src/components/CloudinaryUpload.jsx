@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const ImageUpload = ({ onImagesUploaded }) => {
+// Cloudinary Upload Component
+const CloudinaryUpload = ({ onImagesUploaded, existingImagePublicIds = [] }) => {
   const [imageFiles, setImageFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -10,7 +11,7 @@ const ImageUpload = ({ onImagesUploaded }) => {
   const uploadImageToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "pottery_pics"); // cloudinary preset
+    formData.append("upload_preset", "pottery_pics"); // Cloudinary preset
 
     try {
       const res = await axios.post(
@@ -30,6 +31,40 @@ const ImageUpload = ({ onImagesUploaded }) => {
     }
   };
 
+  // Check if the image already exists in Cloudinary (based on its publicId)
+  const checkForDuplicateImage = (file) => {
+    // You could check for duplicates based on some unique image properties or a stored hash
+    // For simplicity, we use an array of existing publicIds passed as props
+    const existingImage = existingImagePublicIds.find(
+      (publicId) => publicId === file.name // Simplified comparison using file name (or hash)
+    );
+    return existingImage;
+  };
+
+  // Delete image from Cloudinary by publicId
+  const deleteImageFromCloudinary = async (publicId) => {
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/drszm8sem/image/destroy`,
+        {
+          public_id: publicId,
+        }
+      );
+
+      // Check if the deletion was successful
+      if (response.data.result === "ok") {
+        console.log(`Image with public_id ${publicId} deleted successfully.`);
+        return true;
+      } else {
+        console.error("Image deletion failed:", response.data);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error deleting image", error);
+      return false;
+    }
+  };
+
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
     setIsUploading(true);
@@ -38,6 +73,15 @@ const ImageUpload = ({ onImagesUploaded }) => {
 
     for (let file of files) {
       try {
+        // Check if the image already exists (by name or hash)
+        const existingPublicId = checkForDuplicateImage(file);
+
+        // If the image exists, delete it from Cloudinary
+        if (existingPublicId) {
+          await deleteImageFromCloudinary(existingPublicId);
+        }
+
+        // Upload new image to Cloudinary
         const { transformedUrl, publicId } = await uploadImageToCloudinary(file);
         imageUrls.push(transformedUrl);
         imagePublicIds.push(publicId);
@@ -52,30 +96,7 @@ const ImageUpload = ({ onImagesUploaded }) => {
     onImagesUploaded(imageUrls); // Pass URLs back to the parent component
   };
 
-  // Delete image from Cloudinary
-  const deleteImageFromCloudinary = async (publicId) => {
-    try {
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/drszm8sem/image/destroy`,
-        {
-          public_id: publicId,
-        }
-      );
-
-      // Check if the deletion was successful
-      if (response.data.result === "ok") {
-        console.log(`Image with public_id ${publicId} deleted successfully.`);
-        return true; // Deletion successful
-      } else {
-        console.error("Image deletion failed:", response.data);
-        return false; // Deletion failed
-      }
-    } catch (error) {
-      console.error("Error deleting image", error);
-      return false; // Error during deletion
-    }
-  };
-
+  // Handle image deletion from the state and Cloudinary
   const handleDeleteImage = async (publicId, index) => {
     const isDeleted = await deleteImageFromCloudinary(publicId); // Wait for deletion to complete
 
@@ -130,4 +151,4 @@ const ImageUpload = ({ onImagesUploaded }) => {
   );
 };
 
-export default ImageUpload;
+export default CloudinaryUpload;

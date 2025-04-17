@@ -16,17 +16,23 @@ const createCheckoutSession = async (req, res) => {
       items.map(async (item) => {
         const product = await Product.findById(item.product_id);
         if (!product) throw new Error(`Product not found: ${item.product_id}`);
-
+    
         if (!product.stripePriceId) {
           throw new Error(`Product ${item.product_id} does not have a valid Stripe price ID.`);
         }
-
+    
+        // Check stock
+        if (item.quantity > product.stock) {
+          throw new Error(`Requested quantity for ${product.title} exceeds available stock.`);
+        }
+    
         return {
           price: product.stripePriceId,
           quantity: item.quantity,
         };
       })
     );
+    
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -86,30 +92,36 @@ const stripeWebhook = async (req, res) => {
   }
 
   if (event.type === 'checkout.session.completed') {
-    console.log('📦 checkout.session.completed event received');
-
     const session = event.data.object;
+  
     try {
-      // 1. Update the order
       const order = await Order.findOne({ stripeSessionId: session.id });
-      console.log('Webhook session.id:', session.id);
-      console.log('Fetched order:', order);
-
+  
       if (order) {
         order.paymentStatus = 'paid';
         order.stripePaymentIntentId = session.payment_intent;
         await order.save();
-
-        // 2. Clear the cart for that user
-        console.log(`✅ Payment succeeded and cart cleared for user: ${order.user_id}`);
+  console.log(order.items);
+  
+        //  Update stock
+        for (const item of order.items) {
+          const product = await Product.findById(item.product_id);
+          if (product) {
+            product.stock = Math.max(0, product.stock - item.quantity);
+            await product.save();
+          }
+        }
+  
+        // Clear cart
         await Cart.findOneAndDelete({ user_id: order.user_id });
+  
+        console.log(`✅ Payment succeeded, stock updated and cart cleared for user: ${order.user_id}`);
       }
-
-      console.log(`✅ Payment succeeded and cart cleared for user: ${order.user_id}`);
     } catch (err) {
       console.error('Error during webhook processing:', err);
     }
   }
+  
 
   res.status(200).send('Webhook received');
 };

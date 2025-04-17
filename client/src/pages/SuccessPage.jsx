@@ -14,8 +14,15 @@ const SuccessPage = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
+      const token = localStorage.getItem("token");
       try {
-        const response = await axios.get(`http://localhost:3050/order/success/${sessionId}`);
+        const response = await axios.get(`http://localhost:3050/order/success/${sessionId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         console.log("Response order", response);
 
         if (response.data.order) {

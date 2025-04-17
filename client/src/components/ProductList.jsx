@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const ProductList = ({ products, onDelete, isAdmin = false }) => {
+const ProductList = ({ products, onDelete, onUpdate, isAdmin = false }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {products.map((product) => (
@@ -25,7 +25,12 @@ const ProductList = ({ products, onDelete, isAdmin = false }) => {
               >
                 Delete
               </button>
-              {/* You could add an edit button here too */}
+              <button
+                onClick={() => onUpdate(product)}
+                className="text-blue-600 hover:underline"
+              >
+                Update
+              </button>
             </div>
           )}
         </div>

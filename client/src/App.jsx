@@ -7,6 +7,8 @@ import ShopPage from "./pages/ShopPage";
 import ProductPage from "./pages/ProductPage";
 import WorkshopPage from "./pages/WorkshopPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
+import ExhibitionDetailsPage from "./pages/ExhibitionDetailsPage";
+import AdminExhibitionModal from "./components/AdminExhibitionModal";
 import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
 import Checkout from "./pages/Checkout";
@@ -24,7 +26,9 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="exhibitions" element={<ExhibitionsPage />} />
+        <Route path="/exhibitions" element={<ExhibitionsPage />} />
+        <Route path="/exhibitions/:id" element={<ExhibitionDetailsPage />} />
+        <Route path="/exhibitions/add" element = {<AdminExhibitionModal/>}/>
         <Route path="/workshops" element={<WorkshopPage />}/>
         <Route path="/shop" element = {<ShopPage />}/>
         <Route path="/product/:id" element={<ProductPage />} />

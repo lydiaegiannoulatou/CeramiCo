@@ -1,55 +1,72 @@
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  let token = null;
-  let decodedToken = null;
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [userId, setUserId] = useState(null);
 
-  try {
-    if (localStorage.getItem("token")) {
-      token = localStorage.getItem("token");
-      decodedToken = jwtDecode(token);
-      console.log(decodedToken); // You can inspect the decoded token here
-    }
-  } catch (error) {
-    console.log(error);
-  }
-
-  // Handle log out
-  function handleLogout() {
-    try {
-      if (localStorage.getItem("token")) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        navigate("/login");
+  useEffect(() => {
+    const checkToken = () => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
+        try {
+          const decoded = jwtDecode(storedToken);
+          const currentTime = Date.now() / 1000; // in seconds
+          if (decoded.exp < currentTime) {
+            // Token expired
+            localStorage.removeItem("token");
+            localStorage.removeItem("role");
+            setToken(null);
+            setUserId(null);
+            navigate("/login");
+          } else {
+            setToken(storedToken);
+            setUserId(decoded.userId);
+          }
+        } catch (error) {
+          console.error("Invalid token:", error);
+          setToken(null);
+        }
+      } else {
+        setToken(null);
+        setUserId(null);
       }
-    } catch (error) {
-      console.log(error);
-    }
-  }
+    };
 
-  // Ensure you have a valid token and decoded token
-  const userId = decodedToken ? decodedToken.userId : null; // Access the user ID from the token if available
+    checkToken(); // Initial check
+    const interval = setInterval(checkToken, 1000 * 10); // check every 10 seconds
+
+    return () => clearInterval(interval); // Cleanup
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    setToken(null);
+    setUserId(null);
+    navigate("/login");
+  };
 
   return (
     <div className="flex justify-between items-center p-4 bg-orange-800">
       <h3 className="text-xl font-bold">
         <Link to="/">CeramiCo</Link>
       </h3>
-      <ul style={{ display: "flex", justifyContent: "space-between" }} className="flex space-x-6 list-none">
+      <ul className="flex space-x-6 list-none">
         {token ? (
           <>
             <li>
-              <Link to="exhibitions">Exhibitions</Link>
+              <Link to="/exhibitions">Exhibitions</Link>
             </li>
             <li>
-              <Link to="workshops">Workshops</Link>
+              <Link to="/workshops">Workshops</Link>
             </li>
             <li>
               <Link to="/shop">Shop</Link>
             </li>
-            {userId && ( // Only show the profile link if there's a valid user ID
+            {userId && (
               <li>
                 <Link to={`/profile/${userId}`}>My Profile</Link>
               </li>
@@ -58,18 +75,18 @@ const Navbar = () => {
               <Link to="/cart">My Cart</Link>
             </li>
             <li>
-              <Link onClick={handleLogout} to="/">
+              <button onClick={handleLogout} className="text-white">
                 Logout
-              </Link>
+              </button>
             </li>
           </>
         ) : (
           <>
             <li>
-              <Link to="exhibitions">Exhibitions</Link>
+              <Link to="/exhibitions">Exhibitions</Link>
             </li>
             <li>
-              <Link to="workshops">Workshops</Link>
+              <Link to="/workshops">Workshops</Link>
             </li>
             <li>
               <Link to="/shop">Shop</Link>

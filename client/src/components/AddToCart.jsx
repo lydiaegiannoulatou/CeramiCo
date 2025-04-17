@@ -4,8 +4,9 @@ import { FaShoppingCart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
-const AddToCart = ({ productId, userRole }) => {
+const AddToCart = ({ productId }) => {
   const [isAdding, setIsAdding] = useState(false);
+  const role = localStorage.getItem("role"); // <== Moved here
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
@@ -40,7 +41,7 @@ const AddToCart = ({ productId, userRole }) => {
     }
   };
 
-  if (userRole !== "user") {
+  if (role !== "user") {
     return null;
   }
 
