@@ -1,9 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { refreshAuth } = useContext(AuthContext);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [userId, setUserId] = useState(null);
 
@@ -42,12 +46,15 @@ const Navbar = () => {
   }, [navigate]);
 
   const handleLogout = () => {
+    // Clear local storage and update state
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     setToken(null);
     setUserId(null);
+    refreshAuth();
     navigate("/login");
   };
+  
 
   return (
     <div className="flex justify-between items-center p-4 bg-orange-800">

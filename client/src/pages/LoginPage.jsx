@@ -1,11 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
   const navigate = useNavigate()
+  const { refreshAuth } = useContext(AuthContext);
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,40 +22,39 @@ const Login = () => {
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
-
+  
     if (!usernameOrEmail || !password) {
       setError("Both username/email and password are required.");
       return;
     }
-
-    // Check if the input is an email
+  
     const isEmail = /\S+@\S+\.\S+/.test(usernameOrEmail);
-
+  
     let userInfo = {
       password,
       ...(isEmail ? { email: usernameOrEmail } : { username: usernameOrEmail }),
     };
+  
     try {
       let response = await axios.post(
         "http://localhost:3050/user/login",
         userInfo
       );
-
-      //____store token
+  
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role)
-      //___decode token
-      const decodedToken = jwtDecode(response.data.token)
-      console.log(("Decoded Token:", decodedToken));
-      localStorage.setItem("role",decodedToken.role)
-      
+      const decodedToken = jwtDecode(response.data.token);
+      localStorage.setItem("role", decodedToken.role);
+  
+      refreshAuth(); // 🔥 This is what makes the magic happen
+  
       alert(response.data.msg);
-      navigate("/")
+      navigate("/");
     } catch (error) {
       alert(error.response.data.msg);
       console.log(error);
     }
   }
+  
 
   return (
     <div className="flex-row justify-items-center mt-20">

@@ -6,9 +6,9 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false); // NEW
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-  useEffect(() => {
+  const syncAuthState = () => {
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
         const currentTime = Date.now() / 1000;
 
         if (decodedToken.exp < currentTime) {
-          // Token expired
           localStorage.removeItem("token");
           setIsLoggedIn(false);
           setUser(null);
@@ -37,6 +36,21 @@ export const AuthProvider = ({ children }) => {
     }
 
     setIsAuthReady(true);
+  };
+
+  useEffect(() => {
+    syncAuthState();
+
+    // 👇 Listen for token changes across tabs/windows
+    const onStorageChange = (e) => {
+      if (e.key === "token") {
+        syncAuthState();
+      }
+    };
+
+    window.addEventListener("storage", onStorageChange);
+
+    return () => window.removeEventListener("storage", onStorageChange);
   }, []);
 
   return (
@@ -46,7 +60,8 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn,
         user,
         setUser,
-        isAuthReady, 
+        isAuthReady,
+        refreshAuth: syncAuthState, // expose function to manually trigger refresh
       }}
     >
       {children}

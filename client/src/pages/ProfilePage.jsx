@@ -1,14 +1,26 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import AdminProfile from '../components/AdminProfile';
 import UserProfile from '../components/UserProfile';
 
 const ProfilePage = () => {
   const { user, isAuthReady } = useContext(AuthContext);
+  const [role, setRole] = useState(null);
 
-  if (!isAuthReady) return <p>Loading profile...</p>;
+  useEffect(() => {
+    // Only update role once user is ready and defined
+    if (isAuthReady && user) {
+      setRole(user.role);
+    } else if (isAuthReady && !user) {
+      setRole(null); // for logged-out case
+    }
+  }, [user, isAuthReady]);
 
-  return user?.role === 'admin' ? <AdminProfile /> : <UserProfile />;
+  if (!isAuthReady || role === null) {
+    return <p>Loading profile...</p>;
+  }
+
+  return role === 'admin' ? <AdminProfile /> : <UserProfile />;
 };
 
 export default ProfilePage;
