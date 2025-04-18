@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import WorkshopPage from "./pages/WorkshopPage";
+import WorkshopDetailPage from "./pages/WorkshopDetailsPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ExhibitionDetailsPage from "./pages/ExhibitionDetailsPage";
 import AdminExhibitionModal from "./components/AdminExhibitionModal";
@@ -30,6 +31,7 @@ function App() {
         <Route path="/exhibitions/:id" element={<ExhibitionDetailsPage />} />
         <Route path="/exhibitions/add" element = {<AdminExhibitionModal/>}/>
         <Route path="/workshops" element={<WorkshopPage />}/>
+        <Route path="/workshops/:id" element={<WorkshopDetailPage />} />
         <Route path="/shop" element = {<ShopPage />}/>
         <Route path="/product/:id" element={<ProductDetailsPage />} />
         <Route path="/register" element={<Register />} />
