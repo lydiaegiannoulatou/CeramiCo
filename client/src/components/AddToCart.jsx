@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
 
-const AddToCart = ({ productId }) => {
+const AddToCart = ({ product, showLabel = true }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const role = localStorage.getItem("role"); // <== Moved here
+  const role = localStorage.getItem("role");
+
+  // 🔒 Guard clause if product is not defined
+  if (!product || !product._id) return null;
+
+  const { _id, stock } = product;
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
@@ -16,12 +20,17 @@ const AddToCart = ({ productId }) => {
       return;
     }
 
+    if (stock === 0) {
+      toast.warning("This product is currently out of stock.");
+      return;
+    }
+
     setIsAdding(true);
     try {
       const response = await axios.post(
         "http://localhost:3050/cart/add-to-cart",
         {
-          items: [{ product_id: productId, quantity: 1 }],
+          items: [{ product_id: _id, quantity: 1 }],
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -41,18 +50,44 @@ const AddToCart = ({ productId }) => {
     }
   };
 
-  if (role !== "user") {
-    return null;
-  }
+  // Only show if logged in user is a "user"
+  if (role !== "user") return null;
 
   return (
     <button
       onClick={handleAddToCart}
-      className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-md transition disabled:opacity-50"
-      disabled={isAdding}
-      title="Add to cart"
+      className={`flex items-center justify-center ${
+        showLabel ? "py-2 px-6" : "p-3"
+      } bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:bg-gray-400`}
+      disabled={isAdding || stock === 0}
+      title={stock === 0 ? "Out of stock" : "Add to cart"}
     >
-      <FaShoppingCart />
+      {stock === 0 ? (
+        showLabel ? (
+          <>
+            <FaShoppingCart className="mr-2" />
+            Out of Stock
+          </>
+        ) : (
+          <FaShoppingCart />
+        )
+      ) : isAdding ? (
+        showLabel ? (
+          <>
+            <FaShoppingCart className="mr-2 animate-spin" />
+            Adding...
+          </>
+        ) : (
+          <FaShoppingCart className="animate-spin" />
+        )
+      ) : showLabel ? (
+        <>
+          <FaShoppingCart className="mr-2" />
+          Add to Cart
+        </>
+      ) : (
+        <FaShoppingCart />
+      )}
     </button>
   );
 };

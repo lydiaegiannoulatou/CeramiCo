@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const shippingAddressSchema = new mongoose.Schema(
   {
@@ -41,7 +42,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "shipped", "cancelled", "refunded"],
+      enum: ["pending", "paid", "cancelled", "refunded"],
       default: "pending",
     },
     paymentIntentId: {
@@ -62,11 +63,17 @@ const orderSchema = new mongoose.Schema(
     stripePaymentIntentId: {
       type: String,
     },
+    orderNumber: {
+      type: Number,
+      unique: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+orderSchema.plugin(AutoIncrement, { inc_field: "orderNumber", start_seq: 1 });
 
 const Order = mongoose.model("Order", orderSchema);
 

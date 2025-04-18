@@ -9,7 +9,7 @@ const HomePage =() => {
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage:
-                "url('https://res.cloudinary.com/drszm8sem/image/upload/v1744102566/ceramic-pottery-tools-still-life1_mozolb.jpg')",
+                "url('https://res.cloudinary.com/drszm8sem/image/upload/v1744978827/monochromatic-still-life-composition-with-tableware_oc2kfe.jpg')",
             }}
           />
     
