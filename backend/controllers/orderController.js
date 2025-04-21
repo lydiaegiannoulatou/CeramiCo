@@ -14,7 +14,7 @@ const getOrder = async (req, res) => {
       })
       .populate({
         path: 'items.workshop_id', // Populate workshop_id for workshop items
-        select: 'classTitle sessionDate price',
+        select: 'classTitle sessionDate price image',
       });
 
     if (!order) {

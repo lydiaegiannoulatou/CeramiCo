@@ -5,3 +5,25 @@
 .no-scroll {
     overflow: hidden;
   }
+
+
+
+.event-tooltip-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.event-tooltip-wrapper:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 9999;
+}

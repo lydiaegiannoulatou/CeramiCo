@@ -5,9 +5,10 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import axios from "axios";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-const locales = { "en-US": enUS };
 import CalendarModal from "../components/CalendarModal";
 import AddToCart from "../components/AddToCart";
+
+const locales = { "en-US": enUS };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -21,7 +22,7 @@ const WorkshopDetailPage = () => {
   const { id } = useParams();
   const [workshop, setWorkshop] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   useEffect(() => {
     const fetchWorkshop = async () => {
@@ -40,7 +41,7 @@ const [selectedSession, setSelectedSession] = useState(null);
 
   const events = workshop.sessions.map((session, index) => {
     const start = new Date(session);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const end = new Date(start.getTime() + 60 * 60 * 1000); // assuming 1 hour duration for each session
     return {
       id: index,
       title: workshop.title,
@@ -70,47 +71,66 @@ const [selectedSession, setSelectedSession] = useState(null);
         <p className="text-gray-700">{workshop.description}</p>
       </div>
 
+      <div className="bg-white p-6 rounded shadow mb-6">
+        <h2 className="text-lg font-serif mb-4">Workshop Schedule</h2>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 400 }}
+          onSelectEvent={(event) => {
+            const session = workshop.sessions[event.id];
+            setSelectedSession({ start: new Date(session), id: event.id });
+            setModalOpen(true);
+          }}
+        />
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-6 mb-6">
         <div className="bg-gray-200 rounded p-4 flex-1 min-h-[250px] shadow">
-        <button
-  onClick={() => setModalOpen(true)}
-  className="mb-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
->
-  Select Date & Time
-</button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="mb-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+          >
+            Select Date & Time
+          </button>
 
-{selectedSession && (
-  <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-lg">
-    <p><strong>Selected Date:</strong> {selectedSession.start.toLocaleDateString()}</p>
-    <p><strong>Selected Time:</strong> {selectedSession.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-  </div>
-)}
+          {selectedSession && (
+            <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-lg">
+              <p><strong>Selected Date:</strong> {selectedSession.start.toLocaleDateString()}</p>
+              <p><strong>Selected Time:</strong> {selectedSession.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+          )}
 
-<CalendarModal
-  isOpen={modalOpen}
-  onClose={() => setModalOpen(false)}
-  sessions={workshop.sessions}
-  onConfirm={(session) => setSelectedSession(session)}
-/>
-
+          <CalendarModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            sessions={workshop.sessions}
+            onConfirm={(session) => setSelectedSession(session)}
+          />
         </div>
 
         <div className="bg-gray-200 rounded p-4 w-full lg:w-1/3 min-h-[250px] shadow flex items-center justify-center text-center">
           <div>
             <h2 className="font-serif mb-2">Time slot<br />and<br />date verification</h2>
-            {/* Placeholder - Replace with actual selection logic */}
             <p className="text-gray-600">Feature coming soon</p>
           </div>
         </div>
       </div>
 
       <div className="text-center">
-        <button
-          className="bg-[#D2AE82] hover:bg-[#b79467] text-white py-2 px-6 rounded shadow text-sm font-medium"
-          onClick={() => alert("Booking functionality coming soon!")}
-        >
-          Add to Cart
-        </button>
+        <AddToCart 
+          item={{
+            _id: workshop._id,
+            price: workshop.price,
+            stock: workshop.stock,
+            maxSpots: workshop.maxSpots,
+            bookedSpots: workshop.bookedSpots,
+          }}
+          type="workshop"
+          showLabel={true}
+        />
       </div>
     </div>
   );

@@ -20,14 +20,7 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
       : false;
 
   const handleAddToCart = async () => {
-    const normalizedType = type?.toLowerCase?.(); // Safely lowercase
-    console.log("🛒 [AddToCart] Attempting to add to cart...");
-    console.log("👉 Raw type:", type);
-    console.log("👉 Normalized type:", normalizedType);
-    console.log("👉 Item ID (_id):", _id);
-    console.log("👉 Price:", price);
-    console.log("👉 Role from localStorage:", role);
-    console.log("👉 Token present:", !!token);
+    const normalizedType = type?.toLowerCase?.();
 
     if (!token || role !== "user") {
       toast.info("You need to be logged in as a user to add items to the cart.");
@@ -58,8 +51,6 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
         ],
       };
 
-      console.log("📦 Payload being sent to backend:", payload);
-
       const response = await axios.post(
         "http://localhost:3050/cart/add-to-cart",
         payload,
@@ -67,8 +58,6 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      console.log("✅ Backend responded with:", response.data);
 
       if (response.data.success) {
         toast.success(

@@ -1,4 +1,3 @@
-// components/Calendar.jsx
 import React from "react";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
@@ -18,28 +17,55 @@ const localizer = dateFnsLocalizer({
 });
 
 const Calendar = ({ sessions, onSelectSession }) => {
-  const events = sessions.map((session, index) => {
-    const start = new Date(session);
-    const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour
-    return {
-      id: index,
-      title: "Workshop Session",
-      start,
-      end,
-    };
-  });
+  const events = sessions
+    .filter((session) => session.start && !isNaN(new Date(session.start))) // Filter invalid sessions
+    .map((session, index) => {
+      const start = new Date(session.start);
+      const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
+      return {
+        id: index,
+        title: session.availableSpots > 0 ? "Available" : "Fully Booked",
+        start,
+        end,
+        availableSpots: session.availableSpots,
+        isFullyBooked: session.availableSpots === 0,
+      };
+    });
+
+  const defaultDate = events.length > 0 ? events[0].start : new Date();
 
   return (
-    <BigCalendar
-      localizer={localizer}
-      events={events}
-      startAccessor="start"
-      endAccessor="end"
-      views={["month", "week", "day"]}
-      popup
-      onSelectEvent={onSelectSession}
-      style={{ height: 300 }}
-    />
+    <div>
+      <BigCalendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        views={["month", "week", "day"]}
+        popup
+        defaultDate={defaultDate}
+        onSelectEvent={(event) => {
+          if (!event.isFullyBooked) {
+            onSelectSession(event);
+          } else {
+            alert("This session is fully booked.");
+          }
+        }}
+        style={{ height: 400 }}
+        components={{
+          event: ({ event }) => (
+            <div
+              className={`event-tooltip-wrapper ${
+                event.isFullyBooked ? "bg-red-500 text-white" : "bg-green-500 text-white"
+              }`}
+              title={`Available Spots: ${event.availableSpots}`}
+            >
+              {event.title}
+            </div>
+          ),
+        }}
+      />
+    </div>
   );
 };
 

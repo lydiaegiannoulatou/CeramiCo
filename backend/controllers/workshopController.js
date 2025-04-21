@@ -3,7 +3,7 @@ const Workshop= require("../models/WorkshopModel");
 //ALL CLASSES
 const getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find().sort({ date: 1 }); // Sorted by date
+    const classes = await Workshop.find().sort({ date: 1 }); // Sorted by date
     res.status(200).json(classes);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch classes", details: error.message });
@@ -13,9 +13,9 @@ const getAllClasses = async (req, res) => {
 // CLASS BY ID
 const getClassById = async (req, res) => {
   try {
-    const classItem = await Class.findById(req.params.id);
+    const classItem = await Workshop.findById(req.params.id);
     if (!classItem) {
-      return res.status(404).json({ error: "Class not found" });
+      return res.status(404).json({ error: "Workshop not found" });
     }
     res.status(200).json(classItem);
   } catch (error) {
@@ -49,7 +49,7 @@ const createClass = async (req, res) => {
     const sessions = generateSessions(parsedStartDate, recurringTime);
 
     // Create the new class object
-    const newClass = new Class({
+    const newClass = new Workshop({
       title,
       image, // Optional field
       instructor,
@@ -101,13 +101,13 @@ const generateSessions = (startDate, time) => {
 //UPDATE CLASS (ADMIN)
 const updateClass = async (req, res) => {
   try {
-    const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, {
+    const updatedClass = await Workshop.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
     if (!updatedClass) {
-      return res.status(404).json({ error: "Class not found" });
+      return res.status(404).json({ error: "Workshop not found" });
     }
 
     res.status(200).json(updatedClass);
@@ -119,12 +119,12 @@ const updateClass = async (req, res) => {
 //DELETE CLASS(ADMIN)
 const deleteClass = async (req, res) => {
   try {
-    const deletedClass = await Class.findByIdAndDelete(req.params.id);
+    const deletedClass = await Workshop.findByIdAndDelete(req.params.id);
     if (!deletedClass) {
-      return res.status(404).json({ error: "Class not found" });
+      return res.status(404).json({ error: "Workshop not found" });
     }
 
-    res.status(200).json({ message: "Class deleted successfully" });
+    res.status(200).json({ message: "Workshop deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete class", details: error.message });
   }
@@ -132,7 +132,7 @@ const deleteClass = async (req, res) => {
 
 const getClassesForCalendar = async (req, res) => {
     try {
-      const classes = await Class.find({ date: { $gte: new Date() } });
+      const classes = await Workshop.find({ date: { $gte: new Date() } });
   
       const calendarEvents = classes.map((classItem) => ({
         id: classItem._id,

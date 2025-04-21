@@ -118,7 +118,7 @@ const addToCart = async (req, res) => {
       })
       .populate({
         path: "items.workshop_id",
-        select: "workshopTitle sessionDate price",
+        select: "workshopTitle sessionDate price image",
       });
 
     if (!populatedCart) {

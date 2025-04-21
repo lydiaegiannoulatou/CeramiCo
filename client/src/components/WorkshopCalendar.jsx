@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import { format, parseISO } from "date-fns";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { parse, startOfWeek, getDay } from "date-fns";
+import React, { useEffect, useState } from "react";
+import { Calendar } from "react-big-calendar";
 import { dateFnsLocalizer } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import CalendarModal from "./CalendarModal";
+import enUS from "date-fns/locale/en-US";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 const locales = {
-  "en-US": require("date-fns/locale/en-US"),
+  "en-US": enUS,
 };
 
 const localizer = dateFnsLocalizer({
@@ -17,57 +18,64 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const WorkshopCalendar = ({ onSelectClass }) => {
-  const [events, setEvents] = useState([]);
+const WorkshopCalendar = () => {
+  const [sessions, setSessions] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchSessions = async () => {
       try {
-        const response = await fetch("/api/classes/calendar");
+        const response = await fetch("/api/sessions"); // Replace with your API endpoint
         const data = await response.json();
 
-        const formattedEvents = data.map((cls) => ({
-          id: cls.id,
-          title: cls.title,
-          start: new Date(cls.start),
-          end: new Date(new Date(cls.start).getTime() + 60 * 60 * 1000), // Default 1h duration
-          resource: cls.extendedProps,
-        }));
-
-        setEvents(formattedEvents);
+        // Validate and filter sessions
+        const validSessions = data.filter(
+          (session) => session.start && !isNaN(new Date(session.start))
+        );
+        setSessions(validSessions);
       } catch (error) {
-        console.error("Error fetching class data:", error);
+        console.error("Error fetching sessions:", error);
       }
     };
 
-    fetchClasses();
+    fetchSessions();
   }, []);
 
-  const handleSelectEvent = (event) => {
-    const { availableSpots } = event.resource;
+  const handleSelectSession = (session) => {
+    setSelectedSession(session);
+    setIsModalOpen(true);
+  };
 
-    if (availableSpots <= 0) {
-      alert("Sorry, this class is fully booked.");
-      return;
-    }
-
-    const confirm = window.confirm(`Do you want to book "${event.title}" on ${event.start.toLocaleString()}?`);
-    if (confirm) {
-      onSelectClass(event.id);
-    }
+  const handleConfirmBooking = (session) => {
+    console.log("Confirmed booking for:", session);
+    alert(`You have booked: ${session.title} on ${session.start}`);
   };
 
   return (
     <div style={{ height: "80vh" }}>
       <Calendar
         localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
+        events={sessions.map((session) => ({
+          id: session.id,
+          title: session.title,
+          start: new Date(session.start),
+          end: new Date(session.end),
+          availableSpots: session.availableSpots,
+        }))}
         style={{ height: "100%", padding: "1rem" }}
-        onSelectEvent={handleSelectEvent}
+        onSelectEvent={handleSelectSession}
         views={["month", "week", "day"]}
         popup
+      />
+
+      <CalendarModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        sessions={sessions}
+        selectedSession={selectedSession} 
+        onSelectSession={setSelectedSession}
+        onConfirm={handleConfirmBooking}
       />
     </div>
   );

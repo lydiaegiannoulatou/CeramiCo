@@ -1,12 +1,9 @@
-// components/CalendarModal.jsx
-import React, { useState } from "react";
+import React from "react";
 import { Dialog } from "@headlessui/react";
 import { X } from "lucide-react";
 import Calendar from "./Calendar";
 
-const CalendarModal = ({ isOpen, onClose, sessions, onConfirm }) => {
-  const [selectedSession, setSelectedSession] = useState(null);
-
+const CalendarModal = ({ isOpen, onClose, sessions, selectedSession, onSelectSession, onConfirm }) => {
   const handleConfirm = () => {
     if (selectedSession) {
       onConfirm(selectedSession);
@@ -26,21 +23,16 @@ const CalendarModal = ({ isOpen, onClose, sessions, onConfirm }) => {
             </button>
           </div>
 
-          <Calendar sessions={sessions} onSelectSession={setSelectedSession} />
+          <Calendar
+            sessions={sessions}
+            onSelectSession={onSelectSession}
+          />
 
           {selectedSession && (
             <div className="mt-4 bg-gray-100 p-4 rounded-lg">
-              <p>
-                <strong>Date:</strong>{" "}
-                {selectedSession.start.toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Time:</strong>{" "}
-                {selectedSession.start.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
+              <p><strong>Date:</strong> {new Date(selectedSession.start).toLocaleDateString()}</p>
+              <p><strong>Time:</strong> {new Date(selectedSession.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+              <p><strong>Available Spots:</strong> {selectedSession.availableSpots}</p>
               <button
                 onClick={handleConfirm}
                 className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
