@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import CloudinaryUpload from "../components/CloudinaryUpload"; // Import Cloudinary Upload Component
 
 const AdminCreateWorkshop = () => {
   const [formData, setFormData] = useState({
@@ -7,8 +9,10 @@ const AdminCreateWorkshop = () => {
     description: "",
     price: "",
     duration: "",
-    date: "",
+    startDate: "", // Start Date
+    recurringTime: "17:00", // Default recurring time (can be adjusted)
     maxSpots: "",
+    image: "", // For image URL from Cloudinary
   });
 
   const [message, setMessage] = useState(null);
@@ -18,20 +22,69 @@ const AdminCreateWorkshop = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageUpload = (uploadedImages) => {
+    // Set the image URL from the Cloudinary upload response
+    if (uploadedImages.length > 0) {
+      setFormData((prev) => ({ ...prev, image: uploadedImages[0] }));
+    }
+  };
+
+  // Function to generate the recurring dates
+  const generateRecurringDates = (startDate, durationMonths, recurringTime) => {
+    const dates = [];
+    let currentDate = new Date(startDate);
+
+    // Set the start time to 17:00 for each session
+    const [hour, minute] = recurringTime.split(":");
+    currentDate.setHours(hour, minute);
+
+    // Calculate the end date by adding the duration (in months) to the start date
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + durationMonths);
+
+    // Loop through the dates and add each Monday
+    while (currentDate <= endDate) {
+      // Add current date to the array
+      dates.push(new Date(currentDate));
+      // Move to the next Monday
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+
+    return dates;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
 
-    try {
-      const res = await fetch("/api/classes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    // Generate recurring sessions
+    const recurringDates = generateRecurringDates(
+      formData.startDate,
+      2, // 2 months duration for the workshop
+      formData.recurringTime
+    );
 
-      if (!res.ok) throw new Error("Failed to create workshop");
+    // Prepare the form data for submission
+    const workshopData = {
+      ...formData,
+      price: Number(formData.price), // Convert to number
+      maxSpots: Number(formData.maxSpots), // Convert to number
+      sessions: recurringDates, // Include the generated sessions
+    };
+const token = localStorage.getItem('token')
+try {
+  const res = await axios.post(
+    "http://localhost:3050/workshops/new_class",
+    workshopData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json", 
+      },
+    }
+  );
+
+      if (res.status !== 201) throw new Error("Failed to create workshop");
 
       setMessage("Workshop created successfully!");
       setFormData({
@@ -40,8 +93,10 @@ const AdminCreateWorkshop = () => {
         description: "",
         price: "",
         duration: "",
-        date: "",
+        startDate: "",
+        recurringTime: "17:00",
         maxSpots: "",
+        image: "",
       });
     } catch (err) {
       console.error(err);
@@ -94,19 +149,27 @@ const AdminCreateWorkshop = () => {
         <input
           type="text"
           name="duration"
-          placeholder="Duration (e.g., 2 hours)"
+          placeholder="Duration (e.g., 2 months)"
           value={formData.duration}
           onChange={handleChange}
           className="w-full border p-2 rounded"
           required
         />
         <input
-          type="datetime-local"
-          name="date"
-          value={formData.date}
+          type="date"
+          name="startDate"
+          value={formData.startDate}
           onChange={handleChange}
           className="w-full border p-2 rounded"
           required
+        />
+        <input
+          type="text"
+          name="recurringTime"
+          value={formData.recurringTime}
+          onChange={handleChange}
+          placeholder="Recurring Time (e.g., 17:00)"
+          className="w-full border p-2 rounded"
         />
         <input
           type="number"
@@ -117,6 +180,9 @@ const AdminCreateWorkshop = () => {
           className="w-full border p-2 rounded"
           required
         />
+
+        {/* Cloudinary image upload */}
+        <CloudinaryUpload onImagesUploaded={handleImageUpload} />
 
         <button
           type="submit"

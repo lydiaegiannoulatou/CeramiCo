@@ -49,24 +49,30 @@ const Checkout = () => {
       ) * 100
     );
 
+    const payload = {
+      items: cart.items.map((item) => ({
+        product_id: item.product_id._id,
+        quantity: item.quantity,
+        price: item.product_id.price,
+        type: item.type, 
+      })),
+      shippingAddress,
+      totalCost: totalCostInCents,
+      currency: "EUR",
+    };
+
+    console.log("Payload being sent to backend:", payload);
+
     try {
       const response = await axios.post(
         "http://localhost:3050/payment/checkout",
-        {
-          items: cart.items.map((item) => ({
-            product_id: item.product_id._id,
-            quantity: item.quantity,
-            price: item.product_id.price,
-          })),
-          shippingAddress,
-          totalCost: totalCostInCents,
-          currency: "EUR",
-        },
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log(response);
+      console.log("Response", response);
+
 
       // Redirect to Stripe Checkout
       window.location.href = response.data.url;
@@ -89,30 +95,39 @@ const Checkout = () => {
       {/* Left: Cart Summary */}
       <div className="md:w-1/2">
         <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
-        {cart.items.map((item) => (
-          <div
-            key={item.product_id._id}
-            className="flex items-center border-b py-4 gap-4"
-          >
-            <img
-              src={item.product_id.images[0]}
-              alt={item.product_id.title}
-              className="w-20 h-20 object-cover rounded"
-            />
-            <div className="flex-1">
-              <p className="font-semibold">{item.product_id.title}</p>
-              <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-              <p className="text-sm font-medium">
-                Subtotal: €{(item.quantity * item.product_id.price).toFixed(2)}
-              </p>
+        {cart.items
+          .filter((item) => {
+            if (!item.product_id) {
+              console.warn("Missing product_id for cart item:", item);
+              return false; // Exclude invalid items
+            }
+            return true;
+          })
+          .map((item) => (
+            <div
+              key={item.product_id._id}
+              className="flex items-center border-b py-4 gap-4"
+            >
+              <img
+                src={item.product_id.images?.[0] || "/placeholder-image.jpg"} // Fallback image
+                alt={item.product_id.title || "Product"}
+                className="w-20 h-20 object-cover rounded"
+              />
+              <div className="flex-1">
+                <p className="font-semibold">{item.product_id.title || "Unknown Product"}</p>
+                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                <p className="text-sm font-medium">
+                  Subtotal: €{(item.quantity * item.product_id.price || 0).toFixed(2)}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
         <p className="text-xl font-bold mt-4">
           Total: €
           {cart.items
+            .filter((item) => item.product_id) // Exclude invalid items
             .reduce(
-              (acc, item) => acc + item.quantity * item.product_id.price,
+              (acc, item) => acc + item.quantity * (item.product_id.price || 0),
               0
             )
             .toFixed(2)}

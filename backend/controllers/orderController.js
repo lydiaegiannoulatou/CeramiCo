@@ -1,4 +1,5 @@
 const Order = require("../models/orderModel");
+const Product = require("../models/productModel")
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
 
 // GET A SINGLE ORDER
@@ -7,7 +8,14 @@ const getOrder = async (req, res) => {
     const { sessionId } = req.params;
 
     const order = await Order.findOne({ stripeSessionId: sessionId })
-      .populate("items.product_id", "title images price");
+      .populate({
+        path: 'items.product_id', // Populate product_id for product items
+        select: 'title image images price',
+      })
+      .populate({
+        path: 'items.workshop_id', // Populate workshop_id for workshop items
+        select: 'classTitle sessionDate price',
+      });
 
     if (!order) {
       return res.status(404).send({ msg: "Order not found" });
@@ -20,24 +28,50 @@ const getOrder = async (req, res) => {
   }
 };
 
-//GET ALL ORDERS
-const getAllOrders = async (req, res) => {
+// Fetch all workshop orders
+const workshopOrders = async (req, res) => {
+  console.log("Route hit")
   try {
-    const orders = await Order.find() 
-      .sort({ createdAt: -1 }) //  sort orders by creation date (descending)
-      .populate("items.product_id", "title images price"); // Populate the product details in the order items
+    const orders = await Order.find({ "items.type": "workshop" })  // Filtering for workshop orders
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'items.workshop_id', // Populate workshop_id for workshop items
+        select: 'classTitle sessionDate price',
+      });
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ msg: "No orders found" });
+      return res.status(200).json({ msg: "No workshop orders yet", orders: [] });
     }
 
-    res.status(200).json({ msg: "Orders fetched successfully", orders });
+    res.status(200).json({ msg: "Workshop orders fetched successfully", orders });
   } catch (error) {
-    console.error("Error fetching all orders:", error);
+    console.error("Error fetching workshop orders:", error);
     res.status(500).send({ msg: "Something went wrong" });
   }
 };
 
+// Fetch all product orders
+const productOrders = async (req, res) => {
+  try {
+    const products = await Order.find({ "items.type": "product" })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'items.product_id', // Populate product_id for product items
+        select: 'title image images price',
+      });
+
+    console.log('Fetched product orders:', products);  // Log the result
+
+    if (!products || products.length === 0) {
+      return res.status(200).json({ msg: "No product orders found", products: [] });
+    }
+
+    res.status(200).json({ msg: "Product orders fetched successfully", products });
+  } catch (error) {
+    console.error("Error fetching product orders:", error);
+    res.status(500).send({ msg: "Something went wrong" });
+  }
+};
 
 // GET ALL ORDERS FOR A USER
 const getOrdersByUser = async (req, res) => {
@@ -46,7 +80,14 @@ const getOrdersByUser = async (req, res) => {
 
     const orders = await Order.find({ user_id: userId })
       .sort({ createdAt: -1 })
-      .populate("items.product_id", "title images price");
+      .populate({
+        path: 'items.product_id', // Populate product_id for product items
+        select: 'title image images price',
+      })
+      .populate({
+        path: 'items.workshop_id', // Populate workshop_id for workshop items
+        select: 'classTitle sessionDate price',
+      });
 
     res.status(200).send({ msg: "Orders fetched successfully", orders });
   } catch (error) {
@@ -133,8 +174,9 @@ const updateOrder = async (req, res) => {
 
 module.exports = {
   getOrder,
-  getAllOrders,
+  workshopOrders,
+  productOrders,
   getOrdersByUser,
   cancelOrder,
-  updateOrder,  
+  updateOrder,
 };

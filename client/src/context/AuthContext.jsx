@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
         user,
         setUser,
         isAuthReady,
-        refreshAuth: syncAuthState, // expose function to manually trigger refresh
+        refreshAuth: syncAuthState, 
       }}
     >
       {children}

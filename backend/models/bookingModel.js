@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema (
     {
         user_id:{ type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // References User model
-        class_id: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true }, // References Class model
+        workshop_id: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true }, // References Class model
         date: { type: Date, required: true, default: Date.now }, // Defaults to current date
         status: { 
             type: String, 

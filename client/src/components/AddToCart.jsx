@@ -3,70 +3,112 @@ import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const AddToCart = ({ product, showLabel = true }) => {
+const AddToCart = ({ item, type = "product", showLabel = true }) => {
   const [isAdding, setIsAdding] = useState(false);
   const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
 
-  // 🔒 Guard clause if product is not defined
-  if (!product || !product._id) return null;
+  if (!item || !item._id) return null;
 
-  const { _id, stock } = product;
+  const { _id, stock, maxSpots, bookedSpots, price } = item;
+
+  const isOutOfStock =
+    type === "product"
+      ? stock === 0
+      : type === "workshop"
+      ? bookedSpots >= maxSpots
+      : false;
 
   const handleAddToCart = async () => {
-    const token = localStorage.getItem("token");
+    const normalizedType = type?.toLowerCase?.(); // Safely lowercase
+    console.log("🛒 [AddToCart] Attempting to add to cart...");
+    console.log("👉 Raw type:", type);
+    console.log("👉 Normalized type:", normalizedType);
+    console.log("👉 Item ID (_id):", _id);
+    console.log("👉 Price:", price);
+    console.log("👉 Role from localStorage:", role);
+    console.log("👉 Token present:", !!token);
 
-    if (!token) {
-      toast.error("You need to be logged in to add items to the cart.");
+    if (!token || role !== "user") {
+      toast.info("You need to be logged in as a user to add items to the cart.");
       return;
     }
 
-    if (stock === 0) {
-      toast.warning("This product is currently out of stock.");
+    if (isOutOfStock) {
+      toast.warning(
+        normalizedType === "product"
+          ? "This product is currently out of stock."
+          : "This workshop is fully booked."
+      );
       return;
     }
 
     setIsAdding(true);
     try {
+      const payload = {
+        items: [
+          {
+            type: normalizedType,
+            quantity: 1,
+            price,
+            ...(normalizedType === "product"
+              ? { product_id: _id }
+              : { workshop_id: _id }),
+          },
+        ],
+      };
+
+      console.log("📦 Payload being sent to backend:", payload);
+
       const response = await axios.post(
         "http://localhost:3050/cart/add-to-cart",
-        {
-          items: [{ product_id: _id, quantity: 1 }],
-        },
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
+      console.log("✅ Backend responded with:", response.data);
+
       if (response.data.success) {
-        toast.success("Product added to the cart!");
+        toast.success(
+          normalizedType === "product"
+            ? "Product added to the cart!"
+            : "Workshop added to the cart!"
+        );
       } else {
-        toast.error(response.data.msg || "Failed to add product to cart.");
+        toast.error(response.data.msg || "Failed to add to cart.");
       }
     } catch (err) {
-      console.error("Error adding to cart:", err);
+      console.error("❌ Error adding to cart:", err);
       toast.error("Something went wrong. Please try again later.");
     } finally {
       setIsAdding(false);
     }
   };
 
-  // Only show if logged in user is a "user"
-  if (role !== "user") return null;
-
   return (
     <button
       onClick={handleAddToCart}
       className={`flex items-center justify-center ${
         showLabel ? "py-2 px-6" : "p-3"
-      } bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:bg-gray-400`}
-      disabled={isAdding || stock === 0}
-      title={stock === 0 ? "Out of stock" : "Add to cart"}
+      } bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition ${
+        isAdding || isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+      disabled={isAdding || isOutOfStock}
+      title={
+        !token || role !== "user"
+          ? "Login required"
+          : isOutOfStock
+          ? "Unavailable"
+          : "Add to cart"
+      }
     >
-      {stock === 0 ? (
+      {isOutOfStock ? (
         showLabel ? (
           <>
             <FaShoppingCart className="mr-2" />
-            Out of Stock
+            {type === "product" ? "Out of Stock" : "Fully Booked"}
           </>
         ) : (
           <FaShoppingCart />

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import AdminProfile from '../components/AdminProfile';
+import AdminProfile from "../AdminComponents/AdminProfile"
 import UserProfile from '../components/UserProfile';
 
 const ProfilePage = () => {

@@ -7,7 +7,7 @@ const {
   updateClass,
   deleteClass,
   getClassesForCalendar,
-} = require("../controllers/classController");
+} = require("../controllers/workshopController");
 const { authMiddleware, adminAccess } = require("../middleware/authMiddleware");
 
 router.get("/", getAllClasses);

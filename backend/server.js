@@ -10,11 +10,11 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const exhibitionRoutes = require("./routes/exhibitionRoutes");
-const classRoutes = require("./routes/classRoutes")
+const workshopRoutes = require("./routes/workshopRoutes")
 const bookingRoutes = require("./routes/bookingRoutes")
 const { stripeWebhook } = require("./controllers/paymentController");
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT
 
 app.post(
   "/payment/webhook",
@@ -34,7 +34,7 @@ app.use("/payment", paymentRoutes);
 app.use("/order", orderRoutes);
 app.use("/admin", adminRoutes);
 app.use("/exhibitions", exhibitionRoutes);
-app.use("/workshops",classRoutes)
+app.use("/workshops",workshopRoutes)
 app.use("/bookings", bookingRoutes)
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

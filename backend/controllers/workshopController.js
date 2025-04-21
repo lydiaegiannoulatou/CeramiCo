@@ -1,4 +1,4 @@
-const Class = require("../models/classModel");
+const Workshop= require("../models/WorkshopModel");
 
 //ALL CLASSES
 const getAllClasses = async (req, res) => {
@@ -26,24 +26,77 @@ const getClassById = async (req, res) => {
 //ADD NEW CLASS (ADMIN)
 const createClass = async (req, res) => {
   try {
-    const { title, instructor, description, price, duration, date, maxSpots } = req.body;
+    // Destructure the data from the request body
+    const { title, instructor, description, price, duration, startDate, recurringTime, maxSpots, image } = req.body;
 
+    // Validate required fields
+    if (!title || !instructor || !description || !price || !duration || !startDate || !recurringTime || !maxSpots) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    // Ensure the price and maxSpots are numbers
+    if (typeof price !== 'number' || typeof maxSpots !== 'number') {
+      return res.status(400).json({ error: "Price and maxSpots must be numbers." });
+    }
+
+    // Parse startDate if it's a string (e.g., datetime-local input)
+    const parsedStartDate = new Date(startDate);
+    if (isNaN(parsedStartDate)) {
+      return res.status(400).json({ error: "Invalid start date format." });
+    }
+
+    // Calculate the sessions based on recurringTime (e.g., every Monday at 5 PM)
+    const sessions = generateSessions(parsedStartDate, recurringTime);
+
+    // Create the new class object
     const newClass = new Class({
       title,
+      image, // Optional field
       instructor,
       description,
       price,
       duration,
-      date,
+      startDate: parsedStartDate,
+      recurringTime,
       maxSpots,
+      sessions, // Add the generated sessions to the class
     });
 
+    // Save the class to the database
     const savedClass = await newClass.save();
+
+    // Send a success response
     res.status(201).json(savedClass);
   } catch (error) {
+    console.error("Error creating class:", error);
     res.status(500).json({ error: "Failed to create class", details: error.message });
   }
 };
+
+// Helper function to generate sessions based on recurring time
+const generateSessions = (startDate, time) => {
+  const sessions = [];
+  const currentDate = new Date(startDate);
+
+  // Use provided time like "17:00"
+  const [hours, minutes] = time.split(":").map(Number);
+
+  currentDate.setHours(hours);
+  currentDate.setMinutes(minutes);
+  currentDate.setSeconds(0);
+
+  const endDate = new Date(currentDate);
+  endDate.setMonth(currentDate.getMonth() + 2);
+
+  while (currentDate <= endDate) {
+    sessions.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 7);
+  }
+
+  return sessions;
+};
+
+
 
 //UPDATE CLASS (ADMIN)
 const updateClass = async (req, res) => {

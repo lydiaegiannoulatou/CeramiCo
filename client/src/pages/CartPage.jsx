@@ -33,6 +33,7 @@ const Cart = () => {
         // Check for success message and retrieve cart
         if (response.data && response.data.cart) {
           setCart(response.data.cart);
+          console.log("Cart data:", response.data.cart); 
         } else if (response.status === 200) {
           // In case backend returns { cart: { items: [] } } or similar
           setCart({ items: [] });
@@ -138,67 +139,79 @@ const Cart = () => {
 
       {/* Cart items */}
       <div className="space-y-6">
-        {cart.items.map((item) => {
-          const { product_id, quantity } = item;
-          return (
-            <div
-              key={product_id._id}
-              className="flex items-center border-b pb-4 mb-4 last:mb-0 last:border-b-0"
-            >
-              <img
-                src={product_id.images[0]} // Display the first image of the product
-                alt={product_id.title}
-                className="w-24 h-24 object-cover rounded-lg mr-6"
-              />
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold">{product_id.title}</h2>
-                <p className="text-lg text-gray-600">Price: €{product_id.price}</p>
-                
-                {/* Quantity update buttons */}
-                <div className="flex items-center space-x-2 text-lg text-gray-600">
+        {cart.items
+          .filter((item) => {
+            if (!item.product_id) {
+              console.warn("Missing product_id for cart item:", item);
+              return false; // Exclude invalid items
+            }
+            return true;
+          })
+          .map((item) => {
+            const { product_id, quantity } = item;
+
+            return (
+              <div
+                key={product_id._id}
+                className="flex items-center border-b pb-4 mb-4 last:mb-0 last:border-b-0"
+              >
+                <img
+                  src={product_id.images?.[0] || "/placeholder-image.jpg"} // Fallback image
+                  alt={product_id.title || "Product"}
+                  className="w-24 h-24 object-cover rounded-lg mr-6"
+                />
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold">{product_id.title || "Unknown Product"}</h2>
+                  <p className="text-lg text-gray-600">Price: €{product_id.price || "N/A"}</p>
+                  
+                  {/* Quantity update buttons */}
+                  <div className="flex items-center space-x-2 text-lg text-gray-600">
+                    <button
+                      onClick={() => handleUpdateQuantity(product_id._id, quantity - 1)}
+                      className="text-blue-500 hover:text-blue-700"
+                      disabled={quantity <= 1}
+                    >
+                      <FaArrowDown />
+                    </button>
+                    <span>Quantity: {quantity}</span>
+                    <button
+                      onClick={() => handleUpdateQuantity(product_id._id, quantity + 1)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <FaArrowUp />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Product total price */}
+                <div className="text-right">
+                  <p className="text-xl font-bold text-green-600">
+                    €{(product_id.price * quantity).toFixed(2) || "N/A"}
+                  </p>
+                </div>
+
+                {/* Delete button */}
+                <div className="ml-4">
                   <button
-                    onClick={() => handleUpdateQuantity(product_id._id, quantity - 1)}
-                    className="text-blue-500 hover:text-blue-700"
-                    disabled={quantity <= 1}
+                    onClick={() => handleRemoveProduct(product_id._id)}
+                    className="text-red-500 hover:text-red-700"
                   >
-                    <FaArrowDown />
-                  </button>
-                  <span>Quantity: {quantity}</span>
-                  <button
-                    onClick={() => handleUpdateQuantity(product_id._id, quantity + 1)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FaArrowUp />
+                    <FaTrash />
                   </button>
                 </div>
               </div>
-
-              {/* Product total price */}
-              <div className="text-right">
-                <p className="text-xl font-bold text-green-600">
-                  €{(product_id.price * quantity).toFixed(2)}
-                </p>
-              </div>
-
-              {/* Delete button */}
-              <div className="ml-4">
-                <button
-                  onClick={() => handleRemoveProduct(product_id._id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Total Price */}
       <div className="flex justify-between items-center py-4 mt-6 border-t">
         <h2 className="text-2xl font-semibold">Total:</h2>
         <p className="text-xl font-bold text-green-600">
-          €{cart.items.reduce((acc, item) => acc + item.quantity * item.product_id.price, 0).toFixed(2)}
+          €{cart.items
+            .filter((item) => item.product_id) // Exclude invalid items
+            .reduce((acc, item) => acc + item.quantity * item.product_id.price, 0)
+            .toFixed(2)}
         </p>
       </div>
 

@@ -14,6 +14,42 @@ const shippingAddressSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const orderItemSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["product", "workshop"],
+      required: true,
+    },
+    product_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product", // Corrected: Matches the model name in productModel.js
+      required: function () {
+        return this.type === "product"; // Only required if type is "product"
+      },
+    },
+    workshop_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workshop",
+      required: function () {
+        return this.type === "workshop"; // Only required if type is "workshop"
+      },
+    },
+    quantity: {
+      type: Number,
+      required: function () {
+        return this.type === "product"; // Only required if type is "product"
+      },
+    },
+    price: { type: Number, required: true }, // In cents
+
+    // Workshop-specific fields
+    sessionDate: { type: Date },
+    classTitle: { type: String },
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     user_id: {
@@ -21,17 +57,8 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    items: [
-      {
-        product_id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        quantity: { type: Number, required: true },
-        price: { type: Number, required: true }, // In cents
-      },
-    ],
+    items: [orderItemSchema],
+
     totalCost: {
       type: Number,
       required: true, // In cents

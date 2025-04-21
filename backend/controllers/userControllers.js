@@ -35,7 +35,7 @@ const loginUser = async (req, res) => {
       email: isUserRegistered.email,
       role: isUserRegistered.role,
     };
-    let token = await jwt.sign(payload, secretKey);
+    let token = await jwt.sign(payload, secretKey, { expiresIn: "2h" });
     console.log(token);
 
     return res.send({ msg: "Login Successfully!", token });

@@ -42,18 +42,27 @@ const ProductDetailsPage = () => {
           <p className="text-lg text-gray-800 mb-4">{product.description}</p>
 
           <div className="mb-4">
-            <p><strong>Stock:</strong> {product.stock}</p>
-            <p><strong>Price:</strong> {product.price}€</p>
+            <p>
+              <strong>Stock:</strong> {product.stock}
+            </p>
+            <p>
+              <strong>Price:</strong> {product.price}€
+            </p>
           </div>
 
           {error && <div className="text-red-500 mb-2">{error}</div>}
 
-          {userRole === "user" ? (
-            <AddToCart product={product} showLabel={true} />
-          ) : (
+          {userRole === "admin" ? (
             <p className="text-gray-500 italic">
               Admins cannot add products to the cart.
             </p>
+          ) : (
+            <AddToCart
+              item={product}
+              type="Product"
+              showLabel={true}
+              disabled={userRole !== "user"}
+            />
           )}
         </div>
       </div>

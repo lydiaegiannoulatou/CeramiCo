@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const WorkshopPage = () => {
   const [classes, setClasses] = useState([]);
@@ -7,9 +8,8 @@ const WorkshopPage = () => {
   useEffect(() => {
     const fetchWorkshops = async () => {
       try {
-        const response = await fetch("/api/classes");
-        const data = await response.json();
-        setClasses(data);
+        const response = await axios.get("http://localhost:3050/workshops");
+        setClasses(response.data);
       } catch (err) {
         console.error("Failed to fetch workshops", err);
       }
@@ -27,12 +27,23 @@ const WorkshopPage = () => {
           <Link
             to={`/workshops/${workshop._id}`}
             key={workshop._id}
-            className="border rounded-xl p-4 shadow hover:shadow-lg transition"
+            className="border rounded-xl p-4 shadow hover:shadow-lg transition flex flex-col"
           >
+            {workshop.image && (
+              <img
+                src={workshop.image}
+                alt={workshop.title}
+                className="h-40 w-full object-cover rounded-md mb-4"
+              />
+            )}
             <h2 className="text-xl font-semibold">{workshop.title}</h2>
             <p className="text-sm text-gray-600">{workshop.instructor}</p>
-            <p className="mt-2 text-gray-700">{workshop.description.slice(0, 80)}...</p>
-            <p className="mt-2 font-medium">€{workshop.price}</p>
+            <p className="mt-2 text-gray-700">
+              {workshop.description.length > 80
+                ? `${workshop.description.slice(0, 80)}...`
+                : workshop.description}
+            </p>
+            <p className="mt-2 font-medium text-blue-600">€{workshop.price}</p>
           </Link>
         ))}
       </div>
