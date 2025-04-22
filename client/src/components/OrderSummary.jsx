@@ -14,6 +14,8 @@ const OrderSummary = ({ order }) => {
     createdAt,
   } = order;
 
+  console.log("user_id:", user_id);
+  
   return (
     <div className="border p-6 rounded-lg shadow-md bg-white mt-6">
       <h2 className="text-2xl font-bold mb-4">Order Confirmation</h2>
@@ -34,10 +36,10 @@ const OrderSummary = ({ order }) => {
       </p>
       <h3 className="font-semibold mt-4">User Details:</h3>
       <p>
-        <strong>Name:</strong> {user_id?.fullName || "N/A"}
+        <strong>Name:</strong> {user_id.name || "N/A"}
       </p>
       <p>
-        <strong>Email:</strong> {user_id?.email || "N/A"}
+        <strong>Email:</strong> {user_id.email || "N/A"}
       </p>
       <h3 className="font-semibold mt-4">Items:</h3>
 {Array.isArray(items) && items.length > 0 ? (

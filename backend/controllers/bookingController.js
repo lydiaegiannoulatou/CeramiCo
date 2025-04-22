@@ -36,23 +36,20 @@ const getBookingById = async (req, res) => {
 
 // 🟢 Fetch bookings for the logged-in user
 const bookingsByUser = async (req, res) => {
-  console.log(req);
   try {
-   
-    
-    
+    // Get userId from authenticated user (populated by authMiddleware)
     const userId = req.user.userId;
     console.log("Decoded userId from token:", userId);
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid user ID" });
-    }
 
     if (!userId) {
       console.log("User ID not found in the request");
       return res
         .status(400)
         .json({ error: "User ID not found in the request" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID format" });
     }
 
     console.log("Fetching bookings for user with ID:", userId);
@@ -65,7 +62,7 @@ const bookingsByUser = async (req, res) => {
 
     if (bookings.length === 0) {
       console.log(`No bookings found for user ${userId}`);
-      return res.status(404).json({ error: "No bookings found for this user" });
+      return res.status(200).json({ bookings: [] }); // Return empty array instead of 404
     }
 
     res.status(200).json({ bookings });
@@ -75,7 +72,7 @@ const bookingsByUser = async (req, res) => {
 
     res
       .status(500)
-      .json({ error: "Failed to fetch user bookings", details: error.stack });
+      .json({ error: "Failed to fetch user bookings", details: error.message });
   }
 };
 

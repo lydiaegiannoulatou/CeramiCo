@@ -13,7 +13,7 @@ const getOrder = async (req, res) => {
 
     // Find the order by sessionId and populate user details
     const order = await Order.findOne({ stripeSessionId: sessionId })
-      .populate("user_id", "fullName email") // Populate user details
+      .populate("user_id", "name email") // Populate user details
       .populate("items.product_id", "title images")
 
 

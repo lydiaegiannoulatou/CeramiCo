@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import OrderSummary from "../components/OrderSummary";
 
 const UserOrders = ({ token }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -22,6 +24,14 @@ const UserOrders = ({ token }) => {
     fetchOrders();
   }, [token]);
 
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const closeModal = () => {
+    setSelectedOrder(null);
+  };
+
   if (loading) return <p>Loading orders...</p>;
 
   return (
@@ -31,7 +41,11 @@ const UserOrders = ({ token }) => {
         <p>You have no orders yet.</p>
       ) : (
         orders.map((order) => (
-          <div key={order._id} className="bg-white border rounded-xl p-4 mb-4 shadow-md">
+          <div
+            key={order._id}
+            className="bg-white border rounded-xl p-4 mb-4 shadow-md cursor-pointer"
+            onClick={() => handleOrderClick(order)}
+          >
             <div className="flex justify-between items-center">
               <span className="font-medium">{order._id}</span>
               <span
@@ -40,7 +54,6 @@ const UserOrders = ({ token }) => {
                 {order.orderStatus}
               </span>
             </div>
-            {/* Render the order items here */}
             <div className="flex gap-4 mt-3 overflow-x-auto">
               {order.items.map((item) => (
                 <div key={item._id} className="w-20 h-20 flex-shrink-0">
@@ -61,11 +74,25 @@ const UserOrders = ({ token }) => {
           </div>
         ))
       )}
+
+      {/* MODAL */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full relative p-6">
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              &times;
+            </button>
+            <OrderSummary order={selectedOrder} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Helper function to get the status color for orders
 const getStatusColor = (status) => {
   switch (status) {
     case "processing":
