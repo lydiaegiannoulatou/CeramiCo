@@ -6,7 +6,7 @@ function authMiddleware(req, res, next) {
   if (!authHeader) return res.status(401).send({ msg: "Unauthorized User" });
 
   let clientToken = authHeader.split(" ")[1];
-  console.log(clientToken);
+  // console.log(clientToken);
   try {
     let decodedToken = jwt.verify(clientToken, process.env.SECRET_KEY);
     console.log(decodedToken);

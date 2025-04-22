@@ -1,7 +1,6 @@
 const Booking = require("../models/bookingModel");
 const Workshop = require("../models/workshopModel");
-const Order = require("../models/orderModel");
-const User = require("../models/userModel")
+const User = require("../models/userModel");
 
 // 🟢 Fetch all bookings (Admin only)
 const getAllBookings = async (req, res) => {
@@ -12,7 +11,9 @@ const getAllBookings = async (req, res) => {
 
     res.status(200).json({ bookings });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch bookings", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch bookings", details: error.message });
   }
 };
 
@@ -27,27 +28,61 @@ const getBookingById = async (req, res) => {
 
     res.status(200).json(booking);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch booking", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch booking", details: error.message });
   }
 };
 
 // 🟢 Fetch bookings for the logged-in user
 const bookingsByUser = async (req, res) => {
+  console.log(req);
   try {
-    const userId = req.user._id;
+   
+    
+    
+    const userId = req.user.userId;
+    console.log("Decoded userId from token:", userId);
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    if (!userId) {
+      console.log("User ID not found in the request");
+      return res
+        .status(400)
+        .json({ error: "User ID not found in the request" });
+    }
+
+    console.log("Fetching bookings for user with ID:", userId);
+
     const bookings = await Booking.find({ user_id: userId })
+      .sort({ createdAt: -1 })
       .populate("workshop_id", "classTitle sessionDate instructor image");
+
+    console.log("Bookings found:", bookings);
+
+    if (bookings.length === 0) {
+      console.log(`No bookings found for user ${userId}`);
+      return res.status(404).json({ error: "No bookings found for this user" });
+    }
 
     res.status(200).json({ bookings });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user bookings", details: error.message });
+    console.error("Error fetching user bookings:", error.message);
+    console.error("Error fetching user bookings:", error);
+
+    res
+      .status(500)
+      .json({ error: "Failed to fetch user bookings", details: error.stack });
   }
 };
 
 // 🟢 Handle Book Now (after payment success)
 const handleBookNow = async (req, res) => {
   try {
-    const { workshopId, userId, sessionId } = req.body;  // Include sessionId in the request body
+    const { workshopId, userId, sessionId } = req.body; // Include sessionId in the request body
 
     // Find the workshop by its ID
     const workshop = await Workshop.findById(workshopId);
@@ -59,16 +94,21 @@ const handleBookNow = async (req, res) => {
     }
 
     // Check if the user has already booked the workshop
-    const alreadyBooked = await Booking.findOne({ user_id: userId, workshop_id: workshopId });
+    const alreadyBooked = await Booking.findOne({
+      user_id: userId,
+      workshop_id: workshopId,
+    });
     if (alreadyBooked) {
-      return res.status(400).json({ error: "User already booked this workshop" });
+      return res
+        .status(400)
+        .json({ error: "User already booked this workshop" });
     }
 
     // Create a new booking with status "pending"
     const booking = new Booking({
       user_id: userId,
       workshop_id: workshopId,
-      sessionId: sessionId,  // Save the sessionId in the booking
+      sessionId: sessionId, // Save the sessionId in the booking
       date: workshop.sessionDate,
       status: "pending",
       paymentStatus: "pending", // Payment status will be updated later
@@ -84,10 +124,11 @@ const handleBookNow = async (req, res) => {
     res.status(201).json({ success: true, booking });
   } catch (error) {
     console.error("Error booking workshop:", error);
-    res.status(500).json({ error: "Booking process failed", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Booking process failed", details: error.message });
   }
 };
-
 
 const getBookingSuccess = async (req, res) => {
   const { sessionId } = req.params;
@@ -136,12 +177,10 @@ const getBookingSuccess = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   getAllBookings,
   getBookingById,
   bookingsByUser,
   handleBookNow,
-  getBookingSuccess
+  getBookingSuccess,
 };

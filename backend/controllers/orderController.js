@@ -66,11 +66,7 @@ const getOrdersByUser = async (req, res) => {
         path: 'items.product_id', // Populate product_id for product items
         select: 'title image images price',
       })
-      .populate({
-        path: 'items.workshop_id', // Populate workshop_id for workshop items
-        select: 'classTitle sessionDate price',
-      });
-
+     
     res.status(200).send({ msg: "Orders fetched successfully", orders });
   } catch (error) {
     console.error("Error fetching orders for user:", error);

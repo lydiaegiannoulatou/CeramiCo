@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import AdminProfile from "../AdminComponents/AdminProfile"
-import UserProfile from '../components/UserProfile';
+import UserProfile from '../UserProfile/UserProfile';
 
 const ProfilePage = () => {
   const { user, isAuthReady } = useContext(AuthContext);

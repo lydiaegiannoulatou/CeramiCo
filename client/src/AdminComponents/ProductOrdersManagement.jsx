@@ -2,32 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import OrderSummary from "../components/OrderSummary";
 
-// Error Boundary to catch any errors in this component and prevent a crash
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    // Update state to indicate an error occurred
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, info) {
-    // Log error information
-    console.error("Error caught by boundary:", error, info);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // Fallback UI if there's an error
-      return <h1>Something went wrong while loading the orders.</h1>;
-    }
-
-    return this.props.children;
-  }
-}
 
 const AdminOrderPage = () => {
   const [orders, setOrders] = useState([]);
@@ -54,9 +28,9 @@ const AdminOrderPage = () => {
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
-        setOrders([]);  // Prevent the app from crashing
+        setOrders([]);  
       } finally {
-        setLoading(false);  // Ensure that loading is stopped after the request
+        setLoading(false); 
       }
     };
 
