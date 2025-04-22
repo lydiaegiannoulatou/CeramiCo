@@ -1,4 +1,4 @@
-const Workshop= require("../models/WorkshopModel");
+const Workshop= require("../models/workshopModel");
 
 //ALL CLASSES
 const getAllClasses = async (req, res) => {
@@ -11,17 +11,44 @@ const getAllClasses = async (req, res) => {
 };
 
 // CLASS BY ID
+// GET workshop by ID (with session availability)
 const getClassById = async (req, res) => {
   try {
     const classItem = await Workshop.findById(req.params.id);
     if (!classItem) {
       return res.status(404).json({ error: "Workshop not found" });
     }
-    res.status(200).json(classItem);
+
+    console.log("Workshop fetched:", classItem);  // Log the workshop item
+
+    // Calculate available spots for each session
+    const sessionsWithAvailability = classItem.sessions.map((session) => {
+      console.log("Processing session:", session); // Log each session to see if sessionDate is available
+
+      return {
+        sessionDate: session.sessionDate, // Log if sessionDate is coming through correctly
+        bookedSpots: session.bookedSpots,
+        availableSpots: classItem.maxSpots - session.bookedSpots,
+        _id: session._id,
+      };
+    });
+
+    console.log("Sessions with availability:", sessionsWithAvailability); // Log the final result
+
+    const workshopWithSessions = {
+      ...classItem.toObject(),
+      sessions: sessionsWithAvailability,
+    };
+
+    res.status(200).json(workshopWithSessions);
   } catch (error) {
+    console.error("Error in getClassById:", error);
     res.status(500).json({ error: "Failed to fetch class", details: error.message });
   }
 };
+
+
+
 
 //ADD NEW CLASS (ADMIN)
 const createClass = async (req, res) => {
@@ -78,9 +105,7 @@ const generateSessions = (startDate, time) => {
   const sessions = [];
   const currentDate = new Date(startDate);
 
-  // Use provided time like "17:00"
   const [hours, minutes] = time.split(":").map(Number);
-
   currentDate.setHours(hours);
   currentDate.setMinutes(minutes);
   currentDate.setSeconds(0);
@@ -89,7 +114,7 @@ const generateSessions = (startDate, time) => {
   endDate.setMonth(currentDate.getMonth() + 2);
 
   while (currentDate <= endDate) {
-    sessions.push(new Date(currentDate));
+    sessions.push({ sessionDate: new Date(currentDate), bookedSpots: 0 });
     currentDate.setDate(currentDate.getDate() + 7);
   }
 
@@ -152,6 +177,42 @@ const getClassesForCalendar = async (req, res) => {
     }
   };
   
+  // BOOK A SESSION (User selects a specific session)
+const bookSession = async (req, res) => {
+  try {
+    const { workshopId, sessionId } = req.body; // Receiving the workshopId and sessionId from the client
+
+    const workshop = await Workshop.findById(workshopId);
+
+    if (!workshop) {
+      return res.status(404).json({ error: "Workshop not found" });
+    }
+
+    // Find the selected session
+    const session = workshop.sessions.id(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    // Check if there are available spots
+    if (session.bookedSpots >= workshop.maxSpots) {
+      return res.status(400).json({ error: "No available spots for this session" });
+    }
+
+    // Increment the booked spots for this session
+    session.bookedSpots += 1;
+
+    // Save the workshop with updated session data
+    await workshop.save();
+
+    res.status(200).json({ success: true, message: "Booking confirmed" });
+  } catch (error) {
+    console.error("Error booking session:", error);
+    res.status(500).json({ error: "Failed to book session", details: error.message });
+  }
+};
+
 
 module.exports = {
   getAllClasses,
@@ -160,4 +221,5 @@ module.exports = {
   updateClass,
   deleteClass,
   getClassesForCalendar,
+  bookSession
 };

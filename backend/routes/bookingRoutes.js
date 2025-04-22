@@ -3,18 +3,17 @@ const router = express.Router();
 const {
   getAllBookings,
   getBookingById,
-  createBooking,
-  updateBooking,
-  deleteBooking,
-  bookingsByUser
+  bookingsByUser,
+  handleBookNow,
+  getBookingSuccess
 } = require("../controllers/bookingController");
-const{authMiddleware, adminAccess}= require("../middleware/authMiddleware")
+const { authMiddleware, adminAccess } = require("../middleware/authMiddleware");
 
-router.get("/",authMiddleware,adminAccess,getAllBookings)
-router.get("/:id",authMiddleware,getBookingById)
-router.get("/user", authMiddleware, bookingsByUser)
-router.post("new_booking",authMiddleware,createBooking)
-router.put("update/:id",authMiddleware,updateBooking)
-router.delete("delete/:id",authMiddleware,deleteBooking)
+// Create a new booking
+router.get("/", authMiddleware, adminAccess, getAllBookings);
+router.get("/:id", authMiddleware, getBookingById);
+router.get("/user", authMiddleware, bookingsByUser);
+router.post("/book-now", authMiddleware, handleBookNow);
+router.get("/success/:sessionId", authMiddleware, getBookingSuccess);
 
 module.exports = router;

@@ -3,105 +3,131 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
-const Workshop = require("../models/WorkshopModel");
+const Workshop = require("../models/workshopModel");
 const Cart = require("../models/cartModel");
-
+const Booking = require("../models/bookingModel");
+const User = require("../models/userModel")
 // Create Checkout Session
+
 const createCheckoutSession = async (req, res) => {
-  const { items, shippingAddress } = req.body;
+  const { items } = req.body;
   const userId = req.user.userId;
+  const userEmail = req.user.email;
 
   try {
-    // Validate and format line_items
-    const line_items = await Promise.all(
-      items.map(async (item) => {
-        if (item.type === "product") {
-          const product = await Product.findById(item.id);
-          if (!product) throw new Error(`Product not found: ${item.id}`);
+    const line_items = [];
+    const productItems = [];
+    const bookings = [];
 
-          if (!product.stripePriceId) {
-            throw new Error(
-              `Product ${item.id} does not have a valid Stripe price ID.`
-            );
-          }
+    let sessionType = "";
 
-          if (item.quantity > product.stock) {
-            throw new Error(
-              `Requested quantity for ${product.title} exceeds available stock.`
-            );
-          }
-
-          return {
-            price: product.stripePriceId,
-            quantity: item.quantity,
-          };
-        } else if (item.type === "workshop") {
-          const workshop = await Workshop.findById(item.id);
-          if (!workshop) throw new Error(`Workshop not found: ${item.id}`);
-
-          return {
-            price_data: {
-              currency: "EUR",
-              product_data: {
-                name: workshop.title,
-                description: `Workshop on ${workshop.sessionDate}`,
-              },
-              unit_amount: item.price * 100,
-            },
-            quantity: item.quantity,
-          };
-        } else {
-          throw new Error(`Invalid item type: ${item.type}`);
+    for (const item of items) {
+      if (item.type === "product") {
+        const product = await Product.findById(item.id);
+        if (!product || !product.stripePriceId) {
+          throw new Error(`Invalid product or missing Stripe price ID`);
         }
-      })
-    );
+        if (item.quantity > product.stock) {
+          throw new Error(`Insufficient stock for product: ${product.title}`);
+        }
 
-    // Create Stripe Checkout Session
+        // Stripe line item
+        line_items.push({
+          price: product.stripePriceId,
+          quantity: item.quantity,
+        });
+
+        // Prepare order item
+        productItems.push({
+          type: "product",
+          product_id: product._id,
+          quantity: item.quantity,
+          price: product.price,
+        });
+        sessionType = "product";
+      } else if (item.type === "workshop") {
+        const workshop = await Workshop.findById(item.id);
+        const session = workshop.sessions.id(item.sessionId);
+
+        if (!workshop || !session) {
+          throw new Error("Invalid workshop or session");
+        }
+
+        // Stripe line item for workshop
+        line_items.push({
+          price_data: {
+            currency: "EUR",
+            product_data: {
+              name: `${workshop.title} - ${new Date(
+                session.sessionDate
+              ).toLocaleString()}`,
+              description: "Workshop booking",
+            },
+            unit_amount: Math.round(workshop.price * 100),
+          },
+          quantity: 1,
+        });
+
+        bookings.push({
+          user_id: userId,
+          workshop_id: workshop._id,
+          sessionId: session.id,
+          image: workshop.image,
+          date: session.sessionDate,
+        });
+        sessionType = "workshop";
+      }
+    }
+
+    const totalCost =
+      [...productItems].reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      ) + bookings.reduce((acc, b) => acc + b.price || 0, 0);
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      mode: "payment",
       line_items,
-      customer_email: req.user.email,
-      success_url: `${process.env.DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}`,
+      mode: "payment",
+      customer_email: userEmail,
+      success_url: `${process.env.DOMAIN}/success?session_id={CHECKOUT_SESSION_ID}&type=${sessionType}`,
       cancel_url: `${process.env.DOMAIN}/cancel`,
     });
 
-    // Save order to DB
-    const newOrder = new Order({
-      user_id: userId,
-      items: items.map((item) => ({
-        type: item.type,
-        quantity: item.quantity,
-        price: item.price,
-        ...(item.type === 'product' && { product_id: item.id }),
-        ...(item.type === 'workshop' && { workshop_id: item.id }),
-      })),
-      totalCost: items.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0
-      ),
-      paymentStatus: "pending",
-      shippingAddress,
-      stripeSessionId: session.id,
-      currency: "EUR",
-    });
+    // Save product order only (if any)
+    if (productItems.length > 0) {
+      const newOrder = new Order({
+        user_id: userId,
+        items: productItems,
+        totalCost,
+        paymentStatus: "pending",
+        stripeSessionId: session.id,
+        currency: "EUR",
+      });
+      await newOrder.save();
+    }
 
-    await newOrder.save();
+    // Save booking as pending (to be confirmed on payment)
+    for (const b of bookings) {
+      const booking = new Booking({
+        ...b,
+        sessionId: session.id,
+        status: "pending",
+        paymentStatus: "pending",
+      });
+      await booking.save();
+    }
 
-    // Respond with session URL for redirect
     res.status(200).json({ url: session.url });
   } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ msg: err.message || "Error creating checkout session" });
+    console.error("Error creating checkout session:", err);
+    res.status(500).json({ msg: "Error creating checkout session" });
   }
 };
 
 // Stripe Webhook (to handle payment updates)
 const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
-
   let event;
 
   try {
@@ -121,47 +147,62 @@ const stripeWebhook = async (req, res) => {
     const session = event.data.object;
 
     try {
+      // 1. Update order
       const order = await Order.findOne({ stripeSessionId: session.id });
-
       if (order) {
         order.paymentStatus = "paid";
         order.stripePaymentIntentId = session.payment_intent;
         await order.save();
-        console.log(order.items);
 
-        //  Update stock
+        // 2. Update stock
         for (const item of order.items) {
-          const product = await Product.findById(item.product_id);
-          if (product) {
-            product.stock = Math.max(0, product.stock - item.quantity);
-            await product.save();
+          if (item.type === "product") {
+            const product = await Product.findById(item.product_id);
+            if (product) {
+              product.stock = Math.max(0, product.stock - item.quantity);
+              await product.save();
+            }
           }
         }
-
-        if (item.type === "workshop") {
-          const workshop = await Workshop.findById(item.workshop_id);
-          if (workshop) {
-            workshop.bookedSpots = Math.max(
-              0,
-              workshop.bookedSpots + item.quantity
-            );
-            await workshop.save();
-          }
-        }
-
-        // Clear cart
-        await Cart.findOneAndDelete({ user_id: order.user_id });
-
-        console.log(
-          `✅ Payment succeeded, stock updated and cart cleared for user: ${order.user_id}`
-        );
       }
+
+      // 3. Confirm all pending bookings for this user
+      const userId =
+        order?.user_id ||
+        (await User.findOne({ email: session.customer_email }))?._id;
+      const bookings = await Booking.find({
+        user_id: userId,
+        paymentStatus: "pending",
+      });
+
+      for (const booking of bookings) {
+        const workshop = await Workshop.findById(booking.workshop_id);
+        const sessionIndex = workshop.sessions.findIndex(
+          (s) =>
+            new Date(s.sessionDate).getTime() ===
+            new Date(booking.date).getTime()
+        );
+
+        if (sessionIndex !== -1) {
+          workshop.sessions[sessionIndex].bookedSpots += 1;
+          await workshop.save();
+
+          booking.status = "confirmed";
+          booking.paymentStatus = "paid";
+          await booking.save();
+        }
+      }
+
+      // 4. Clear cart
+      await Cart.findOneAndDelete({ user_id: userId });
+
+      console.log(`✅ Payment processed for user ${userId}`);
     } catch (err) {
-      console.error("Error during webhook processing:", err);
+      console.error("❌ Error handling webhook:", err);
     }
   }
 
-  res.status(200).send("Webhook received");
+  res.status(200).send("Webhook processed");
 };
 
 module.exports = {

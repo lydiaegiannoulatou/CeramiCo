@@ -58,7 +58,7 @@ const Navbar = () => {
     setUserId(null);
     setRole(null);
     refreshAuth();
-    navigate("/login");
+    navigate("/");
   };
 
   return (

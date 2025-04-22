@@ -1,6 +1,6 @@
 const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
-const Workshop = require("../models/WorkshopModel"); 
+const Workshop = require("../models/workshopModel"); 
 
 // Utility function to check if MongoDB ObjectId is valid
 const mongoose = require('mongoose');

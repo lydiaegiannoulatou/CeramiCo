@@ -4,72 +4,65 @@ const OrderSummary = ({ order }) => {
   if (!order) return null;
 
   const {
-    _id,
-    createdAt,
-    paymentStatus,
+    orderNumber,
     orderStatus,
-    shippingAddress,
-    items,
+    paymentStatus,
     totalCost,
     currency,
+    user_id,
+    items,
+    createdAt,
   } = order;
 
   return (
     <div className="border p-6 rounded-lg shadow-md bg-white mt-6">
-      <h2 className="text-2xl font-bold mb-4">Order #{_id}</h2>
+      <h2 className="text-2xl font-bold mb-4">Order Confirmation</h2>
       <p>
-        <strong>Placed on:</strong> {new Date(createdAt).toLocaleDateString()}
+        <strong>Order Number:</strong> {orderNumber}
+      </p>
+      <p>
+        <strong>Status:</strong> {orderStatus}
       </p>
       <p>
         <strong>Payment Status:</strong> {paymentStatus}
       </p>
       <p>
-        <strong>Order Status:</strong> {orderStatus}
+        <strong>Total Cost:</strong> {totalCost} {currency}
       </p>
-
-      <div className="my-4">
-        <h3 className="font-semibold">Shipping Address:</h3>
-        <p>{shippingAddress.fullName}</p>
-        <p>{shippingAddress.addressLine1}</p>
-        {shippingAddress.addressLine2 && <p>{shippingAddress.addressLine2}</p>}
+      <p>
+        <strong>Order Date:</strong> {new Date(createdAt).toLocaleString()}
+      </p>
+      <h3 className="font-semibold mt-4">User Details:</h3>
+      <p>
+        <strong>Name:</strong> {user_id?.fullName || "N/A"}
+      </p>
+      <p>
+        <strong>Email:</strong> {user_id?.email || "N/A"}
+      </p>
+      <h3 className="font-semibold mt-4">Items:</h3>
+{Array.isArray(items) && items.length > 0 ? (
+  <ul>
+    {items.map((item, index) => (
+      <li key={index} className="mb-2">
+        <p><strong>Product:</strong> {item.product_id?.title || "N/A"}</p>
         <p>
-          {shippingAddress.city}, {shippingAddress.postalCode}
+          <img
+            src={item.product_id?.images?.[0] || "https://via.placeholder.com/150"}
+            alt={item.product_id?.title || "Product"}
+            className="w-32 h-auto"
+          />
         </p>
-        <p>{shippingAddress.country}</p>
-        {shippingAddress.phone && <p>Phone: {shippingAddress.phone}</p>}
-      </div>
+        <p><strong>Quantity:</strong> {item.quantity}</p>
+        <p><strong>Price:</strong> {item.price} {currency}</p>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>No items found in this order.</p>
+)
+}
+</div>
+)}
 
-      <div className="my-4">
-        <h3 className="font-semibold mb-2">Items:</h3>
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center border-b py-2">
-            <img
-              src={item?.product_id?.images?.[0] || "/fallback.jpg"}
-              alt={item?.product_id?.title || "Workshop/Product"}
-              className="w-16 h-16 object-cover rounded mr-4"
-            />
-
-            <div className="flex-1">
-              <p className="font-semibold">{item.product_id.title}</p>
-              <p>Quantity: {item.quantity}</p>
-              <p>Price: €{item.price.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="font-bold text-green-600">
-                €{(item.price * item.quantity).toFixed(2)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-right mt-6">
-        <p className="text-xl font-bold">
-          Total: €{totalCost.toFixed(2)} {currency}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export default OrderSummary;

@@ -8,8 +8,9 @@ const AdminCreateWorkshop = () => {
     instructor: "",
     description: "",
     price: "",
-    duration: "",
-    startDate: "", // Start Date
+    duration: "", // No default duration
+    startDate: "", // Start Date and Time
+    recurringPattern: "weekly", // Default recurring pattern
     recurringTime: "17:00", // Default recurring time (can be adjusted)
     maxSpots: "",
     image: "", // For image URL from Cloudinary
@@ -29,25 +30,31 @@ const AdminCreateWorkshop = () => {
     }
   };
 
-  // Function to generate the recurring dates
-  const generateRecurringDates = (startDate, durationMonths, recurringTime) => {
+  // Function to generate the recurring dates based on recurring pattern
+  const generateRecurringDates = (startDate, durationMonths, recurringPattern) => {
     const dates = [];
     let currentDate = new Date(startDate);
 
-    // Set the start time to 17:00 for each session
-    const [hour, minute] = recurringTime.split(":");
+    // Set the start time to the selected recurring time
+    const [hour, minute] = formData.recurringTime.split(":");
     currentDate.setHours(hour, minute);
 
     // Calculate the end date by adding the duration (in months) to the start date
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + durationMonths);
 
-    // Loop through the dates and add each Monday
+    // Loop through the recurring pattern and add sessions
     while (currentDate <= endDate) {
-      // Add current date to the array
       dates.push(new Date(currentDate));
-      // Move to the next Monday
-      currentDate.setDate(currentDate.getDate() + 7);
+
+      // Set the next date based on the selected recurring pattern
+      if (recurringPattern === "weekly") {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (recurringPattern === "bi-weekly") {
+        currentDate.setDate(currentDate.getDate() + 14);
+      } else if (recurringPattern === "monthly") {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
     }
 
     return dates;
@@ -57,11 +64,17 @@ const AdminCreateWorkshop = () => {
     e.preventDefault();
     setMessage(null);
 
-    // Generate recurring sessions
+    // Validate duration field is not empty
+    if (!formData.duration) {
+      setMessage("Please select the duration of the workshop.");
+      return;
+    }
+
+    // Generate recurring sessions based on selected pattern and duration
     const recurringDates = generateRecurringDates(
       formData.startDate,
-      2, // 2 months duration for the workshop
-      formData.recurringTime
+      Number(formData.duration),
+      formData.recurringPattern
     );
 
     // Prepare the form data for submission
@@ -71,18 +84,19 @@ const AdminCreateWorkshop = () => {
       maxSpots: Number(formData.maxSpots), // Convert to number
       sessions: recurringDates, // Include the generated sessions
     };
-const token = localStorage.getItem('token')
-try {
-  const res = await axios.post(
-    "http://localhost:3050/workshops/new_class",
-    workshopData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json", 
-      },
-    }
-  );
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.post(
+        "http://localhost:3050/workshops/new_class",
+        workshopData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (res.status !== 201) throw new Error("Failed to create workshop");
 
@@ -92,9 +106,10 @@ try {
         instructor: "",
         description: "",
         price: "",
-        duration: "",
+        duration: "", // Reset duration
         startDate: "",
-        recurringTime: "17:00",
+        recurringPattern: "weekly", // Reset to default recurring pattern
+        recurringTime: "17:00", // Reset to default time
         maxSpots: "",
         image: "",
       });
@@ -146,31 +161,53 @@ try {
           className="w-full border p-2 rounded"
           required
         />
-        <input
-          type="text"
+
+        {/* Duration Dropdown */}
+        <select
           name="duration"
-          placeholder="Duration (e.g., 2 months)"
           value={formData.duration}
           onChange={handleChange}
           className="w-full border p-2 rounded"
           required
-        />
+        >
+          <option value="">Select Duration</option>
+          <option value="1">1 month</option>
+          <option value="2">2 months</option>
+          <option value="3">3 months</option>
+        </select>
+
+        {/* Start Date with Time */}
         <input
-          type="date"
+          type="datetime-local"
           name="startDate"
           value={formData.startDate}
           onChange={handleChange}
           className="w-full border p-2 rounded"
           required
         />
+
+        {/* Recurring Pattern */}
+        <select
+          name="recurringPattern"
+          value={formData.recurringPattern}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          required
+        >
+          <option value="weekly">Weekly</option>
+          <option value="bi-weekly">Bi-weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+
+        {/* Recurring Time */}
         <input
-          type="text"
+          type="time"
           name="recurringTime"
           value={formData.recurringTime}
           onChange={handleChange}
-          placeholder="Recurring Time (e.g., 17:00)"
           className="w-full border p-2 rounded"
         />
+
         <input
           type="number"
           name="maxSpots"

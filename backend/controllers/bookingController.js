@@ -1,28 +1,27 @@
 const Booking = require("../models/bookingModel");
-const Workshop = require("../models/WorkshopModel"); // Update this import
+const Workshop = require("../models/workshopModel");
+const Order = require("../models/orderModel");
+const User = require("../models/userModel")
 
-// Get all bookings
+// 🟢 Fetch all bookings (Admin only)
 const getAllBookings = async (req, res) => {
   try {
-    const filter = {};
-    if (req.query.user_id) filter.user_id = req.query.user_id;
+    const bookings = await Booking.find()
+      .populate("user_id", "name email")
+      .populate("workshop_id", "classTitle sessionDate instructor image");
 
-    const bookings = await Booking.find(filter)
-      .populate("user_id", "name email") // Optional: populate user info
-      .populate("workshop_id", "title date instructor"); // Populate workshop info (was "class" before)
-
-    res.status(200).json(bookings);
+    res.status(200).json({ bookings });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch bookings", details: error.message });
   }
 };
 
-// Get a booking with id
+// 🟢 Fetch single booking by ID
 const getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate("user_id", "name email")
-      .populate("workshop_id", "title date");
+      .populate("workshop_id", "classTitle sessionDate instructor image");
 
     if (!booking) return res.status(404).json({ error: "Booking not found" });
 
@@ -32,102 +31,117 @@ const getBookingById = async (req, res) => {
   }
 };
 
-// Add new booking (admin)
-const createBooking = async (req, res) => {
+// 🟢 Fetch bookings for the logged-in user
+const bookingsByUser = async (req, res) => {
   try {
-    const { user_id, workshop_id } = req.body; // Update to use workshop_id
+    const userId = req.user._id;
+    const bookings = await Booking.find({ user_id: userId })
+      .populate("workshop_id", "classTitle sessionDate instructor image");
 
-    const selectedWorkshop = await Workshop.findById(workshop_id); // Update to search Workshop model
-    if (!selectedWorkshop) return res.status(404).json({ error: "Workshop not found" });
+    res.status(200).json({ bookings });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user bookings", details: error.message });
+  }
+};
 
-    if (selectedWorkshop.bookedSpots >= selectedWorkshop.maxSpots) {
+// 🟢 Handle Book Now (after payment success)
+const handleBookNow = async (req, res) => {
+  try {
+    const { workshopId, userId, sessionId } = req.body;  // Include sessionId in the request body
+
+    // Find the workshop by its ID
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) return res.status(404).json({ error: "Workshop not found" });
+
+    // Check if the workshop is fully booked
+    if (workshop.bookedSpots >= workshop.maxSpots) {
       return res.status(400).json({ error: "Workshop is fully booked" });
     }
 
-    const existingBooking = await Booking.findOne({ user_id, workshop_id }); // Use workshop_id here
-    if (existingBooking) {
-      return res.status(400).json({ error: "You have already booked this workshop" });
+    // Check if the user has already booked the workshop
+    const alreadyBooked = await Booking.findOne({ user_id: userId, workshop_id: workshopId });
+    if (alreadyBooked) {
+      return res.status(400).json({ error: "User already booked this workshop" });
     }
 
-    const newBooking = new Booking({
-      user_id,
-      workshop_id, // Updated to store workshop_id
-      date: selectedWorkshop.date, // Use workshop date as booking date
+    // Create a new booking with status "pending"
+    const booking = new Booking({
+      user_id: userId,
+      workshop_id: workshopId,
+      sessionId: sessionId,  // Save the sessionId in the booking
+      date: workshop.sessionDate,
+      status: "pending",
+      paymentStatus: "pending", // Payment status will be updated later
+      image: workshop.image, // Save workshop image URL for later
     });
 
-    await newBooking.save();
+    await booking.save();
 
-    selectedWorkshop.bookedSpots += 1;
-    await selectedWorkshop.save();
+    // Increment the booked spots
+    workshop.bookedSpots += 1;
+    await workshop.save();
 
-    res.status(201).json(newBooking);
+    res.status(201).json({ success: true, booking });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create booking", details: error.message });
+    console.error("Error booking workshop:", error);
+    res.status(500).json({ error: "Booking process failed", details: error.message });
   }
 };
 
-// Get bookings made by the logged-in user
-const bookingsByUser = async (req, res) => {
-  try {
-    const userId = req.user._id; // Extract the user ID from the JWT token
-    const bookings = await Booking.find({ user_id: userId }) // Find bookings by the user ID
-      .populate("workshop_id", "title date instructor"); // Populate workshop details (was "class" before)
 
-    // If no bookings are found, return an empty array
-    if (!bookings || bookings.length === 0) {
-      return res.status(200).json({ bookings: [] }); // Respond with empty array if no bookings
+const getBookingSuccess = async (req, res) => {
+  const { sessionId } = req.params;
+
+  // Log the session ID received in the request
+  console.log("Received session ID:", sessionId);
+
+  try {
+    // Check if sessionId exists
+    if (!sessionId) {
+      console.log("No session ID provided.");
+      return res.status(400).json({ message: "Session ID is required." });
     }
 
-    res.status(200).json({ bookings }); // Respond with the bookings if found
-  } catch (error) {
-    console.error("Error fetching bookings:", error);
-    res.status(500).json({ error: "Failed to fetch bookings" }); // Respond with an error if something goes wrong
-  }
-};
+    // Query the database to find the booking with the matching sessionId
+    const booking = await Booking.findOne({ sessionId: sessionId })
+      .populate("user_id", "name email")
+      .populate("workshop_id", "title description image");
 
-// Update booking (admin)
-const updateBooking = async (req, res) => {
-  try {
-    const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
+    // Log the fetched booking or error if not found
+    if (!booking) {
+      console.log("Booking not found for session ID:", sessionId);
+      return res.status(404).json({ message: "Booking not found." });
+    } else {
+      console.log("Booking found:", booking);
+    }
+
+    // If booking is found, send the details as a response
+    res.status(200).json({
+      workshopTitle: booking.workshop_id.title,
+      workshopImage: booking.workshop_id.image,
+      sessionDate: booking.date,
+      status: booking.status,
+      bookingDate: booking.createdAt,
+      user: {
+        name: booking.user_id.name,
+        email: booking.user_id.email,
+      },
     });
+  } catch (err) {
+    // Log the error if there's a problem fetching the booking
+    console.error("Error fetching booking:", err);
 
-    if (!updatedBooking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
-
-    res.status(200).json(updatedBooking);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update booking", details: error.message });
+    // Return a 500 error if something goes wrong
+    res.status(500).json({ message: "Could not retrieve booking details." });
   }
 };
 
-// Delete booking (admin)
-const deleteBooking = async (req, res) => {
-  try {
-    const booking = await Booking.findByIdAndDelete(req.params.id);
 
-    if (!booking) return res.status(404).json({ error: "Booking not found" });
-
-    // Decrease the booked spots on workshop
-    const bookedWorkshop = await Workshop.findById(booking.workshop_id); // Use Workshop model
-    if (bookedWorkshop && bookedWorkshop.bookedSpots > 0) {
-      bookedWorkshop.bookedSpots -= 1;
-      await bookedWorkshop.save();
-    }
-
-    res.status(200).json({ message: "Booking cancelled successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete booking", details: error.message });
-  }
-};
 
 module.exports = {
   getAllBookings,
   getBookingById,
-  createBooking,
-  updateBooking,
-  deleteBooking,
   bookingsByUser,
+  handleBookNow,
+  getBookingSuccess
 };

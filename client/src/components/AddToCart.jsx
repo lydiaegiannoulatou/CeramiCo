@@ -3,36 +3,24 @@ import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const AddToCart = ({ item, type = "product", showLabel = true }) => {
+const AddToCart = ({ item, showLabel = true }) => {
   const [isAdding, setIsAdding] = useState(false);
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
 
   if (!item || !item._id) return null;
 
-  const { _id, stock, maxSpots, bookedSpots, price } = item;
-
-  const isOutOfStock =
-    type === "product"
-      ? stock === 0
-      : type === "workshop"
-      ? bookedSpots >= maxSpots
-      : false;
+  const { _id, stock, price } = item;
+  const isOutOfStock = stock === 0;
 
   const handleAddToCart = async () => {
-    const normalizedType = type?.toLowerCase?.();
-
     if (!token || role !== "user") {
       toast.info("You need to be logged in as a user to add items to the cart.");
       return;
     }
 
     if (isOutOfStock) {
-      toast.warning(
-        normalizedType === "product"
-          ? "This product is currently out of stock."
-          : "This workshop is fully booked."
-      );
+      toast.warning("This product is currently out of stock.");
       return;
     }
 
@@ -41,12 +29,10 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
       const payload = {
         items: [
           {
-            type: normalizedType,
+            type: "product",
             quantity: 1,
             price,
-            ...(normalizedType === "product"
-              ? { product_id: _id }
-              : { workshop_id: _id }),
+            product_id: _id,
           },
         ],
       };
@@ -60,11 +46,7 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
       );
 
       if (response.data.success) {
-        toast.success(
-          normalizedType === "product"
-            ? "Product added to the cart!"
-            : "Workshop added to the cart!"
-        );
+        toast.success("Product added to the cart!");
       } else {
         toast.error(response.data.msg || "Failed to add to cart.");
       }
@@ -89,7 +71,7 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
         !token || role !== "user"
           ? "Login required"
           : isOutOfStock
-          ? "Unavailable"
+          ? "Out of Stock"
           : "Add to cart"
       }
     >
@@ -97,7 +79,7 @@ const AddToCart = ({ item, type = "product", showLabel = true }) => {
         showLabel ? (
           <>
             <FaShoppingCart className="mr-2" />
-            {type === "product" ? "Out of Stock" : "Fully Booked"}
+            Out of Stock
           </>
         ) : (
           <FaShoppingCart />

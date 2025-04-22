@@ -4,51 +4,33 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
 
 // GET A SINGLE ORDER
 const getOrder = async (req, res) => {
-  try {
-    const { sessionId } = req.params;
+  const { sessionId } = req.params;
 
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ message: "Session ID is required." });
+    }
+
+    // Find the order by sessionId and populate user details
     const order = await Order.findOne({ stripeSessionId: sessionId })
-      .populate({
-        path: 'items.product_id', // Populate product_id for product items
-        select: 'title image images price',
-      })
-      .populate({
-        path: 'items.workshop_id', // Populate workshop_id for workshop items
-        select: 'classTitle sessionDate price image',
-      });
+      .populate("user_id", "fullName email") // Populate user details
+      .populate("items.product_id", "title images")
+
 
     if (!order) {
-      return res.status(404).send({ msg: "Order not found" });
+      return res.status(404).json({ message: "Order not found." });
     }
 
-    res.status(200).send({ msg: "Order fetched successfully", order });
-  } catch (error) {
-    console.error("Error fetching order by sessionId:", error);
-    res.status(500).send({ msg: "Something went wrong" });
+    res.status(200).json({
+      msg: "Order fetched successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("Error fetching order:", err);
+    res.status(500).json({ message: "Could not retrieve order details." });
   }
 };
 
-// Fetch all workshop orders
-const workshopOrders = async (req, res) => {
-  console.log("Route hit")
-  try {
-    const orders = await Order.find({ "items.type": "workshop" })  // Filtering for workshop orders
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'items.workshop_id', // Populate workshop_id for workshop items
-        select: 'classTitle sessionDate price',
-      });
-
-    if (!orders || orders.length === 0) {
-      return res.status(200).json({ msg: "No workshop orders yet", orders: [] });
-    }
-
-    res.status(200).json({ msg: "Workshop orders fetched successfully", orders });
-  } catch (error) {
-    console.error("Error fetching workshop orders:", error);
-    res.status(500).send({ msg: "Something went wrong" });
-  }
-};
 
 // Fetch all product orders
 const productOrders = async (req, res) => {
@@ -174,7 +156,7 @@ const updateOrder = async (req, res) => {
 
 module.exports = {
   getOrder,
-  workshopOrders,
+  
   productOrders,
   getOrdersByUser,
   cancelOrder,

@@ -1,59 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import axios from 'axios';
-import OrderSummary from '../components/OrderSummary';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import BookingSummary from "../components/BookingSummary";
+import OrderSummary from "../components/OrderSummary";
 
 const SuccessPage = () => {
-  const location = useLocation();
-  const [order, setOrder] = useState(null);
-  const [error, setError] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Extract session_id from query params
-  const sessionId = new URLSearchParams(location.search).get('session_id');
-  console.log('sessionId:', sessionId);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const sessionId = queryParams.get("session_id");
+  const type = queryParams.get("type");
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      const token = localStorage.getItem("token");
+    const fetchPaymentData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3050/order/success/${sessionId}`,
-          {
+        console.log("Fetching payment data...");
+        console.log("Session ID:", sessionId);
+        console.log("Payment Type:", type);
+
+        if (!sessionId || !type) {
+          console.error("Missing sessionId or type");
+          toast.error("Missing session ID or type.");
+          return;
+        }
+
+        setIsLoading(true);
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found in localStorage");
+          toast.error("You must be logged in to view this page.");
+          setIsLoading(false);
+          return;
+        }
+
+        let response;
+        if (type === "workshop") {
+          console.log("Fetching workshop booking data...");
+          const url = `http://localhost:3050/bookings/success/${sessionId}`;
+          console.log("API URL for workshop:", url);
+          response = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+          });
+          if (response.status === 200) {
+            console.log("Workshop booking data received:", response.data);
+            setPaymentData(response.data);  // Setting payment data here
+          } else {
+            console.error("Failed to fetch workshop booking data, status:", response.status);
+            toast.error("Failed to fetch workshop booking data.");
           }
-        );
-        console.log("Response order", response);
-
-        if (response.data.order) {
-          setOrder(response.data.order);
+        } else if (type === "product") {
+          console.log("Fetching product order data...");
+          const url = `http://localhost:3050/order/success/${sessionId}`;
+          console.log("API URL for product:", url);
+          response = await axios.get(url, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (response.status === 200) {
+            console.log("Product order data received:", response.data);
+            setPaymentData(response.data);
+          } else {
+            console.error("Failed to fetch product order data, status:", response.status);
+            toast.error("Failed to fetch product order data.");
+          }
         } else {
-          setError("Order not found.");
+          console.error("Unknown payment type:", type);
+          toast.error("Unknown payment type.");
         }
       } catch (err) {
-        console.error("Error fetching order:", err);
-        setError("Could not load order details.");
+        if (err.response) {
+          console.error("Error fetching payment data (response error):", err.response);
+          toast.error(`Error fetching payment data: ${err.response.statusText}`);
+        } else {
+          console.error("Error fetching payment data:", err);
+          toast.error("Error fetching payment data.");
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (sessionId) {
-      fetchOrder();
+    if (sessionId && type) {
+      fetchPaymentData();
+    } else {
+      console.error("Invalid sessionId or type.");
+      setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, type]);
 
-  if (error) {
-    return <div className="text-center py-6 text-red-500">{error}</div>;
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  if (!order) {
-    return <div className="text-center py-6">Loading your order...</div>;
+  if (!paymentData) {
+    console.error("No payment data found.");
+    return <div>No payment data found.</div>;
   }
+
+  console.log("Payment Data:", paymentData);  // Log out the fetched payment data here
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-center mb-6 text-green-600">🎉 Payment Successful!</h1>
-      <p className="text-center mb-4 text-gray-600">Here are your order details:</p>
-      <OrderSummary order={order} />
+    <div>
+      <h1>Payment Successful!</h1>
+      {type === "workshop" ? (
+        <BookingSummary booking={paymentData} />
+      ) : type === "product" ? (
+        <OrderSummary order={paymentData.order} />
+      ) : (
+        <div>Unknown payment type</div>
+      )}
     </div>
   );
 };
