@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import BookingSummary from "../components/BookingSummary";
+import BookingSuccessDetails from "../components/BookingSuccessDetails"
 import OrderSummary from "../components/OrderSummary";
 
 const SuccessPage = () => {
@@ -110,7 +110,7 @@ const SuccessPage = () => {
     <div>
       <h1>Payment Successful!</h1>
       {type === "workshop" ? (
-        <BookingSummary booking={paymentData} />
+        <BookingSuccessDetails booking={paymentData} />
       ) : type === "product" ? (
         <OrderSummary order={paymentData.order} />
       ) : (

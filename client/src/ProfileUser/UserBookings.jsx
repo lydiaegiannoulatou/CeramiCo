@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import BookingSummary from "../components/BookingSummary";
+import BookingDetailsModal from "./BookingDetailsModal";
 import { FaTimes } from "react-icons/fa";
 
 const UserBookings = ({ token }) => {
@@ -19,6 +19,7 @@ const UserBookings = ({ token }) => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+        console.log("Bookings fetched for profile:", response.data.bookings);
         setBookings(response.data.bookings || []);
       } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -30,7 +31,45 @@ const UserBookings = ({ token }) => {
     fetchBookings();
   }, [token]);
 
-  const closeModal = () => setSelectedBooking(null);
+  
+  // Split bookings by status
+  const upcoming = bookings.filter(
+    (b) => b.status !== "completed" && b.status !== "canceled"
+  );
+  const completed = bookings.filter((b) => b.status === "completed");
+  const canceled = bookings.filter((b) => b.status === "canceled");
+
+  const renderBookingList = (list) =>
+    list.map((booking) => (
+      <li
+        key={booking._id}
+        onClick={() => setSelectedBooking(booking._id)}
+        className="border bg-white rounded-xl p-4 shadow-md flex justify-between items-center cursor-pointer hover:bg-gray-50"
+      >
+        {/* Image thumbnail */}
+        {booking.workshop_id.image && (
+          <img
+            src={booking.workshop_id.image}
+            alt={booking.workshop_id.title}
+            className="w-16 h-16 rounded-md object-cover mr-4"
+          />
+        )}
+
+        {/* Text content */}
+        <div className="flex-1">
+          <p className="font-medium">{booking.workshop_id.title}</p>
+          <p className="text-sm text-gray-600">
+            {new Date(booking.date).toLocaleDateString()} | Status:{" "}
+            {booking.status}
+          </p>
+        </div>
+
+        {/* Payment status */}
+        <span className="text-sm bg-indigo-100 text-indigo-600 px-3 py-1 rounded">
+          {booking.paymentStatus}
+        </span>
+      </li>
+    ));
 
   return (
     <div>
@@ -40,50 +79,42 @@ const UserBookings = ({ token }) => {
       ) : bookings.length === 0 ? (
         <p>You haven't booked any workshops yet.</p>
       ) : (
-        <ul className="space-y-4">
-          {bookings.map((booking) => (
-            <li
-              key={booking._id}
-              onClick={() => setSelectedBooking(booking)}
-              className="border bg-white rounded-xl p-4 shadow-md flex justify-between items-center cursor-pointer hover:bg-gray-50"
-            >
-              <div>
-                <p className="font-medium">{booking.workshop_id.title}</p>
-                <p className="text-sm text-gray-600">
-                  {new Date(booking.date).toLocaleDateString()} | Status:{" "}
-                  {booking.status}
-                </p>
-              </div>
-              <span className="text-sm bg-indigo-100 text-indigo-600 px-3 py-1 rounded">
-                {booking.paymentStatus}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          {upcoming.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold mt-4 mb-2">
+                Upcoming Workshops
+              </h3>
+              <ul className="space-y-4">{renderBookingList(upcoming)}</ul>
+            </>
+          )}
+
+          {completed.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold mt-6 mb-2">
+                ✅ Past Workshops
+              </h3>
+              <ul className="space-y-4">{renderBookingList(completed)}</ul>
+            </>
+          )}
+
+          {canceled.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold mt-6 mb-2">
+                ❌ Canceled Workshops
+              </h3>
+              <ul className="space-y-4">{renderBookingList(canceled)}</ul>
+            </>
+          )}
+        </>
       )}
 
       {/* Modal */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
-          <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-xl font-bold"
-            >
-              <FaTimes />{" "}
-            </button>
-            <BookingSummary
-              booking={{
-                workshopTitle: selectedBooking.workshop_id.title,
-                workshopImage: selectedBooking.workshop_id.image,
-                sessionDate: selectedBooking.date,
-                status: selectedBooking.status,
-                bookingDate: selectedBooking.createdAt,
-                user: selectedBooking.user_id,
-              }}
-            />
-          </div>
-        </div>
+        <BookingDetailsModal
+          bookingId={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
       )}
     </div>
   );

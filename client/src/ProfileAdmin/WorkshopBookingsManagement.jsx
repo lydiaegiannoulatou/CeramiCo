@@ -1,95 +1,46 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import BookingDetailsModal from "../ProfileUser/BookingDetailsModal" // Import the modal component
 
-const BookingsManagement = () => {
-  const [workshopOrders, setWorkshopOrders] = useState([]);
+const WorkshopBookingsManagement = () => {
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedBookingId, setSelectedBookingId] = useState(null); // State to hold selected booking ID for the modal
 
-  // Fetch all workshop orders
   useEffect(() => {
-    const fetchWorkshopOrders = async () => {
+    const fetchBookings = async () => {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+
+      if (role !== "admin") {
+        return setError("User is not authorized for this action");
+      }
+
       try {
-        // Get token and role from localStorage
-        const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
-console.log("Token:", token,"Role:", role);
-
-        // Check if user is admin
-        if (role !== "admin") {
-          setError("You do not have the necessary permissions to view this page.");
-          return;
-        }
-
-        // Make the API request to fetch workshop orders
-        const response = await axios.get("http://localhost:3050/order/workshop_orders", {
-          headers: {
-            Authorization: `Bearer ${token}`, // Use token for authentication
-          },
+        const response = await axios.get("http://localhost:3050/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        setWorkshopOrders(response.data.orders);
+        setBookings(response.data.bookings);
+        setLoading(false);
       } catch (err) {
-        setError("Failed to fetch workshop orders.", err);
-      } finally {
+        setError("Failed to fetch bookings",err);
         setLoading(false);
       }
     };
-
-    fetchWorkshopOrders();
+    fetchBookings();
   }, []);
 
-  // Handle status update
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.put(
-        `http://localhost:3050/order/update/${orderId}`,
-        { orderStatus: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setWorkshopOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order._id === orderId ? { ...order, orderStatus: newStatus } : order
-        )
-      );
-    } catch (err) {
-      setError("Failed to update the order status.", err);
-    }
+  const handleBookingClick = (bookingId) => {
+    setSelectedBookingId(bookingId); // Open the modal and set the bookingId
   };
 
-
-  // Handle order cancellation
-  const handleCancelOrder = async (orderId) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.delete(`http://localhost:3050/order/cancel/${orderId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setWorkshopOrders((prevOrders) =>
-        prevOrders.filter((order) => order._id !== orderId)
-      );
-    } catch (err) {
-      setError("Failed to cancel the order.", err);
-    }
-  };
-
-  // Handle selecting an order for detailed view
-  const handleSelectOrder = (order) => {
-    setSelectedOrder(order);
+  const closeModal = () => {
+    setSelectedBookingId(null); // Close the modal by resetting the bookingId
   };
 
   if (loading) {
-    return <div>Loading workshop orders...</div>;
+    return <div>Loading...</div>;
   }
 
   if (error) {
@@ -97,91 +48,54 @@ console.log("Token:", token,"Role:", role);
   }
 
   return (
-    <div className="container mx-auto py-4">
-      <h1 className="text-2xl font-bold mb-4">Manage Workshop Bookings</h1>
-
-      {/* List of workshop orders */}
-      <div className="space-y-4">
-        {workshopOrders.map((order) => (
-          <div
-            key={order._id}
-            className="border p-4 rounded-lg shadow-md"
-            onClick={() => handleSelectOrder(order)}
-          >
-            <h3 className="text-lg font-semibold">{order.items[0]?.classTitle}</h3>
-            <p>Customer: {order.shippingAddress.fullName}</p>
-            <p>Session Date: {new Date(order.items[0]?.sessionDate).toLocaleDateString()}</p>
-            <p>Order Status: {order.orderStatus}</p>
-            <p>Payment Status: {order.paymentStatus}</p>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-2 mt-2">
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded"
-                onClick={() => handleStatusChange(order._id, "shipped")}
-              >
-                Mark as Shipped
-              </button>
-              <button
-                className="bg-yellow-500 text-white px-4 py-2 rounded"
-                onClick={() => handleStatusChange(order._id, "delivered")}
-              >
-                Mark as Delivered
-              </button>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={() => handleCancelOrder(order._id)}
-              >
-                Cancel Order
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Order Details (if an order is selected) */}
-      {selectedOrder && (
-        <div className="mt-8 p-4 border rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold">Order Details</h3>
-          <p>
-            <strong>Customer Name:</strong> {selectedOrder.shippingAddress.fullName}
-          </p>
-          <p>
-            <strong>Session Date:</strong> {new Date(selectedOrder.items[0]?.sessionDate).toLocaleString()}
-          </p>
-          <p>
-            <strong>Class Title:</strong> {selectedOrder.items[0]?.classTitle}
-          </p>
-          <p>
-            <strong>Order Status:</strong> {selectedOrder.orderStatus}
-          </p>
-          <p>
-            <strong>Payment Status:</strong> {selectedOrder.paymentStatus}
-          </p>
-          <div className="flex space-x-2 mt-4">
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
-              onClick={() => handleStatusChange(selectedOrder._id, "shipped")}
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Workshop Bookings</h2>
+      <table className="min-w-full table-auto">
+        <thead>
+          <tr>
+            <th className="px-4 py-2 border">Booking #</th>
+            <th className="px-4 py-2 border">User Name</th>
+            <th className="px-4 py-2 border">Workshop Title</th>
+            <th className="px-4 py-2 border">Status</th>
+            <th className="px-4 py-2 border">Payment Status</th>
+            <th className="px-4 py-2 border">Date</th>
+            <th className="px-4 py-2 border">Image</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bookings.map((booking) => (
+            <tr
+              key={booking._id}
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => handleBookingClick(booking._id)} // Open modal on click
             >
-              Mark as Shipped
-            </button>
-            <button
-              className="bg-yellow-500 text-white px-4 py-2 rounded"
-              onClick={() => handleStatusChange(selectedOrder._id, "delivered")}
-            >
-              Mark as Delivered
-            </button>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={() => handleCancelOrder(selectedOrder._id)}
-            >
-              Cancel Order
-            </button>
-          </div>
-        </div>
+              <td className="px-4 py-2 border">{String(booking._id).slice(-5)}</td>
+              <td className="px-4 py-2 border">{booking.user_id.name}</td>
+              <td className="px-4 py-2 border">{booking.workshop_id.title}</td>
+              <td className="px-4 py-2 border">{booking.status}</td>
+              <td className="px-4 py-2 border">{booking.paymentStatus}</td>
+              <td className="px-4 py-2 border">{new Date(booking.date).toLocaleDateString()}</td>
+              <td className="px-4 py-2 border">
+                <img
+                  src={booking.workshop_id.image}
+                  alt={booking.workshop_id.title}
+                  className="w-20 h-20 object-cover rounded"
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Show the modal if a booking is selected */}
+      {selectedBookingId && (
+        <BookingDetailsModal
+          bookingId={selectedBookingId}
+          onClose={closeModal} // Close the modal when the user clicks on the close button
+        />
       )}
     </div>
   );
 };
 
-export default BookingsManagement;
+export default WorkshopBookingsManagement;

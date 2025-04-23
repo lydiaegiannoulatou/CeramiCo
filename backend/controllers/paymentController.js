@@ -111,7 +111,7 @@ const createCheckoutSession = async (req, res) => {
     for (const b of bookings) {
       const booking = new Booking({
         ...b,
-        sessionId: session.id,
+        stripeSessionId: session.id,
         status: "pending",
         paymentStatus: "pending",
       });
@@ -150,9 +150,13 @@ const stripeWebhook = async (req, res) => {
       // 1. Update order
       const order = await Order.findOne({ stripeSessionId: session.id });
       if (order) {
+        console.log("Found order for session ID:", session.id);  // Log to confirm order is found
+
         order.paymentStatus = "paid";
-        order.stripePaymentIntentId = session.payment_intent;
+        order.stripePaymentIntentId = session.payment_intent;  // Save the payment intent ID to stripePaymentIntentId
         await order.save();
+
+        console.log("Order updated with payment intent ID:", session.payment_intent); // Log to confirm the update
 
         // 2. Update stock
         for (const item of order.items) {
@@ -164,6 +168,8 @@ const stripeWebhook = async (req, res) => {
             }
           }
         }
+      } else {
+        console.log("No order found for session ID:", session.id);  // Log if order is not found
       }
 
       // 3. Confirm all pending bookings for this user
@@ -171,8 +177,7 @@ const stripeWebhook = async (req, res) => {
         order?.user_id ||
         (await User.findOne({ email: session.customer_email }))?._id;
       const bookings = await Booking.find({
-        user_id: userId,
-        paymentStatus: "pending",
+        stripeSessionId: session.id,
       });
 
       for (const booking of bookings) {
@@ -189,6 +194,7 @@ const stripeWebhook = async (req, res) => {
 
           booking.status = "confirmed";
           booking.paymentStatus = "paid";
+          booking.paymentIntentId = session.payment_intent;
           await booking.save();
         }
       }
@@ -204,6 +210,7 @@ const stripeWebhook = async (req, res) => {
 
   res.status(200).send("Webhook processed");
 };
+
 
 module.exports = {
   createCheckoutSession,

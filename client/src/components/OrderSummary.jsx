@@ -36,10 +36,10 @@ const OrderSummary = ({ order }) => {
       </p>
       <h3 className="font-semibold mt-4">User Details:</h3>
       <p>
-        <strong>Name:</strong> {user_id.name || "N/A"}
+        <strong>Name:</strong> {user_id.name }
       </p>
       <p>
-        <strong>Email:</strong> {user_id.email || "N/A"}
+        <strong>Email:</strong> {user_id.email}
       </p>
       <h3 className="font-semibold mt-4">Items:</h3>
 {Array.isArray(items) && items.length > 0 ? (

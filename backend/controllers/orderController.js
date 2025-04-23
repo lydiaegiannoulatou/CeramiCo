@@ -31,6 +31,36 @@ const getOrder = async (req, res) => {
   }
 };
 
+// GET ORDER BY ID
+const getOrderById = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    if (!orderId) {
+      return res.status(400).json({ msg: "Order ID is required." });
+    }
+
+    const order = await Order.findById(orderId)
+      .populate("user_id", "name email")
+      .populate("items.product_id", "title images")
+      .populate("items.workshop_id", "title date"); // Optional: if workshops used
+
+    if (!order) {
+      return res.status(404).json({ msg: "Order not found." });
+    }
+
+    // Optionally restrict access to the owner
+    if (order.user_id._id.toString() !== req.user.userId) {
+      return res.status(403).json({ msg: "You are not authorized to view this order." });
+    }
+
+    res.status(200).json({ msg: "Order fetched successfully", order });
+  } catch (error) {
+    console.error("Error fetching order by ID:", error);
+    res.status(500).json({ msg: "Could not retrieve order by ID", error });
+  }
+};
+
 
 // Fetch all product orders
 const productOrders = async (req, res) => {
@@ -78,35 +108,51 @@ const getOrdersByUser = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log("orderId", orderId);
+    console.log("Received orderId:", orderId);  // Log the orderId from the URL
 
     const order = await Order.findById(orderId);
     if (!order) {
+      console.log("Order not found for ID:", orderId);  // Log if order is not found
       return res.status(404).json({ msg: "Order not found" });
     }
 
+    // Log the order details
+    console.log("Found order:", order);
+
     // Ensure the logged-in user owns this order
     if (order.user_id.toString() !== req.user.userId) {
+      console.log("Unauthorized access attempt by user:", req.user.userId);  // Log unauthorized user access
       return res.status(403).json({ msg: "You are not authorized to cancel this order." });
     }
 
+    // Log the user ID
+    console.log("Logged-in user ID:", req.user.userId);
+    console.log("Order user ID:", order.user_id.toString());
+
     // Only refund if the order is paid
     if (order.paymentStatus === "paid") {
-      if (!order.paymentIntentId) {
+      if (!order.stripePaymentIntentId) {
+        console.log("No paymentIntentId found for order:", orderId);  // Log if paymentIntentId is missing
         return res.status(400).json({ msg: "No paymentIntentId found for this order" });
       }
 
+      // Log refund attempt
+      console.log("Attempting to refund payment with paymentIntentId:", order.paymentIntentId);
+
       const refund = await stripe.refunds.create({
-        payment_intent: order.paymentIntentId,
+        payment_intent: order.stripePaymentIntentId,
       });
 
-      order.orderStatus = "refunded";
+      order.orderStatus = "canceled";
       order.paymentStatus = "refunded";
       await order.save();
 
-      console.log("Updated order status:", order.orderStatus);
+      console.log("Updated order status after refund:", order.orderStatus);
       return res.status(200).json({ msg: "Order refunded successfully", refund });
     } else {
+      // Log cancellation process
+      console.log("Cancelling order without refund. Updating status...");
+
       order.orderStatus = "canceled";
       order.paymentStatus = "cancelled";
       await order.save();
@@ -115,7 +161,7 @@ const cancelOrder = async (req, res) => {
       return res.status(200).json({ msg: "Order canceled successfully" });
     }
   } catch (error) {
-    console.error("Error cancelling order:", error);
+    console.error("Error cancelling order:", error);  // Log the error details
     res.status(500).json({ msg: "Could not cancel order", error });
   }
 };
@@ -157,4 +203,5 @@ module.exports = {
   getOrdersByUser,
   cancelOrder,
   updateOrder,
+  getOrderById
 };
