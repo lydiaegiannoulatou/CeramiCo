@@ -48,15 +48,14 @@ const bookingsByUser = async (req, res) => {
         .json({ error: "User ID not found in the request" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid user ID format" });
-    }
+    
 
     console.log("Fetching bookings for user with ID:", userId);
 
     const bookings = await Booking.find({ user_id: userId })
       .sort({ createdAt: -1 })
-      .populate("workshop_id", "classTitle sessionDate instructor image");
+      .populate("workshop_id", "title instructor image sessions")
+
 
     console.log("Bookings found:", bookings);
 
@@ -106,7 +105,7 @@ const handleBookNow = async (req, res) => {
       user_id: userId,
       workshop_id: workshopId,
       sessionId: sessionId, // Save the sessionId in the booking
-      date: workshop.sessionDate,
+      date: workshop.sessions.sessionDate,
       status: "pending",
       paymentStatus: "pending", // Payment status will be updated later
       image: workshop.image, // Save workshop image URL for later
