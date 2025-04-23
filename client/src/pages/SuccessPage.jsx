@@ -108,7 +108,6 @@ const SuccessPage = () => {
 
   return (
     <div>
-      <h1>Payment Successful!</h1>
       {type === "workshop" ? (
         <BookingSuccessDetails booking={paymentData} />
       ) : type === "product" ? (

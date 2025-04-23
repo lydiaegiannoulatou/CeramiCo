@@ -30,6 +30,7 @@ const OrderDetailsModal = ({ order }) => {
     orderNumber,
     orderStatus,
     paymentStatus,
+    shippingAddress,
     totalCost,
     currency,
     items,
@@ -37,6 +38,7 @@ const OrderDetailsModal = ({ order }) => {
     _id,
   } = order;
 console.log("order._id",order._id);
+console.log("shippingAddress:",order.shippingAddress)
 
   const handleCancelOrder = async () => {
     const confirmCancel = window.confirm("Are you sure you want to cancel this order?");
@@ -85,6 +87,26 @@ console.log("order._id",order._id);
         <h3 className="text-xl font-semibold mb-2">User Details</h3>
         <p><span className="font-semibold">Name:</span> {userDetails.name}</p>
         <p><span className="font-semibold">Email:</span> {userDetails.email}</p>
+      </div>
+      <div className="pt-4 border-t">
+        <h3 className="text-xl font-semibold mb-2">Shipping Address</h3>
+        {shippingAddress ? (
+          <div>
+            <p><span className="font-semibold">Full Name:</span> {shippingAddress.fullName}</p>
+            <p><span className="font-semibold">Address Line 1:</span> {shippingAddress.addressLine1}</p>
+            {shippingAddress.addressLine2 && (
+              <p><span className="font-semibold">Address Line 2:</span> {shippingAddress.addressLine2}</p>
+            )}
+            <p><span className="font-semibold">City:</span> {shippingAddress.city}</p>
+            <p><span className="font-semibold">Postal Code:</span> {shippingAddress.postalCode}</p>
+            <p><span className="font-semibold">Country:</span> {shippingAddress.country}</p>
+            {shippingAddress.phone && (
+              <p><span className="font-semibold">Phone:</span> {shippingAddress.phone}</p>
+            )}
+          </div>
+        ) : (
+          <p>No shipping address provided.</p>
+        )}
       </div>
 
       <div className="pt-4 border-t">

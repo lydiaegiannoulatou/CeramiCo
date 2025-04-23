@@ -1,8 +1,8 @@
+import React from "react";
+import clsx from "clsx";
+
 const BookingSummary = ({ booking }) => {
-  console.log("Booking object received in BookingSummary:", booking);
-
   if (!booking) return null;
-
 
   const {
     workshopTitle,
@@ -13,67 +13,71 @@ const BookingSummary = ({ booking }) => {
     user,
   } = booking;
 
+  /* badge palette */
+  const badge = (state) =>
+    clsx(
+      "inline-block rounded-full px-3 py-0.5 text-xs font-medium ring-1",
+      {
+        pending:  "bg-yellow-50 text-yellow-700 ring-yellow-300",
+        confirmed:"bg-emerald-50 text-emerald-700 ring-emerald-300",
+        canceled: "bg-rose-50 text-rose-700 ring-rose-300",
+      }[state] || "bg-gray-100 text-gray-600 ring-gray-300"
+    );
+
   return (
-    <div className="max-w-2xl mx-auto border p-6 rounded-lg shadow-lg bg-white mt-6">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        Booking Confirmation
-      </h2>
+    <section className="relative mx-auto max-w-4xl rounded-3xl bg-white/70 p-8 backdrop-blur-lg">
+      {/* decorative blob */}
+      <div className="pointer-events-none absolute left-0 top-0 -z-10 h-40 w-40 -translate-x-1/3 -translate-y-1/3 rounded-full bg-rose-500/10 blur-3xl" />
 
-      {/* Workshop details */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-700">
-          Workshop Details
-        </h3>
-        <div className="mt-2">
-          <p className="text-lg font-medium text-gray-900">
-            <strong>Workshop:</strong> {workshopTitle}
-          </p>
-          {workshopImage && (
-            <img
-              src={workshopImage}
-              alt={workshopTitle}
-              className="mt-4 rounded-lg shadow-md w-full h-64 object-cover"
-            />
-          )}
-        </div>
-      </div>
+      {/* heading */}
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <h2 className="text-3xl font-extrabold tracking-tight text-gray-800">
+          Booking&nbsp;Confirmation
+        </h2>
+        <span className={badge(status)}>{status}</span>
+      </header>
 
-      {/* Session and Booking Date */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-700">
-          Session Information
-        </h3>
-        <div className="mt-2">
-          <p className="text-lg text-gray-900">
-            <strong>Session Date:</strong>{" "}
+      {/* workshop details */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {workshopImage && (
+          <img
+            src={workshopImage}
+            alt={workshopTitle}
+            className="h-64 w-full rounded-2xl object-cover"
+          />
+        )}
+
+        <div className="flex flex-col gap-6">
+          <Meta label="Workshop">{workshopTitle}</Meta>
+          <Meta label="Session Date">
             {new Date(sessionDate).toLocaleString()}
-          </p>
-          <p className="text-lg text-gray-900">
-            <strong>Status:</strong> {status}
-          </p>
-          <p className="text-lg text-gray-900">
-            <strong>Booking Date:</strong>{" "}
+          </Meta>
+          <Meta label="Booked On">
             {new Date(bookingDate).toLocaleString()}
-          </p>
+          </Meta>
         </div>
       </div>
 
-      {/* User details */}
-      <div>
-        <h3 className="text-xl font-semibold text-gray-700">User Details</h3>
-        <div className="mt-2">
-          <p className="text-lg text-gray-900">
-            <strong>Name:</strong> {user.name}
-          </p>
-          <p className="text-lg text-gray-900">
-            <strong>Email:</strong> {user.email}
-          </p>
-        </div>
+      {/* user */}
+      <h3 className="mt-12 mb-4 text-lg font-semibold tracking-tight text-gray-700">
+        Attendee
+      </h3>
+      <div className="grid gap-2 text-sm sm:grid-cols-2">
+        <Meta label="Name">{user?.name}</Meta>
+        <Meta label="Email">{user?.email}</Meta>
       </div>
-
-     
-    </div>
+    </section>
   );
 };
+
+/* tiny sub‑component for labels */
+const Meta = ({ label, children }) => (
+  <div>
+    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      {label}
+    </p>
+    <p className="text-gray-800">{children}</p>
+  </div>
+);
 
 export default BookingSummary;

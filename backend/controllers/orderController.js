@@ -2,7 +2,54 @@ const Order = require("../models/orderModel");
 const Product = require("../models/productModel")
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
 
-// GET A SINGLE ORDER
+
+
+
+const createOrder = async (req, res) => {
+  const { sessionId } = req.body;
+
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ msg: "Session ID is required." });
+    }
+
+    // Fetch the session details from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ msg: "Stripe session not found." });
+    }
+
+    // Extract necessary details from the session
+    const userId = session.metadata.userId; // Assuming userId is stored in metadata
+    const items = JSON.parse(session.metadata.items); // Assuming items are stored in metadata
+    const shippingAddress = JSON.parse(session.metadata.shippingAddress); // Assuming shippingAddress is stored in metadata
+
+    // Create a new order
+    const newOrder = new Order({
+      user_id: userId,
+      items,
+      shippingAddress,
+      totalCost: session.amount_total / 100,
+      currency: session.currency,
+      stripeSessionId: session.id,
+      stripePaymentIntentId: session.payment_intent,
+      paymentStatus: "paid",
+      orderStatus: "processing",
+    });
+
+    const savedOrder = await newOrder.save();
+
+    res.status(201).json({ msg: "Order created successfully", order: savedOrder });
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ msg: "Could not create order", error: error.message });
+  }
+};
+
+
+
+// GET A SINGLE ORDER WITH STRIPE SESSION ID FOR SUCCESS PATH
 const getOrder = async (req, res) => {
   const { sessionId } = req.params;
 
@@ -16,7 +63,7 @@ const getOrder = async (req, res) => {
       .populate("user_id", "name email") // Populate user details
       .populate("items.product_id", "title images")
 
-
+      console.log("Order fetched:", order);
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
     }
@@ -43,13 +90,12 @@ const getOrderById = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate("user_id", "name email")
       .populate("items.product_id", "title images")
-      .populate("items.workshop_id", "title date"); // Optional: if workshops used
+      
 
     if (!order) {
       return res.status(404).json({ msg: "Order not found." });
     }
 
-    // Optionally restrict access to the owner
     if (order.user_id._id.toString() !== req.user.userId) {
       return res.status(403).json({ msg: "You are not authorized to view this order." });
     }
@@ -198,7 +244,7 @@ const updateOrder = async (req, res) => {
 
 module.exports = {
   getOrder,
-  
+  createOrder,
   productOrders,
   getOrdersByUser,
   cancelOrder,

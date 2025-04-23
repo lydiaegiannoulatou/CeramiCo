@@ -10,7 +10,7 @@ const User = require("../models/userModel")
 // Create Checkout Session
 
 const createCheckoutSession = async (req, res) => {
-  const { items } = req.body;
+  const { items, shippingAddress } = req.body;
   const userId = req.user.userId;
   const userEmail = req.user.email;
 
@@ -99,6 +99,7 @@ const createCheckoutSession = async (req, res) => {
       const newOrder = new Order({
         user_id: userId,
         items: productItems,
+        shippingAddress,
         totalCost,
         paymentStatus: "pending",
         stripeSessionId: session.id,
