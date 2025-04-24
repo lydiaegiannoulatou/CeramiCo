@@ -37,4 +37,6 @@ app.use("/exhibitions", exhibitionRoutes);
 app.use("/workshops",workshopRoutes)
 app.use("/bookings", bookingRoutes)
 
+require("./cron/completeBookings"); 
+
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

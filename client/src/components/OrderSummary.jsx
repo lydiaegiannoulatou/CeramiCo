@@ -53,7 +53,7 @@ const OrderSummary = ({ order }) => {
           {new Date(createdAt).toLocaleString()}
         </Meta>
         <Meta label="Total">
-          {(totalCost / 100).toFixed(2)} {currency}
+          {totalCost.toFixed(2)} {currency}
         </Meta>
         <Meta label="Customer">
           {user_id?.name}
@@ -106,7 +106,7 @@ const OrderSummary = ({ order }) => {
               </div>
 
               <p className="ml-auto text-base font-semibold tracking-wide">
-                {(item.price / 100).toFixed(2)}&nbsp;{currency}
+                {item.price.toFixed(2)}&nbsp;{currency}
               </p>
             </li>
           );

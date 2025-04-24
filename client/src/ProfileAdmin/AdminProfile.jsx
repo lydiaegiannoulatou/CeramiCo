@@ -18,7 +18,7 @@ const adminSections = [
 ];
 
 const AdminProfile = () => {
-  const [activeSection, setActiveSection] = useState("products");
+  const [activeSection, setActiveSection] = useState("orders");
 
   const renderSection = () => {
     switch (activeSection) {

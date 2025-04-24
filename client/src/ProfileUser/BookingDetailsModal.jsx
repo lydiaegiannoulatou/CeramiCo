@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTimes } from "react-icons/fa";
+import ToastNotification from '../components/ToastNotification';
 
-const BookingDetailsModal = ({ bookingId, onClose }) => {
+const BookingDetailsModal = ({ bookingId, onClose, onStatusChange }) => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Fetch booking data
   useEffect(() => {
@@ -22,9 +21,6 @@ const BookingDetailsModal = ({ bookingId, onClose }) => {
           }
         );
         setBooking(response.data);
-        setStatus(response.data.status); // Initialize status with the current booking status
-        const role = localStorage.getItem("role");
-        setIsAdmin(role === "admin"); // Set the user role to admin if available
       } catch (err) {
         console.error("Error fetching booking details:", err);
       } finally {
@@ -35,32 +31,17 @@ const BookingDetailsModal = ({ bookingId, onClose }) => {
     fetchBooking();
   }, [bookingId]);
 
-  const handleStatusChange = async (newStatus) => {
-    if (!isAdmin) return; // Only admins can change status
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `http://localhost:3050/bookings/update-status/${booking._id}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setStatus(newStatus); // Update the UI with the new status
-      alert("Booking status updated successfully.");
-    } catch (err) {
-      console.error("Error updating status:", err);
-      alert("Failed to update booking status.");
-    }
+  const handleCancelBooking = () => {
+    // Ask for confirmation using the ToastNotification helper
+    ToastNotification.notifyWarning(
+      "Are you sure you want to cancel this booking?",
+      {
+        onConfirm: confirmCancel,
+      }
+    );
   };
 
-  const handleCancelBooking = async () => {
-    if (!isAdmin) return; // Only admins can cancel bookings
-
-    const confirmCancel = window.confirm(
-      "Are you sure you want to cancel this booking?"
-    );
-    if (!confirmCancel) return;
-
+  const confirmCancel = async () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
@@ -68,11 +49,16 @@ const BookingDetailsModal = ({ bookingId, onClose }) => {
         null,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Booking canceled successfully.");
-      window.location.reload(); // Refresh the page or re-fetch data
+      ToastNotification.notifySuccess("Booking canceled successfully.");
+
+      // Inform parent so list refreshes (if prop provided)
+      if (onStatusChange) {
+        onStatusChange("canceled");
+      }
+      onClose();
     } catch (err) {
-      console.error("Error canceling booking:", err);
-      alert("Failed to cancel booking.");
+      console.error(err);
+      ToastNotification.notifyError("Failed to cancel booking");
     }
   };
 
@@ -131,33 +117,14 @@ const BookingDetailsModal = ({ bookingId, onClose }) => {
               </p>
             </div>
 
-            {isAdmin && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-700">Admin Actions</h3>
-
-                {/* Status Change */}
-                <div className="mb-4">
-                  <label className="text-sm text-gray-600">Update Status:</label>
-                  <select
-                    value={status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="mt-2 p-2 border rounded-md w-full"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="completed">Completed</option>
-                    <option value="canceled">Canceled</option>
-                  </select>
-                </div>
-
-                {/* Cancel Booking */}
-                <button
-                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  onClick={handleCancelBooking}
-                >
-                  Cancel Booking
-                </button>
-              </div>
+            {/* Conditionally render Cancel Booking button */}
+            {booking.status === "confirmed" && (
+              <button
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                onClick={handleCancelBooking}
+              >
+                Cancel Booking
+              </button>
             )}
           </div>
         ) : (

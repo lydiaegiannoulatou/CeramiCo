@@ -171,6 +171,22 @@ const cancelBooking = async (req, res) => {
 };
 
 
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!booking) return res.status(404).json({ error: "Not found" });
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: "Update failed", details: err.message });
+  }
+};
+
+
 module.exports = {
   getAllBookings,
   getBookingById,
@@ -178,4 +194,5 @@ module.exports = {
   handleBookNow,
   getBookingSuccess,
   cancelBooking,
+  updateBookingStatus,
 };
