@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import AdminCreateWorkshop from "./AdminCreateWorkshop";
-import Newsletter from "./Newsletter"
-import AdminExhibitionModal from "./AdminExhibitionModal"
-import AddProductModal from "./AddProductModal"
-import ProductOrdersManagement from "./ProductOrdersManagement"
+import Newsletter from "./Newsletter";
+import AdminExhibitionModal from "./AdminExhibitionModal";
+import AddProductModal from "./AddProductModal";
+import ProductOrdersManagement from "./ProductOrdersManagement";
 import WorkshopBookingsManagement from "./WorkshopBookingsManagement";
+import GalleryAdmin from "./GalleryAdmin";
 
 const adminSections = [
   { key: "orders", title: "Product Orders" },
@@ -13,6 +14,7 @@ const adminSections = [
   { key: "createWorkshop", title: "Add Workshop" },
   { key: "exhibitions", title: "Add Exhibition" },
   { key: "newsletter", title: "Newsletter" },
+  { key: "gallery", title: "Gallery" },
 ];
 
 const AdminProfile = () => {
@@ -32,6 +34,8 @@ const AdminProfile = () => {
         return <AdminExhibitionModal />; // Exhibition management modal or component
       case "newsletter":
         return <Newsletter />;
+      case "gallery":
+        return <GalleryAdmin />;
       default:
         return <p>Select a section</p>;
     }

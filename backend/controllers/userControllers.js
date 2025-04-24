@@ -50,7 +50,7 @@ const loginUser = async (req, res) => {
 //USER REGISTRATION
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, username, address, phone, enrolled, role } =
+    const { name, email, password, username, enrolled, role } =
       req.body;
     if (!name || !email || !password || !username) {
       return res
@@ -69,8 +69,6 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       username,
-      address,
-      phone,
       enrolled,
       role,
     });
@@ -82,7 +80,7 @@ const registerUser = async (req, res) => {
       role: newUser.role,
     };
 
-    const token = jwt.sign(payload, secretKey, { expiresIn: "2h" });
+    const token = jwt.sign(payload, secretKey, { expiresIn: "4h" });
 
     console.log("registration successfully");
 
@@ -112,8 +110,6 @@ const userProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      address: user.address,
-      phone: user.phone,
       role: user.role
     });
   } catch (error) {

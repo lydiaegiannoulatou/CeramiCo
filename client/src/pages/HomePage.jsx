@@ -1,3 +1,5 @@
+import Gallery from "../components/Gallery";
+
 const HomePage = () => {
   return (
     <>
@@ -25,6 +27,10 @@ const HomePage = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      <div>
+        <Gallery />
       </div>
     </>
   );

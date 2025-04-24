@@ -15,6 +15,8 @@ import ProfilePage from "./pages/ProfilePage"
 import Cart from "./pages/CartPage";
 import Checkout from "./pages/Checkout";
 import SuccessPage from "./pages/SuccessPage";
+import FailPage from "./pages/FailPage"
+import CalendarPage from "./pages/CalendarPage"
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -39,6 +41,8 @@ function App() {
         <Route path="/cart" element = {<Cart />}/>
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<SuccessPage />} />
+        <Route path="/cancel" element={<FailPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
        </Routes>
       <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
     </Router>

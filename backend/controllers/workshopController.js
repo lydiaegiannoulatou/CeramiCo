@@ -214,6 +214,46 @@ const bookSession = async (req, res) => {
 };
 
 
+
+const getSessionsForCalendar = async (req, res) => {
+  try {
+    const workshops = await Workshop.find({
+      "sessions.sessionDate": { $gte: new Date() },
+    });
+
+    const events = [];
+
+    workshops.forEach((workshop) => {
+      workshop.sessions.forEach((s) => {
+        if (
+          s.sessionDate >= new Date() &&  // future-only
+          s.bookedSpots < workshop.maxSpots  // spots left
+        ) {
+          events.push({
+            id: s._id,  // session id
+            workshopId: workshop._id,
+            title: workshop.title,
+            start: s.sessionDate,
+            end: new Date(
+              new Date(s.sessionDate).getTime() +
+                workshop.duration * 60 * 1000  // duration in mins
+            ),
+            availableSpots: workshop.maxSpots - s.bookedSpots,
+          });
+        }
+      });
+    });
+
+    console.log("Fetched events:", events);  // Add log to check response
+    res.status(200).json(events);
+  } catch (err) {
+    console.error("Error fetching sessions:", err);  // Add more logging for better insight
+    res.status(500).json({ error: "Failed to fetch sessions", details: err.message });
+  }
+};
+
+
+
 module.exports = {
   getAllClasses,
   getClassById,
@@ -221,5 +261,6 @@ module.exports = {
   updateClass,
   deleteClass,
   getClassesForCalendar,
-  bookSession
+  bookSession,
+  getSessionsForCalendar
 };

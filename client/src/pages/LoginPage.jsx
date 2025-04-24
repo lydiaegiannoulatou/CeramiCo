@@ -57,49 +57,70 @@ const Login = () => {
   
 
   return (
-    <div className="flex-row justify-items-center mt-20">
-      <h1 className="font-bold mb-8">Login</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form className="flex-row justify-items-center" onSubmit={handleLogin}>
-        <div>
-          {/* <label>Username / Email:</label> */}
+    <section className="min-h-screen flex items-center justify-center bg-[#f7f4ea] px-4">
+      <div className="w-full max-w-md bg-[#eee6d2]/70 shadow-lg rounded-xl p-12">
+        <h2 className="font-serif text-3xl text-center mb-10">Login</h2>
+
+        {error && (
+          <p className="mb-4 text-sm text-red-600 text-center">{error}</p>
+        )}
+
+        <form className="space-y-6" onSubmit={handleLogin}>
           <input
             type="text"
+            placeholder="Email or Username"
             value={usernameOrEmail}
-            placeholder="Enter Username or Email"
-            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            onChange={e => setUsernameOrEmail(e.target.value)}
+            className="w-full border-b border-gray-400 bg-transparent focus:outline-none focus:border-[#713818] placeholder:italic placeholder:text-gray-500 py-2"
             required
           />
-        </div>
-        <div className="">
-          {/* <label>Password:</label> */}
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="button"
-            onClick={togglePasswordVisibility}
-            className="p-2"
+
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full border-b border-gray-400 bg-transparent focus:outline-none focus:border-[#713818] placeholder:italic placeholder:text-gray-500 py-2 pr-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <Link
+            to="/forgot-password"
+            className="block text-sm text-right text-[#713818] hover:underline"
           >
-            {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-          </button>
-        </div>
-        <Link>Forgot your password?</Link>
-        <div>
-          <input
+            Forgot your password?
+          </Link>
+
+          <button
             type="submit"
-            value="Login"
-            className="w-md bg-blue-500 text-white py-2 rounded-lg mt-8"
-          />
+            className="w-full mt-2 bg-[#713818] hover:bg-[#5d2f15] text-[#f7f4ea] py-2 rounded-md tracking-wide transition"
+          >
+            Sign In
+          </button>
+        </form>
+
+        <div className="mt-10 flex items-center justify-between text-sm">
+          <span className="text-gray-600">Create account</span>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-1 text-[#713818] hover:underline"
+          >
+            <span>Register</span>
+            <span className="text-lg">→</span>
+          </Link>
         </div>
-      </form>
-      <Link to="/register">Create account</Link>
-    </div>
+      </div>
+    </section>
   );
-};
+}
 
 export default Login;

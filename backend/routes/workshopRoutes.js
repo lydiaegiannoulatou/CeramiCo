@@ -7,11 +7,14 @@ const {
   updateClass,
   deleteClass,
   getClassesForCalendar,
-  bookSession
+  bookSession,
+  getSessionsForCalendar
 } = require("../controllers/workshopController");
 const { authMiddleware, adminAccess } = require("../middleware/authMiddleware");
 
 router.get("/", getAllClasses);
+router.get("/sessions", getSessionsForCalendar)
+
 router.get("/:id", getClassById);
 router.post("/new_class", authMiddleware, adminAccess, createClass);
 router.put("/update/:id", authMiddleware, adminAccess, updateClass);
