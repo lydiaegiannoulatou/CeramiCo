@@ -75,16 +75,19 @@ function getUploadSignature(req, res) {
 
 async function deleteImage(req, res) {
   try {
-    const result = await cloudinary.uploader.destroy(req.params.id);
-    if (result.result === "not found") {
-      return res.status(403).json({ error: "Image not found or already deleted." });
+    const publicId = req.params.id;            // e.g. "Gallery/lnswxgabdkqoixzgsg14"
+    const result   = await cloudinary.uploader.destroy(publicId);
+
+    if (result.result === 'not found') {
+      return res.status(404).json({ error: 'Image not found or already deleted.' });
     }
     res.sendStatus(204);
   } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).json({ error: "Failed to delete image." });
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete image.' });
   }
 }
+
 
 /* ──────────────  EXPORTS  ────────────── */
 module.exports = {

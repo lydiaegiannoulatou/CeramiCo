@@ -72,7 +72,7 @@ const ImageCarousel = ({ images }) => {
 
       {/* Fullscreen Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.7)] flex items-center justify-center">
           <div className="absolute inset-0" onClick={closeModal}></div>
 
           <button

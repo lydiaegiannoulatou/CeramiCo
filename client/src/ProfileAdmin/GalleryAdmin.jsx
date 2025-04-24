@@ -64,17 +64,17 @@ function GalleryAdmin() {
 
   /* -------- Delete -------- */
   const handleDelete = async (publicId) => {
-    if (!window.confirm("Delete image?")) return;
+    if (!window.confirm('Delete image?')) return;
+  
     try {
-      await axios.delete(`http://localhost:3050/admin/gallery/${publicId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Adding token for authentication
-        },
-      });
-      setImgs((prev) => prev.filter((img) => img.public_id !== publicId));
+      await axios.delete(
+        `http://localhost:3050/admin/gallery/${encodeURIComponent(publicId)}`, // now includes “Gallery/…”
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setImgs(prev => prev.filter(img => img.public_id !== publicId));
     } catch (err) {
       console.error(err);
-      alert("Delete failed");
+      alert('Delete failed');
     }
   };
 
