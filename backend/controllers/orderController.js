@@ -143,6 +143,10 @@ const cancelOrder = async (req, res) => {
       return res.status(403).json({ msg: "You are not authorized to cancel this order." });
     }
 
+    if (order.user_id.toString() !== req.user.userId && req.user.role !== "admin") {
+      return res.status(403).json({ msg: "You are not authorized to cancel this order." });
+    }
+
     // Log the user ID
     console.log("Logged-in user ID:", req.user.userId);
     console.log("Order user ID:", order.user_id.toString());
@@ -185,34 +189,53 @@ const cancelOrder = async (req, res) => {
 };
 
 // UPDATE ORDER STATUS OR PAYMENT STATUS (For Admin Only)
+
+const STATUS_FLOW = ["processing", "shipped", "delivered", "canceled"];
+
 const updateOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { orderStatus, paymentStatus } = req.body;
 
-    // Fetch the order by ID
+    /* ── fetch order ──────────────────────────────────────────────── */
     const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ msg: "Order not found" });
-    }
-    // Update order status and payment status
+    if (!order) return res.status(404).json({ msg: "Order not found" });
+
+    /* ── validate proposed status change ──────────────────────────── */
     if (orderStatus) {
+      const currentIdx = STATUS_FLOW.indexOf(order.orderStatus);
+      const nextIdx    = STATUS_FLOW.indexOf(orderStatus);
+
+      // unknown status or move backwards → reject
+      if (nextIdx === -1)
+        return res.status(400).json({ msg: `Invalid orderStatus "${orderStatus}".` });
+
+      if (nextIdx < currentIdx)
+        return res.status(400).json({
+          msg: `Cannot change status from "${order.orderStatus}" to "${orderStatus}".`
+        });
+
+      // if already canceled, forbid any further change
+      if (order.orderStatus === "canceled")
+        return res.status(400).json({ msg: "Canceled orders cannot be modified." });
+
       order.orderStatus = orderStatus;
     }
 
-    if (paymentStatus) {
-      order.paymentStatus = paymentStatus;
-    }
+    /* ── payment status may change independently (optional) ───────── */
+    if (paymentStatus) order.paymentStatus = paymentStatus;
 
-    // Save the updated order
     await order.save();
+    return res
+      .status(200)
+      .json({ msg: "Order updated successfully", order });
 
-    res.status(200).json({ msg: "Order status updated successfully", order });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ msg: "Could not update order status", error });
   }
 };
+
 
 module.exports = {
   getOrder,

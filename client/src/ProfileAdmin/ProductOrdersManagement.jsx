@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import OrderSummary from "../components/OrderSummary";
+import OrderDetailsModal from "../ProfileUser/OrderDetailsModal";
 
 const statusGroups = ["all", "processing", "shipped", "delivered", "canceled"];
 const ordersPerPage = 15;
@@ -154,12 +154,9 @@ const ProductOrders = () => {
         </button>
       </div>
 
-      {/* Order modal */}
+      {/* Order Summary Modal */}
       {selectedOrder && (
-        <div
-          className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-50 flex justify-center items-start pt-20"
-          onClick={() => setSelectedOrder(null)} // Close the modal when the overlay is clicked
-        >
+        <div className="fixed inset-0 z-50 flex justify-center items-start pt-20">
           <div
             className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()} // Prevent closing the modal when clicking inside it
@@ -170,8 +167,8 @@ const ProductOrders = () => {
             >
               &#x2715;
             </button>
-            {/* Pass the selectedOrder to the OrderSummary */}
-            <OrderSummary order={selectedOrder} onClose={() => setSelectedOrder(null)} onStatusChange={() => {}} />
+            {/* Render the OrderSummary component */}
+            <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onStatusChange={() => {}} />
           </div>
         </div>
       )}

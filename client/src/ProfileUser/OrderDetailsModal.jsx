@@ -1,107 +1,171 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const STATUS_FLOW = ["processing", "shipped", "delivered", "canceled"];
+
 const OrderDetailsModal = ({ order }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [orderStatus, setOrderStatus] = useState(order.orderStatus); // <- actual status text
 
-  // Extract user_id safely (could be undefined if order is null)
   const userId = order.user_id;
+  const isAdmin = localStorage.getItem("role") === "admin";
+  const lowerStatus = orderStatus.toLowerCase();
+  const isCanceled = lowerStatus === "canceled";
 
+  /* fetch user profile ------------------------------------------------ */
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (!userId) return;
-
-      try {
-        const response = await axios.get(`http://localhost:3050/user/profile/${userId}`);
-        setUserDetails(response.data);
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
-
-    fetchUserDetails();
+    if (!userId) return;
+    axios
+      .get(`http://localhost:3050/user/profile/${userId}`)
+      .then(r => setUserDetails(r.data))
+      .catch(e => console.error("Error fetching user details:", e));
   }, [userId]);
 
-  if (!order) return null;
-  if (!userDetails) return <p>Loading user details...</p>;
+  /* helpers ----------------------------------------------------------- */
+  const authHeader = { Authorization: `Bearer ${localStorage.getItem("token")}` };
 
-  const {
-    orderNumber,
-    orderStatus,
-    paymentStatus,
-    shippingAddress,
-    totalCost,
-    currency,
-    items,
-    createdAt,
-    _id,
-  } = order;
-console.log("order._id",order._id);
-console.log("shippingAddress:",order.shippingAddress)
+  const backendUpdate = newStatus =>
+    axios.put(
+      `http://localhost:3050/order/update/${order._id}`,
+      { orderStatus: newStatus },
+      { headers: authHeader }
+    );
 
+  const backendCancel = () =>
+    axios.put(
+      `http://localhost:3050/order/cancel/${order._id}`,
+      null,
+      { headers: authHeader }
+    );
+
+  /* admin dropdown change -------------------------------------------- */
+  const handleStatusChange = async newStatus => {
+    if (!window.confirm(`Change status to ${newStatus}?`)) return;
+    try {
+      await backendUpdate(newStatus);
+      setOrderStatus(newStatus);
+      setDropdownOpen(false);
+      alert(`Order status updated to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || "Failed to update order status.");
+    }
+  };
+
+  /* cancel button / entry -------------------------------------------- */
   const handleCancelOrder = async () => {
-    const confirmCancel = window.confirm("Are you sure you want to cancel this order?");
-    if (!confirmCancel) return;
-
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setIsCancelling(true);
     try {
-      await axios.put(`http://localhost:3050/order/cancel/${order._id}`, null, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await backendCancel();
+      setOrderStatus("canceled");
+      setDropdownOpen(false);
       alert("Order canceled successfully.");
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to cancel order.");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || "Failed to cancel order.");
     } finally {
       setIsCancelling(false);
     }
   };
+
+  /* disable dropdown items that move backward ------------------------ */
+  const disabled = status =>
+    STATUS_FLOW.indexOf(status) < STATUS_FLOW.indexOf(lowerStatus);
+
+  /* ------------------------------------------------------------------ */
+  if (!order) return null;
+  if (!userDetails) return <p>Loading user details…</p>;
+
+  const { orderNumber, paymentStatus, shippingAddress, totalCost, currency, items, createdAt } = order;
+
   return (
     <div className="border p-6 rounded-2xl shadow-md bg-white mt-6 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Order Confirmation</h2>
-        {orderStatus !== "Canceled" && (
+
+        {/* red cancel button — only for non‑admin & not cancelled */}
+        {!isAdmin && !isCanceled && (
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
             onClick={handleCancelOrder}
             disabled={isCancelling}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
           >
-            {isCancelling ? "Cancelling..." : "Cancel Order"}
+            {isCancelling ? "Cancelling…" : "Cancel Order"}
           </button>
+        )}
+
+        {/* admin dropdown ------------------------------------------------ */}
+        {isAdmin && !isCanceled && (
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Change Status
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute bg-white shadow-md rounded-lg mt-2 w-full z-10">
+                {STATUS_FLOW.slice(0, -1).map(st => (
+                  <button
+                    key={st}
+                    onClick={() => handleStatusChange(st)}
+                    disabled={disabled(st)}
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-200 capitalize ${
+                      disabled(st) ? "opacity-40 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    Mark as {st}
+                  </button>
+                ))}
+
+                {/* Cancel option for admin */}
+                <button
+                  onClick={handleCancelOrder}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-200 text-red-600"
+                >
+                  Cancel Order
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
+      {/* --- summary fields ------------------------------------------------ */}
       <div className="grid grid-cols-2 gap-4 text-base">
-        <p><span className="font-semibold">Order #:</span> {orderNumber}</p>
-        <p><span className="font-semibold">Status:</span> {orderStatus}</p>
-        <p><span className="font-semibold">Payment:</span> {paymentStatus}</p>
-        <p><span className="font-semibold">Total:</span> {totalCost} {currency}</p>
-        <p><span className="font-semibold">Date:</span> {new Date(createdAt).toLocaleString()}</p>
+        <p><strong>Order #:</strong> {orderNumber}</p>
+        <p><strong>Status:</strong> {orderStatus}</p>
+        <p><strong>Payment:</strong> {paymentStatus}</p>
+        <p><strong>Total:</strong> {totalCost} {currency}</p>
+        <p><strong>Date:</strong> {new Date(createdAt).toLocaleString()}</p>
       </div>
 
+      {/* --- user details ------------------------------------------------ */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-2">User Details</h3>
-        <p><span className="font-semibold">Name:</span> {userDetails.name}</p>
-        <p><span className="font-semibold">Email:</span> {userDetails.email}</p>
+        <p><strong>Name:</strong> {userDetails.name}</p>
+        <p><strong>Email:</strong> {userDetails.email}</p>
       </div>
+
+      {/* --- shipping address ------------------------------------------------ */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-2">Shipping Address</h3>
         {shippingAddress ? (
           <div>
-            <p><span className="font-semibold">Full Name:</span> {shippingAddress.fullName}</p>
-            <p><span className="font-semibold">Address Line 1:</span> {shippingAddress.addressLine1}</p>
+            <p><strong>Full Name:</strong> {shippingAddress.fullName}</p>
+            <p><strong>Address Line 1:</strong> {shippingAddress.addressLine1}</p>
             {shippingAddress.addressLine2 && (
-              <p><span className="font-semibold">Address Line 2:</span> {shippingAddress.addressLine2}</p>
+              <p><strong>Address Line 2:</strong> {shippingAddress.addressLine2}</p>
             )}
-            <p><span className="font-semibold">City:</span> {shippingAddress.city}</p>
-            <p><span className="font-semibold">Postal Code:</span> {shippingAddress.postalCode}</p>
-            <p><span className="font-semibold">Country:</span> {shippingAddress.country}</p>
+            <p><strong>City:</strong> {shippingAddress.city}</p>
+            <p><strong>Postal Code:</strong> {shippingAddress.postalCode}</p>
+            <p><strong>Country:</strong> {shippingAddress.country}</p>
             {shippingAddress.phone && (
-              <p><span className="font-semibold">Phone:</span> {shippingAddress.phone}</p>
+              <p><strong>Phone:</strong> {shippingAddress.phone}</p>
             )}
           </div>
         ) : (
@@ -109,6 +173,7 @@ console.log("shippingAddress:",order.shippingAddress)
         )}
       </div>
 
+      {/* --- items list ------------------------------------------------ */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-4">Items</h3>
         {Array.isArray(items) && items.length ? (

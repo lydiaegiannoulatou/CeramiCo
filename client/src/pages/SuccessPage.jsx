@@ -3,7 +3,7 @@ import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import BookingSuccessDetails from "../components/BookingSuccessDetails"
-import OrderSummary from "../components/OrderSummary";
+import OrderSummary from "../components/OrderSummary"
 
 const SuccessPage = () => {
   const [paymentData, setPaymentData] = useState(null);
