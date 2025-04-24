@@ -112,7 +112,7 @@ const ProductOrders = () => {
             <tr
               key={o._id}
               className="cursor-pointer hover:bg-gray-100"
-              onClick={() => setSelectedOrder(o)}
+              onClick={() => setSelectedOrder(o)} // Select order to view details
             >
               <td className="px-4 py-2 border">{String(o.orderNumber).padStart(3, "0")}</td>
               <td className="px-4 py-2 border">{o.items[0]?.product_id?.title || "—"}</td>
@@ -156,15 +156,22 @@ const ProductOrders = () => {
 
       {/* Order modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-50 flex justify-center items-start pt-20">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto relative">
+        <div
+          className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-50 flex justify-center items-start pt-20"
+          onClick={() => setSelectedOrder(null)} // Close the modal when the overlay is clicked
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing the modal when clicking inside it
+          >
             <button
               onClick={() => setSelectedOrder(null)}
               className="absolute top-2 right-2 text-gray-500 hover:text-black"
             >
               &#x2715;
             </button>
-            <OrderSummary order={selectedOrder} />
+            {/* Pass the selectedOrder to the OrderSummary */}
+            <OrderSummary order={selectedOrder} onClose={() => setSelectedOrder(null)} onStatusChange={() => {}} />
           </div>
         </div>
       )}

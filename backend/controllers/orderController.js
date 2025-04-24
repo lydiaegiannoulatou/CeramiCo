@@ -78,34 +78,6 @@ const getOrder = async (req, res) => {
   }
 };
 
-// GET ORDER BY ID
-const getOrderById = async (req, res) => {
-  const { orderId } = req.params;
-
-  try {
-    if (!orderId) {
-      return res.status(400).json({ msg: "Order ID is required." });
-    }
-
-    const order = await Order.findById(orderId)
-      .populate("user_id", "name email")
-      .populate("items.product_id", "title images")
-      
-
-    if (!order) {
-      return res.status(404).json({ msg: "Order not found." });
-    }
-
-    if (order.user_id._id.toString() !== req.user.userId) {
-      return res.status(403).json({ msg: "You are not authorized to view this order." });
-    }
-
-    res.status(200).json({ msg: "Order fetched successfully", order });
-  } catch (error) {
-    console.error("Error fetching order by ID:", error);
-    res.status(500).json({ msg: "Could not retrieve order by ID", error });
-  }
-};
 
 
 // Fetch all product orders
@@ -249,5 +221,5 @@ module.exports = {
   getOrdersByUser,
   cancelOrder,
   updateOrder,
-  getOrderById
+  
 };
