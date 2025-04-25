@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import OrderDetailsModal from "../ProfileUser/OrderDetailsModal";
+import { Filter, ChevronLeft, ChevronRight, Loader2, AlertCircle, Package } from "lucide-react";
 
 const statusGroups = ["all", "processing", "shipped", "delivered", "canceled"];
 const ordersPerPage = 15;
@@ -13,7 +14,6 @@ const ProductOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState(statusGroups[0]);
 
-  /* ───────── Fetch orders ───────── */
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -32,143 +32,179 @@ const ProductOrders = () => {
     })();
   }, [currentPage]);
 
-  /* ───────── Helpers ───────── */
   const getStatusColor = (st) => {
     switch (st) {
-      case "processing": return "bg-yellow-100 text-yellow-700";
-      case "shipped":
-      case "delivered": return "bg-green-100 text-green-700";
-      case "canceled": return "bg-red-100 text-red-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "processing": return "bg-[#F5F2EB] text-[#D36B3C]";
+      case "shipped": return "bg-[#EDF7ED] text-[#2F4138]";
+      case "delivered": return "bg-[#E8F4F2] text-[#2D6A6E]";
+      case "canceled": return "bg-[#FBEAEA] text-[#D32F2F]";
+      default: return "bg-[#F5F2EB] text-[#2F4138]";
     }
   };
 
-  // Count the orders for each status, including "all"
   const statusCounts = useMemo(() => {
     return statusGroups.reduce((acc, st) => {
       if (st === "all") {
-        acc[st] = orders.length; // Count all orders
+        acc[st] = orders.length;
       } else {
-        acc[st] = orders.filter((o) => o.orderStatus === st).length; // Count based on status
+        acc[st] = orders.filter((o) => o.orderStatus === st).length;
       }
       return acc;
     }, {});
   }, [orders]);
 
-  // Filter orders based on the selected status
   const visibleOrders = statusFilter === "all"
-    ? orders // Show all orders if "All" is selected
+    ? orders
     : orders.filter((o) => o.orderStatus === statusFilter);
 
-  // Calculate total pages for the filtered list
   const totalPages = Math.max(1, Math.ceil(statusCounts[statusFilter] / ordersPerPage));
   const disableNext = currentPage >= totalPages;
   const disablePrev = currentPage <= 1;
 
-  /* ───────── Render ───────── */
-  if (loading) return <p className="p-4">Loading product orders…</p>;
-  if (error) return <p className="p-4 text-red-600">{error}</p>;
+  const FilterTabBtn = ({ status }) => (
+    <button
+      onClick={() => { 
+        setStatusFilter(status); 
+        setCurrentPage(1); 
+      }}
+      className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2
+        ${statusFilter === status
+          ? "bg-[#2F4138] text-white"
+          : "bg-[#2F4138]/5 text-[#2F4138] hover:bg-[#2F4138]/10"
+        }`}
+    >
+      <span className="capitalize">{status}</span>
+      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+        {statusCounts[status]}
+      </span>
+    </button>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 text-[#2F4138] animate-spin" />
+          <p className="text-[#2F4138]">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
+          <p className="text-[#2F4138] text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-6">Product Orders</h2>
-
-      {/* Filter Pills */}
-      <div className="inline-flex rounded-full overflow-hidden mb-6 border">
-        {statusGroups.map((st, idx) => (
-          <button
-            key={st}
-            onClick={() => { setStatusFilter(st); setCurrentPage(1); }}
-            className={`px-5 py-1 text-sm capitalize flex items-center gap-1
-              ${statusFilter === st
-              ? "text-white"
-              : "text-gray-700 hover:bg-gray-200"
-              }
-              ${idx === 0 ? "" : "border-l"}  /* divider */
-            `}
-            style={{
-              backgroundColor: statusFilter === st ? "#D36B3C" : "transparent"
-            }}
-          >
-            {st} <span className="font-semibold">({statusCounts[st]})</span>
-          </button>
-        ))}
+    <div>
+      {/* Filter Section */}
+      <div className="flex items-center space-x-4 mb-8">
+        <Filter className="w-5 h-5 text-[#2F4138]" />
+        <div className="flex space-x-3">
+          {statusGroups.map((status) => (
+            <FilterTabBtn key={status} status={status} />
+          ))}
+        </div>
       </div>
 
       {/* Table */}
-      <table className="min-w-full table-auto border">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="px-4 py-2 border">Order #</th>
-            <th className="px-4 py-2 border">Product Title</th>
-            <th className="px-4 py-2 border">Date</th>
-            <th className="px-4 py-2 border">Total (€)</th>
-            <th className="px-4 py-2 border">Payment Status</th>
-            <th className="px-4 py-2 border">Order Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibleOrders.map((o) => (
-            <tr
-              key={o._id}
-              className="cursor-pointer hover:bg-gray-100"
-              onClick={() => setSelectedOrder(o)} // Select order to view details
-            >
-              <td className="px-4 py-2 border">{String(o.orderNumber).padStart(3, "0")}</td>
-              <td className="px-4 py-2 border">{o.items[0]?.product_id?.title || "—"}</td>
-              <td className="px-4 py-2 border">{new Date(o.createdAt).toLocaleDateString()}</td>
-              <td className="px-4 py-2 border">{o.totalCost.toFixed(2)}</td>
-              <td className="px-4 py-2 border">{o.paymentStatus}</td>
-              <td className="px-4 py-2 border">
-                <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(o.orderStatus)}`}>
-                  {o.orderStatus}
-                </span>
-              </td>
+      <div className="bg-white rounded-xl overflow-hidden border border-[#2F4138]/10">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-[#2F4138]/5">
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Order #</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Product Title</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Date</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Total (€)</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Payment Status</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Order Status</th>
             </tr>
-          ))}
-          {visibleOrders.length === 0 && (
-            <tr>
-              <td colSpan={6} className="text-center py-4 text-gray-500">
-                No {statusFilter} orders
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-[#2F4138]/10">
+            {visibleOrders.map((o) => (
+              <tr
+                key={o._id}
+                onClick={() => setSelectedOrder(o)}
+                className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
+              >
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {String(o.orderNumber).padStart(3, "0")}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {o.items[0]?.product_id?.title || "—"}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {new Date(o.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {o.totalCost.toFixed(2)}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {o.paymentStatus}
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(o.orderStatus)}`}>
+                    {o.orderStatus}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {visibleOrders.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-[#2F4138]/70">
+                  <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  No orders found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6 gap-4">
+      <div className="flex justify-center mt-8 space-x-4">
         <button
           disabled={disablePrev}
-          className={`px-4 py-2 rounded-lg ${disablePrev ? "bg-gray-100 text-gray-400" : "bg-gray-200 hover:bg-gray-300"}`}
           onClick={() => setCurrentPage((p) => p - 1)}
+          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+            disablePrev
+              ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
+              : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
+          }`}
         >
-          &lt; Previous
+          <ChevronLeft className="w-5 h-5 mr-1" />
+          Previous
         </button>
         <button
           disabled={disableNext}
-          className={`px-4 py-2 rounded-lg ${disableNext ? "bg-gray-100 text-gray-400" : "bg-gray-200 hover:bg-gray-300"}`}
           onClick={() => setCurrentPage((p) => p + 1)}
+          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+            disableNext
+              ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
+              : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
+          }`}
         >
-          Next &gt;
+          Next
+          <ChevronRight className="w-5 h-5 ml-1" />
         </button>
       </div>
 
-      {/* Order Summary Modal */}
+      {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex justify-center items-start pt-20">
-          <div
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing the modal when clicking inside it
-          >
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-black"
-            >
-              &#x2715;
-            </button>
-            {/* Render the OrderSummary component */}
-            <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onStatusChange={() => {}} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <OrderDetailsModal 
+              order={selectedOrder} 
+              onClose={() => setSelectedOrder(null)} 
+              onStatusChange={() => {}} 
+            />
           </div>
         </div>
       )}

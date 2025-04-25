@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import ImageUpload from "../components/CloudinaryUpload";
+import { Package, Tag, DollarSign, Boxes, Send, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
 
 const AddProductPage = () => {
   const [form, setForm] = useState({
@@ -13,6 +15,8 @@ const AddProductPage = () => {
     stock: "",
     images: [],
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -32,20 +36,43 @@ const AddProductPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Add validation for required fields if necessary
     if (!form.title || !form.price || !form.category || !form.description || !form.stock || form.images.length === 0) {
-      toast.error("Please fill in all fields and upload images.");
+      toast.error("Please fill in all fields and upload at least one image.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+      });
       return;
     }
+
+    setIsSubmitting(true);
+    const token = localStorage.getItem("token");
 
     try {
       const response = await axios.post(
         "http://localhost:3050/shop/products/add", 
-        form
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
-        toast.success("Product added successfully!");
+        toast.success("Product added successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+        });
         setForm({
           title: "",
           price: "",
@@ -54,75 +81,153 @@ const AddProductPage = () => {
           keywords: [],
           stock: "",
           images: [],
-        }); // Reset the form after submission
+        });
       } else {
-        toast.error(response.data.msg || "Failed to add product.");
+        toast.error(response.data.msg || "Failed to add product.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: <AlertCircle className="w-5 h-5 text-red-500" />
+        });
       }
     } catch (error) {
       console.error("Error adding product:", error);
-      toast.error("Something went wrong. Please try again later.");
+      toast.error("Something went wrong. Please try again later.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-3xl font-semibold mb-6">Add New Product</h2>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Basic Information</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <Package className="w-4 h-4 inline mr-2" />
+                Product Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={form.title}
+                onChange={handleFormChange}
+                placeholder="Enter product title"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-lg shadow-lg"
-      >
-        {/* Title */}
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleFormChange}
-          placeholder="Product Title"
-          className="p-3 border rounded"
-        />
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleFormChange}
+                placeholder="Enter product description"
+                rows="4"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
+          </div>
+        </div>
 
-        {/* Price */}
-        <input
-          name="price"
-          value={form.price}
-          onChange={handleFormChange}
-          placeholder="Product Price"
-          className="p-3 border rounded"
-        />
+        {/* Category and Price */}
+        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Category and Price</h3>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <Tag className="w-4 h-4 inline mr-2" />
+                Category
+              </label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleFormChange}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              >
+                <option value="">Select Category</option>
+                <option value="mugs">Mugs</option>
+                <option value="plates">Plates</option>
+                <option value="bowls">Bowls</option>
+                <option value="vases">Vases</option>
+                <option value="planters">Planters</option>
+                <option value="teapots">Teapots</option>
+                <option value="decor">Home Decor</option>
+                <option value="kitchen">Kitchenware</option>
+                <option value="sculptures">Sculptures</option>
+                <option value="candles">Candle Holders</option>
+              </select>
+            </div>
 
-        {/* Category Dropdown */}
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleFormChange}
-          className="p-3 border rounded"
-        >
-          <option value="">Select Category</option>
-          <option value="mugs">Mugs</option>
-          <option value="plates">Plates</option>
-          <option value="bowls">Bowls</option>
-          <option value="vases">Vases</option>
-          <option value="planters">Planters</option>
-          <option value="teapots">Teapots</option>
-          <option value="decor">Home Decor</option>
-          <option value="kitchen">Kitchenware</option>
-          <option value="sculptures">Sculptures</option>
-          <option value="candles">Candle Holders</option>
-        </select>
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <DollarSign className="w-4 h-4 inline mr-2" />
+                Price (€)
+              </label>
+              <input
+                type="number"
+                name="price"
+                value={form.price}
+                onChange={handleFormChange}
+                placeholder="Enter price"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
 
-        {/* Description */}
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleFormChange}
-          placeholder="Product Description"
-          className="p-3 border rounded"
-        />
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <Boxes className="w-4 h-4 inline mr-2" />
+                Stock Quantity
+              </label>
+              <input
+                type="number"
+                name="stock"
+                value={form.stock}
+                onChange={handleFormChange}
+                placeholder="Enter stock quantity"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Keywords */}
-        <div className="md:col-span-2">
-          <p className="font-semibold mb-2">Keywords</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="bg-[#2F4138]/5 rounded-xl p-6">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
+            <Tag className="w-4 h-4 inline mr-2" />
+            Keywords
+          </h3>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               "Handmade",
               "Wheel-Thrown",
@@ -135,50 +240,58 @@ const AddProductPage = () => {
               "Decorative",
               "Functional",
             ].map((keyword) => (
-              <label key={keyword} className="flex items-center text-sm">
+              <label key={keyword} className="flex items-center space-x-2 text-sm">
                 <input
                   type="checkbox"
                   value={keyword}
                   checked={form.keywords.includes(keyword)}
                   onChange={(e) => {
                     const keyword = e.target.value;
-                    setForm((prevForm) => {
-                      const updatedKeywords = prevForm.keywords.includes(keyword)
+                    setForm((prevForm) => ({
+                      ...prevForm,
+                      keywords: prevForm.keywords.includes(keyword)
                         ? prevForm.keywords.filter((k) => k !== keyword)
-                        : [...prevForm.keywords, keyword];
-                      return { ...prevForm, keywords: updatedKeywords };
-                    });
+                        : [...prevForm.keywords, keyword],
+                    }));
                   }}
-                  className="mr-2"
+                  className="rounded border-[#2F4138]/20 text-[#2F4138] focus:ring-[#2F4138]"
                 />
-                {keyword}
+                <span className="text-[#2F4138]">{keyword}</span>
               </label>
             ))}
           </div>
         </div>
 
-        {/* Stock */}
-        <input
-          name="stock"
-          value={form.stock}
-          onChange={handleFormChange}
-          placeholder="Stock Quantity"
-          className="p-3 border rounded"
-        />
-
         {/* Image Upload */}
-        <div className="md:col-span-2">
+        <div className="bg-[#2F4138]/5 rounded-xl p-6">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Product Images</h3>
           <ImageUpload onImagesUploaded={handleImageUpload} />
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="md:col-span-2 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
-        >
-          Submit Product
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex items-center px-6 py-3 bg-[#2F4138] text-white rounded-xl
+              hover:bg-[#3A4F44] disabled:bg-[#2F4138]/20 disabled:cursor-not-allowed
+              transition-colors duration-200"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Adding Product...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5 mr-2" />
+                Add Product
+              </>
+            )}
+          </button>
+        </div>
       </form>
+      <ToastContainer />
     </div>
   );
 };

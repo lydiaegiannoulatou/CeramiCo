@@ -6,9 +6,9 @@ const Product = require("../models/productModel");
 const Workshop = require("../models/workshopModel");
 const Cart = require("../models/cartModel");
 const Booking = require("../models/bookingModel");
-const User = require("../models/userModel")
-// Create Checkout Session
+const User = require("../models/userModel");
 
+// Create Checkout Session
 const createCheckoutSession = async (req, res) => {
   const { items, shippingAddress } = req.body;
   const userId = req.user.userId;
@@ -21,6 +21,7 @@ const createCheckoutSession = async (req, res) => {
 
     let sessionType = "";
 
+    // Iterate over the items and prepare line items and orders
     for (const item of items) {
       if (item.type === "product") {
         const product = await Product.findById(item.id);
@@ -31,20 +32,20 @@ const createCheckoutSession = async (req, res) => {
           throw new Error(`Insufficient stock for product: ${product.title}`);
         }
 
-        // Stripe line item
+        // Add product to line_items for Stripe
         line_items.push({
           price: product.stripePriceId,
           quantity: item.quantity,
         });
 
-        // Prepare order item
+        // Prepare product order data
         productItems.push({
           type: "product",
           product_id: product._id,
           quantity: item.quantity,
           price: product.price,
         });
-        sessionType = "product";
+        sessionType = "product"; // Set session type to product
       } else if (item.type === "workshop") {
         const workshop = await Workshop.findById(item.id);
         const session = workshop.sessions.id(item.sessionId);
@@ -53,7 +54,7 @@ const createCheckoutSession = async (req, res) => {
           throw new Error("Invalid workshop or session");
         }
 
-        // Stripe line item for workshop
+        // Add workshop to line_items for Stripe
         line_items.push({
           price_data: {
             currency: "EUR",
@@ -63,28 +64,32 @@ const createCheckoutSession = async (req, res) => {
               ).toLocaleString()}`,
               description: "Workshop booking",
             },
-            unit_amount: Math.round(workshop.price * 100),
+            unit_amount: Math.round(workshop.price * 100), // Convert price to cents
           },
           quantity: 1,
         });
 
+        // Prepare booking data
         bookings.push({
           user_id: userId,
           workshop_id: workshop._id,
           sessionId: session.id,
           image: workshop.image,
           date: session.sessionDate,
+          price: workshop.price, // Store price for booking
         });
-        sessionType = "workshop";
+        sessionType = "workshop"; // Set session type to workshop
       }
     }
 
+    // Calculate the total cost (in cents)
     const totalCost =
       [...productItems].reduce(
         (acc, item) => acc + item.price * item.quantity,
         0
-      ) + bookings.reduce((acc, b) => acc + b.price || 0, 0);
+      ) + bookings.reduce((acc, b) => acc + b.price * 100, 0); // Ensure workshops are in cents
 
+    // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items,
@@ -94,7 +99,7 @@ const createCheckoutSession = async (req, res) => {
       cancel_url: `${process.env.DOMAIN}/cancel`,
     });
 
-    // Save product order only (if any)
+    // Save order if there are product items
     if (productItems.length > 0) {
       const newOrder = new Order({
         user_id: userId,
@@ -108,7 +113,7 @@ const createCheckoutSession = async (req, res) => {
       await newOrder.save();
     }
 
-    // Save booking as pending (to be confirmed on payment)
+    // Save bookings as pending
     for (const b of bookings) {
       const booking = new Booking({
         ...b,
@@ -119,6 +124,7 @@ const createCheckoutSession = async (req, res) => {
       await booking.save();
     }
 
+    // Return session URL to redirect the user to Stripe
     res.status(200).json({ url: session.url });
   } catch (err) {
     console.error("Error creating checkout session:", err);
@@ -126,7 +132,7 @@ const createCheckoutSession = async (req, res) => {
   }
 };
 
-// Stripe Webhook (to handle payment updates)
+// Stripe Webhook to handle payment updates
 const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
@@ -137,7 +143,6 @@ const stripeWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-
     console.log("✅ Webhook received:", event.type);
   } catch (err) {
     console.error("Webhook error:", err.message);
@@ -148,18 +153,17 @@ const stripeWebhook = async (req, res) => {
     const session = event.data.object;
 
     try {
-      // 1. Update order
+      // Update order status to paid
       const order = await Order.findOne({ stripeSessionId: session.id });
       if (order) {
-        console.log("Found order for session ID:", session.id);  // Log to confirm order is found
+        console.log("Found order for session ID:", session.id);
 
         order.paymentStatus = "paid";
-        order.stripePaymentIntentId = session.payment_intent;  // Save the payment intent ID to stripePaymentIntentId
+        order.stripePaymentIntentId = session.payment_intent;
         await order.save();
+        console.log("Order updated with payment intent ID:", session.payment_intent);
 
-        console.log("Order updated with payment intent ID:", session.payment_intent); // Log to confirm the update
-
-        // 2. Update stock
+        // Update product stock
         for (const item of order.items) {
           if (item.type === "product") {
             const product = await Product.findById(item.product_id);
@@ -169,24 +173,16 @@ const stripeWebhook = async (req, res) => {
             }
           }
         }
-      } else {
-        console.log("No order found for session ID:", session.id);  // Log if order is not found
       }
 
-      // 3. Confirm all pending bookings for this user
-      const userId =
-        order?.user_id ||
-        (await User.findOne({ email: session.customer_email }))?._id;
-      const bookings = await Booking.find({
-        stripeSessionId: session.id,
-      });
+      // Confirm pending bookings for the user
+      const userId = order?.user_id || (await User.findOne({ email: session.customer_email }))?._id;
+      const bookings = await Booking.find({ stripeSessionId: session.id });
 
       for (const booking of bookings) {
         const workshop = await Workshop.findById(booking.workshop_id);
         const sessionIndex = workshop.sessions.findIndex(
-          (s) =>
-            new Date(s.sessionDate).getTime() ===
-            new Date(booking.date).getTime()
+          (s) => new Date(s.sessionDate).getTime() === new Date(booking.date).getTime()
         );
 
         if (sessionIndex !== -1) {
@@ -200,7 +196,7 @@ const stripeWebhook = async (req, res) => {
         }
       }
 
-      // 4. Clear cart
+      // Clear cart after successful payment
       await Cart.findOneAndDelete({ user_id: userId });
 
       console.log(`✅ Payment processed for user ${userId}`);
@@ -211,7 +207,6 @@ const stripeWebhook = async (req, res) => {
 
   res.status(200).send("Webhook processed");
 };
-
 
 module.exports = {
   createCheckoutSession,

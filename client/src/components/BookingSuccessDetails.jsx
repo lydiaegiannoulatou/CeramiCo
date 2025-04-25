@@ -24,6 +24,17 @@ const BookingSummary = ({ booking }) => {
       }[state] || "bg-gray-100 text-gray-600 ring-gray-300"
     );
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return `${formattedDate} at ${formattedTime}`;
+  };
+
   return (
     <section className="relative mx-auto max-w-4xl rounded-3xl bg-white/70 p-8 backdrop-blur-lg">
       {/* decorative blob */}
@@ -50,10 +61,10 @@ const BookingSummary = ({ booking }) => {
         <div className="flex flex-col gap-6">
           <Meta label="Workshop">{workshopTitle}</Meta>
           <Meta label="Session Date">
-            {new Date(sessionDate).toLocaleString()}
+            {formatDate(sessionDate)}
           </Meta>
           <Meta label="Booked On">
-            {new Date(bookingDate).toLocaleString()}
+            {formatDate(bookingDate)}
           </Meta>
         </div>
       </div>

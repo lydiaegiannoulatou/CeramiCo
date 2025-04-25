@@ -1,33 +1,54 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { Calendar, Clock, Users, Loader2, ImageIcon } from "lucide-react";
+import { Calendar, Clock, Users, Loader2, ImageIcon, Pencil, Trash2 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const WorkshopPage = () => {
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+
+  const fetchWorkshops = async () => {
+    try {
+      const response = await axios.get("http://localhost:3050/workshops");
+      setWorkshops(response.data);
+    } catch (err) {
+      console.error("Failed to fetch workshops", err);
+      toast.error("Failed to load workshops. Please try again later.", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWorkshops = async () => {
-      try {
-        const response = await axios.get("http://localhost:3050/workshops");
-        setWorkshops(response.data);
-      } catch (err) {
-        console.error("Failed to fetch workshops", err);
-        toast.error("Failed to load workshops. Please try again later.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWorkshops();
   }, []);
+
+  const handleDelete = async (id, e) => {
+    e.preventDefault(); // Prevent navigation
+    
+    if (!window.confirm("Are you sure you want to delete this workshop?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:3050/workshops/delete/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Workshop deleted successfully");
+      fetchWorkshops(); // Refresh the list
+    } catch (err) {
+      console.error("Failed to delete workshop:", err);
+      toast.error("Failed to delete workshop. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -69,8 +90,27 @@ const WorkshopPage = () => {
             <Link
               to={`/workshops/${workshop._id}`}
               key={workshop._id}
-              className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
+              className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col relative"
             >
+              {/* Admin Controls */}
+              {role === "admin" && (
+                <div className="absolute top-4 right-4 flex space-x-2 z-10">
+                  <Link
+                    to={`/admin/workshops/edit/${workshop._id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-2 bg-[#2F4138] text-white rounded-full hover:bg-[#3A4F44] transition-colors duration-200"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={(e) => handleDelete(workshop._id, e)}
+                    className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors duration-200"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               {/* Image Container */}
               <div className="aspect-video relative overflow-hidden bg-[#2F4138]/5">
                 {workshop.image ? (

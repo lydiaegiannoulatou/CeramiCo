@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import BookingDetailsModal from "../ProfileUser/BookingDetailsModal";
+import { Calendar, Filter, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-react";
 
 const bookingsPerPage = 15;
 
@@ -14,18 +15,16 @@ const WorkshopBookingsManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  /* ───────── helper ───────── */
   const getBookingStatusColor = (st) => {
     switch (st) {
-      case "pending":   return "bg-yellow-100 text-yellow-700";
-      case "confirmed": return "bg-blue-100  text-blue-700";
-      case "completed": return "bg-green-100 text-green-700";
-      case "canceled":  return "bg-red-100   text-red-700";
-      default:          return "bg-gray-100  text-gray-700";
+      case "pending":   return "bg-[#F5F2EB] text-[#D36B3C]";
+      case "confirmed": return "bg-[#EDF7ED] text-[#2F4138]";
+      case "completed": return "bg-[#E8F4F2] text-[#2D6A6E]";
+      case "canceled":  return "bg-[#FBEAEA] text-[#D32F2F]";
+      default:          return "bg-[#F5F2EB] text-[#2F4138]";
     }
   };
 
-  /* ───────── effect: fetch bookings ───────── */
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -52,7 +51,6 @@ const WorkshopBookingsManagement = () => {
     })();
   }, [currentPage]);
 
-  /* ───────── effect: apply status filter whenever list or tab changes ───────── */
   useEffect(() => {
     const list =
       selectedStatus === "all"
@@ -64,15 +62,10 @@ const WorkshopBookingsManagement = () => {
   const openModal = (id) => setSelectedId(id);
   const closeModal = () => setSelectedId(null);
 
-  // Pill filter button component
   const FilterTabBtn = ({ status, label }) => {
-    // Calculate count for each status, including "all"
-    let count;
-    if (status === "all") {
-      count = bookings.length; // Show total number of bookings for "all"
-    } else {
-      count = bookings.filter((b) => b.status === status).length;
-    }
+    const count = status === "all" 
+      ? bookings.length 
+      : bookings.filter((b) => b.status === status).length;
 
     return (
       <button
@@ -80,93 +73,137 @@ const WorkshopBookingsManagement = () => {
           setSelectedStatus(status); 
           setCurrentPage(1); 
         }}
-        className={`px-5 py-1 text-sm capitalize flex items-center gap-1
+        className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2
           ${selectedStatus === status
-          ? "text-white"
-          : "text-gray-700 hover:bg-gray-200"
-        }
-        ${status !== 'all' ? "border-l" : ""}  /* divider */
-      `}
-      style={{
-        backgroundColor: selectedStatus === status ? "#D36B3C" : "transparent"
-      }}
-    >
-      {label} 
-      <span className="font-semibold">({count})</span>
-    </button>
-  );
-}
+            ? "bg-[#2F4138] text-white"
+            : "bg-[#2F4138]/5 text-[#2F4138] hover:bg-[#2F4138]/10"
+          }`}
+      >
+        <span>{label}</span>
+        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+          {count}
+        </span>
+      </button>
+    );
+  };
 
-  if (loading) return <div className="p-4">Loading…</div>;
-  if (error) return <div className="p-4 text-red-600">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 text-[#2F4138] animate-spin" />
+          <p className="text-[#2F4138]">Loading bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate if the "Next" button should be disabled
-  const isNextButtonDisabled =
-    bookings.length <= currentPage * bookingsPerPage || currentPage >= totalPages;
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
+          <p className="text-[#2F4138] text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isNextButtonDisabled = currentPage >= totalPages;
   const isPrevButtonDisabled = currentPage <= 1;
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Workshop Bookings</h2>
-
-      {/* Filter pills */}
-      <div className="inline-flex rounded-full overflow-hidden mb-6 border">
-        <FilterTabBtn status="all"       label="All" />
-        <FilterTabBtn status="confirmed" label="Confirmed" />
-        <FilterTabBtn status="canceled"  label="Canceled" />
-        <FilterTabBtn status="completed" label="Completed" />
+    <div>
+      {/* Filter Section */}
+      <div className="flex items-center space-x-4 mb-8">
+        <Filter className="w-5 h-5 text-[#2F4138]" />
+        <div className="flex space-x-3">
+          <FilterTabBtn status="all" label="All Bookings" />
+          <FilterTabBtn status="confirmed" label="Confirmed" />
+          <FilterTabBtn status="canceled" label="Canceled" />
+          <FilterTabBtn status="completed" label="Completed" />
+        </div>
       </div>
 
-      {/* table */}
-      <table className="min-w-full table-auto border">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="px-4 py-2 border">Booking #</th>
-            <th className="px-4 py-2 border">Workshop Title</th>
-            <th className="px-4 py-2 border">Date</th>
-            <th className="px-4 py-2 border">Payment Status</th>
-            <th className="px-4 py-2 border">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredBookings.map((b) => (
-            <tr key={b._id} className="cursor-pointer hover:bg-gray-100" onClick={() => openModal(b._id)}>
-              <td className="px-4 py-2 border">{String(b._id).slice(-5)}</td>
-              <td className="px-4 py-2 border">{b.workshop_id.title}</td>
-              <td className="px-4 py-2 border">{new Date(b.date).toLocaleDateString()}</td>
-              <td className="px-4 py-2 border">{b.paymentStatus}</td>
-              <td className="px-4 py-2 border">
-                <span className={`px-2 py-1 rounded-full text-sm ${getBookingStatusColor(b.status)}`}>
-                  {b.status}
-                </span>
-              </td>
+      {/* Table */}
+      <div className="bg-white rounded-xl overflow-hidden border border-[#2F4138]/10">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-[#2F4138]/5">
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Booking #</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Workshop Title</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Date</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Payment Status</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Status</th>
             </tr>
-          ))}
-          {filteredBookings.length === 0 && (
-            <tr><td colSpan={5} className="text-center py-4 text-gray-500">No bookings</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-[#2F4138]/10">
+            {filteredBookings.map((b) => (
+              <tr 
+                key={b._id} 
+                onClick={() => openModal(b._id)}
+                className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
+              >
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {String(b._id).slice(-5)}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {b.workshop_id.title}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {new Date(b.date).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">
+                  {b.paymentStatus}
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getBookingStatusColor(b.status)}`}>
+                    {b.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {filteredBookings.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-center text-[#2F4138]/70">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  No bookings found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* pagination */}
-      <div className="flex justify-center mt-6 gap-4">
+      {/* Pagination */}
+      <div className="flex justify-center mt-8 space-x-4">
         <button
           disabled={isPrevButtonDisabled}
           onClick={() => setCurrentPage((p) => p - 1)}
-          className={`px-4 py-2 rounded-lg ${isPrevButtonDisabled ? "bg-gray-100 text-gray-400" : "bg-gray-200 hover:bg-gray-300"}`}
+          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+            isPrevButtonDisabled
+              ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
+              : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
+          }`}
         >
-          &lt; Previous
+          <ChevronLeft className="w-5 h-5 mr-1" />
+          Previous
         </button>
         <button
           disabled={isNextButtonDisabled}
           onClick={() => setCurrentPage((p) => p + 1)}
-          className={`px-4 py-2 rounded-lg ${isNextButtonDisabled ? "bg-gray-100 text-gray-400" : "bg-gray-200 hover:bg-gray-300"}`}
+          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+            isNextButtonDisabled
+              ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
+              : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
+          }`}
         >
-          Next &gt;
+          Next
+          <ChevronRight className="w-5 h-5 ml-1" />
         </button>
       </div>
 
-      {/* modal */}
+      {/* Modal */}
       {selectedBookingId && (
         <BookingDetailsModal bookingId={selectedBookingId} onClose={closeModal} />
       )}

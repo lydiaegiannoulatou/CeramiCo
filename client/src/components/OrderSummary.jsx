@@ -1,37 +1,42 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaTimes } from "react-icons/fa";
-import ToastNotification from "../components/ToastNotification";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import { Package, Calendar, MapPin, Phone, Loader2, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
 
-const OrderSummary = ({ order, onClose, onStatusChange, userRole }) => {
+const OrderSummary = () => {
+  const { orderId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id') || orderId;
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Track dropdown state
-
-  const sessionId = order?.stripeSessionId || order?._id;
-
-  console.log("SessionId:", sessionId);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isAdmin = localStorage.getItem("role") === "admin";
 
   useEffect(() => {
-    if (!sessionId) return; // Exit if sessionId does not exist
-
     const fetchOrder = async () => {
+      if (!sessionId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(
           `http://localhost:3050/order/success/${sessionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log("Fetched Order Data:", data);
 
         if (data && data.order) {
-          setOrderDetails(data.order); // Set the order data to state
+          setOrderDetails(data.order);
         } else {
-          ToastNotification.notifyError("Order not found.");
+          toast.error("Order not found");
         }
       } catch (err) {
         console.error("Error fetching order:", err);
-        ToastNotification.notifyError("Unable to load order.");
+        toast.error("Unable to load order details");
       } finally {
         setLoading(false);
       }
@@ -40,163 +45,236 @@ const OrderSummary = ({ order, onClose, onStatusChange, userRole }) => {
     fetchOrder();
   }, [sessionId]);
 
-  // Handle status change
   const handleStatusChange = async (newStatus) => {
+    setIsProcessing(true);
     try {
       const token = localStorage.getItem("token");
-       await axios.put(
+      await axios.put(
         `http://localhost:3050/order/update/${orderDetails._id}`,
         { orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      ToastNotification.notifySuccess(`Order status updated to ${newStatus}`);
-      setOrderDetails((prevDetails) => ({
-        ...prevDetails,
+      
+      setOrderDetails(prev => ({
+        ...prev,
         orderStatus: newStatus
-      })); // Update only the orderStatus, avoid resetting the whole object
-      setDropdownOpen(false); // Close the dropdown after status change
+      }));
+      
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (err) {
       console.error("Error updating order status:", err);
-      ToastNotification.notifyError("Unable to update order status.");
+      toast.error("Failed to update order status");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Loading state or if order details are not available
-  if (loading) return <p className="text-center">Loading order…</p>;
+  const getStatusColor = (status) => {
+    const colors = {
+      processing: "bg-blue-50 text-blue-700 border-blue-200",
+      shipped: "bg-purple-50 text-purple-700 border-purple-200",
+      delivered: "bg-green-50 text-green-700 border-green-200",
+      canceled: "bg-red-50 text-red-700 border-red-200"
+    };
+    return colors[status] || "bg-gray-50 text-gray-700 border-gray-200";
+  };
 
-  if (!orderDetails) return <p className="text-center">Order not found.</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-12 h-12 text-[#2F4138] animate-spin" />
+          <p className="text-[#2F4138] text-lg font-medium">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Disable dropdown if the order is canceled
-  const isOrderCanceled = orderDetails.orderStatus === "canceled";
+  if (!sessionId) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
+          <p className="text-[#2F4138] text-xl font-medium">Invalid order reference</p>
+          <button
+            onClick={() => navigate("/orders")}
+            className="px-6 py-2 bg-[#2F4138] text-white rounded-full hover:bg-[#3A4F44] transition-colors duration-200"
+          >
+            View All Orders
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!orderDetails) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
+          <p className="text-[#2F4138] text-xl font-medium">Order not found</p>
+          <button
+            onClick={() => navigate("/orders")}
+            className="px-6 py-2 bg-[#2F4138] text-white rounded-full hover:bg-[#3A4F44] transition-colors duration-200"
+          >
+            Back to Orders
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
-      <div className="relative bg-white rounded-xl shadow-xl max-w-3xl w-full p-6 overflow-y-auto max-h-[90vh]">
-        <button
-          onClick={onClose} // Ensure this only closes the modal when the close button is clicked
-          className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-xl font-bold"
-        >
-          <FaTimes />
-        </button>
+    <div className="min-h-screen bg-[#F5F2EB] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Order Header */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-display text-[#2F4138] mb-2">
+                Order #{orderDetails.orderNumber || orderDetails._id.slice(-6)}
+              </h1>
+              <p className="text-[#5C6760]">
+                Placed on {new Date(orderDetails.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+            <div className={`px-4 py-2 rounded-full border ${getStatusColor(orderDetails.orderStatus)}`}>
+              {orderDetails.orderStatus.charAt(0).toUpperCase() + orderDetails.orderStatus.slice(1)}
+            </div>
+          </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-          Order #{orderDetails.orderNumber ?? orderDetails._id.slice(-6)}
-        </h2>
-
-        {/* Order details */}
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <p><strong>Status:</strong> {orderDetails.orderStatus}</p>
-          <p><strong>Payment:</strong> {orderDetails.paymentStatus}</p>
-          <p><strong>Total:</strong> {(orderDetails.totalCost / 100).toFixed(2)} {orderDetails.currency}</p>
-          <p><strong>Placed:</strong> {new Date(orderDetails.createdAt).toLocaleString()}</p>
-        </div>
-
-        {/* User Details */}
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">User Information</h3>
-          <p><strong>Name:</strong> {orderDetails.user_id?.name}</p>
-          <p><strong>Email:</strong> {orderDetails.user_id?.email}</p>
-        </div>
-
-        {/* Shipping Address */}
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Shipping Address</h3>
-          <p><strong>Name:</strong> {orderDetails.shippingAddress?.fullName}</p>
-          <p><strong>Address:</strong> {orderDetails.shippingAddress?.addressLine1}, {orderDetails.shippingAddress?.addressLine2}</p>
-          <p><strong>City:</strong> {orderDetails.shippingAddress?.city}</p>
-          <p><strong>Postal Code:</strong> {orderDetails.shippingAddress?.postalCode}</p>
-          <p><strong>Country:</strong> {orderDetails.shippingAddress?.country}</p>
-          <p><strong>Phone:</strong> {orderDetails.shippingAddress?.phone}</p>
-        </div>
-
-        {/* Items list */}
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Items</h3>
-          <ul className="space-y-4">
-            {orderDetails.items.map((item, idx) => (
-              <li key={idx} className="border rounded-lg p-4 flex items-start gap-4 shadow-sm">
-                {item.type === "product" ? (
-                  <>
-                    {item.product_id?.images?.length > 0 && (
-                      <img
-                        src={item.product_id.images[0]} 
-                        alt={item.product_id.title}
-                        className="w-20 h-20 object-cover rounded-md"
-                      />
-                    )}
-                    <div>
-                      <p className="font-medium">{item.product_id?.title ?? "Product"}</p>
-                      <p>Qty: {item.quantity}</p>
-                      <p>Price: {(item.price / 100).toFixed(2)} {orderDetails.currency}</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {item.workshop_id?.image && (
-                      <img
-                        src={item.workshop_id.image}
-                        alt={item.workshop_id.title}
-                        className="w-20 h-20 object-cover rounded-md"
-                      />
-                    )}
-                    <div>
-                      <p className="font-medium">{item.classTitle ?? item.workshop_id?.title}</p>
-                      <p>Session: {new Date(item.sessionDate).toLocaleString()}</p>
-                      <p>Price: {(item.price / 100).toFixed(2)} {orderDetails.currency}</p>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Admin dropdown for status change */}
-        {localStorage.getItem("role") === "admin" && !isOrderCanceled && (
-          <div className="relative mb-4">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown visibility
-              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 w-full text-left text-sm"
-            >
-              Change Status
-            </button>
-
-            {/* Dropdown menu */}
-            {dropdownOpen && (
-              <div className="absolute bg-white shadow-md rounded-lg w-full mt-2 z-10">
-                <button
-                  onClick={() => handleStatusChange("shipped")}
-                  className="w-full text-left px-3 py-1 hover:bg-gray-200 text-sm"
-                >
-                  Mark as Shipped
-                </button>
-                <button
-                  onClick={() => handleStatusChange("delivered")}
-                  className="w-full text-left px-3 py-1 hover:bg-gray-200 text-sm"
-                >
-                  Mark as Delivered
-                </button>
-                <button
-                  onClick={() => handleStatusChange("canceled")}
-                  className="w-full text-left px-3 py-1 hover:bg-gray-200 text-sm"
-                >
-                  Cancel Order
-                </button>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <h2 className="font-medium text-[#2F4138] mb-2 flex items-center">
+                <Package className="w-5 h-5 mr-2" />
+                Order Summary
+              </h2>
+              <div className="space-y-2 text-[#5C6760]">
+                <p>Payment Status: {orderDetails.paymentStatus}</p>
+                <p>Total Amount: €{orderDetails.totalCost.toFixed(2)}</p>
+                <p>Currency: {orderDetails.currency}</p>
               </div>
-            )}
+            </div>
+
+            <div>
+              <h2 className="font-medium text-[#2F4138] mb-2 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                Timeline
+              </h2>
+              <div className="space-y-2 text-[#5C6760]">
+                <p>Created: {new Date(orderDetails.createdAt).toLocaleString()}</p>
+                <p>Last Updated: {new Date(orderDetails.updatedAt).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Items */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm mb-8">
+          <h2 className="text-2xl font-display text-[#2F4138] mb-6">Order Items</h2>
+          <div className="space-y-6">
+            {orderDetails.items.map((item, idx) => (
+              <div key={idx} className="flex gap-6 pb-6 border-b border-[#2F4138]/10 last:border-0">
+                <img
+                  src={item.product_id?.images?.[0] || "/placeholder-image.jpg"}
+                  alt={item.product_id?.title || "Product"}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <h3 className="font-medium text-[#2F4138]">{item.product_id?.title}</h3>
+                  <p className="text-[#5C6760] mt-1">Quantity: {item.quantity}</p>
+                  <p className="text-[#3f612d] font-medium mt-2">
+                    €{(item.price * item.quantity).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Shipping Details */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm mb-8">
+          <h2 className="text-2xl font-display text-[#2F4138] mb-6">Shipping Details</h2>
+          <div className="grid sm:grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-medium text-[#2F4138] mb-4 flex items-center">
+                <MapPin className="w-5 h-5 mr-2" />
+                Delivery Address
+              </h3>
+              <div className="space-y-2 text-[#5C6760]">
+                <p>{orderDetails.shippingAddress.fullName}</p>
+                <p>{orderDetails.shippingAddress.addressLine1}</p>
+                {orderDetails.shippingAddress.addressLine2 && (
+                  <p>{orderDetails.shippingAddress.addressLine2}</p>
+                )}
+                <p>
+                  {orderDetails.shippingAddress.city}, {orderDetails.shippingAddress.postalCode}
+                </p>
+                <p>{orderDetails.shippingAddress.country}</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-[#2F4138] mb-4 flex items-center">
+                <Phone className="w-5 h-5 mr-2" />
+                Contact Information
+              </h3>
+              <div className="space-y-2 text-[#5C6760]">
+                <p>Phone: {orderDetails.shippingAddress.phone}</p>
+                <p>Email: {orderDetails.user_id?.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Admin Actions */}
+        {isAdmin && orderDetails.orderStatus !== "canceled" && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm">
+            <h2 className="text-2xl font-display text-[#2F4138] mb-6">Order Actions</h2>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => handleStatusChange("shipped")}
+                disabled={isProcessing || orderDetails.orderStatus === "shipped" || orderDetails.orderStatus === "delivered"}
+                className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <Package className="w-5 h-5 mr-2" />
+                )}
+                Mark as Shipped
+              </button>
+
+              <button
+                onClick={() => handleStatusChange("delivered")}
+                disabled={isProcessing || orderDetails.orderStatus === "delivered"}
+                className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                )}
+                Mark as Delivered
+              </button>
+
+              <button
+                onClick={() => handleStatusChange("canceled")}
+                disabled={isProcessing}
+                className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <XCircle className="w-5 h-5 mr-2" />
+                )}
+                Cancel Order
+              </button>
+            </div>
           </div>
         )}
-
-        {/* Cancel button for users in processing state */}
-        {orderDetails.orderStatus === "processing" && userRole !== "admin" && (
-          <button
-            className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            onClick={onStatusChange} // Trigger status change
-          >
-            Cancel Order
-          </button>
-        )}
       </div>
+      <ToastContainer />
     </div>
   );
 };

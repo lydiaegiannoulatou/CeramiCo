@@ -18,6 +18,8 @@ import FailPage from "./pages/FailPage"
 import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import FaqPage from "./pages/FaqPage";
+import UpdateWorkshop from "./components/UpdateWorkshop";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -44,7 +46,8 @@ function App() {
         <Route path="/cancel" element={<FailPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />       
+        <Route path="/contact" element={<ContactPage />} />    
+        <Route path="/admin/workshops/edit/:id" element={<UpdateWorkshop />} />
        </Routes>
        <Footer />
       <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />

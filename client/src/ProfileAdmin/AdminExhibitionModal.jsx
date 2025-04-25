@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CloudinaryUpload from "../components/CloudinaryUpload";
-import ToastNotification from "../components/ToastNotification"; 
+import { Calendar, MapPin, Tag, Users, Send, Loader2, AlertCircle, CheckCircle, Plus } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AdminExhibitionPage = ({ existingData }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ const AdminExhibitionPage = ({ existingData }) => {
   });
 
   const [participant, setParticipant] = useState({ name: "", role: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (existingData) {
@@ -52,6 +55,13 @@ const AdminExhibitionPage = ({ existingData }) => {
     }
   };
 
+  const handleRemoveParticipant = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      participants: prev.participants.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleImageUpload = (images) => {
     setFormData((prev) => ({
       ...prev,
@@ -61,145 +71,292 @@ const AdminExhibitionPage = ({ existingData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const token = localStorage.getItem("token");
 
     try {
       let response;
       if (existingData) {
-        // Updating an existing exhibition
         response = await axios.put(
           `http://localhost:3050/exhibitions/${existingData._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        ToastNotification.notifySuccess("Exhibition updated successfully!");
+        toast.success("Exhibition updated successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+        });
       } else {
-        // Creating a new exhibition
         response = await axios.post(
           "http://localhost:3050/exhibitions/add",
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        ToastNotification.notifySuccess("Exhibition created successfully!");
+        toast.success("Exhibition created successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+        });
       }
 
-      console.log(response.data);  // Handle the created or updated exhibition response
-
+      // Reset form after successful submission if creating new exhibition
+      if (!existingData) {
+        setFormData({
+          title: "",
+          description: "",
+          startDate: "",
+          endDate: "",
+          location: "",
+          tags: [],
+          participants: [],
+          media: [],
+        });
+      }
     } catch (err) {
       console.error("Error saving exhibition:", err);
-      ToastNotification.notifyError("Failed to save exhibition.");
+      toast.error("Failed to save exhibition.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-3xl font-semibold mb-6">
-        {existingData ? "Edit Exhibition" : "Create Exhibition"}
-      </h2>
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Basic Information</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                Exhibition Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="Enter exhibition title"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-lg shadow-lg"
-      >
-        {/* Title */}
-        <input
-          type="text"
-          name="title"
-          value={formData.title}
-          onChange={handleInputChange}
-          placeholder="Exhibition Title"
-          className="p-3 border rounded"
-        />
-
-        {/* Description */}
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          placeholder="Exhibition Description"
-          className="p-3 border rounded"
-        />
-
-        {/* Dates */}
-        <div className="flex gap-4">
-          <input
-            type="date"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleInputChange}
-            className="p-3 border rounded"
-          />
-          <input
-            type="date"
-            name="endDate"
-            value={formData.endDate}
-            onChange={handleInputChange}
-            className="p-3 border rounded"
-          />
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Enter exhibition description"
+                rows="4"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Location */}
-        <input
-          type="text"
-          name="location"
-          value={formData.location}
-          onChange={handleInputChange}
-          placeholder="Exhibition Location"
-          className="p-3 border rounded"
-        />
+        {/* Dates and Location */}
+        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Dates and Location</h3>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <Calendar className="w-4 h-4 inline mr-2" />
+                Start Date
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#2F4138] mb-2">
+                <Calendar className="w-4 h-4 inline mr-2" />
+                End Date
+              </label>
+              <input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#2F4138] mb-2">
+              <MapPin className="w-4 h-4 inline mr-2" />
+              Location
+            </label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="Enter exhibition location"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+              required
+            />
+          </div>
+        </div>
 
         {/* Tags */}
-        <input
-          type="text"
-          value={formData.tags.join(", ")}
-          onChange={handleTagChange}
-          placeholder="Tags (comma-separated)"
-          className="p-3 border rounded"
-        />
+        <div className="bg-[#2F4138]/5 rounded-xl p-6">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
+            <Tag className="w-4 h-4 inline mr-2" />
+            Tags
+          </h3>
+          
+          <input
+            type="text"
+            value={formData.tags.join(", ")}
+            onChange={handleTagChange}
+            placeholder="Enter tags separated by commas"
+            className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+              placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+          />
+          
+          {formData.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {formData.tags.map((tag, index) => (
+                <span 
+                  key={index}
+                  className="px-3 py-1 bg-[#2F4138]/10 text-[#2F4138] rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Participants */}
-        <div className="border-t pt-4">
-          <h4 className="font-semibold mb-1">Add Participant</h4>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={participant.name}
-              onChange={(e) => setParticipant({ ...participant, name: e.target.value })}
-              placeholder="Name"
-              className="flex-1 p-3 border rounded"
-            />
-            <input
-              type="text"
-              value={participant.role}
-              onChange={(e) => setParticipant({ ...participant, role: e.target.value })}
-              placeholder="Role"
-              className="flex-1 p-3 border rounded"
-            />
-            <button
-              type="button"
-              onClick={handleAddParticipant}
-              className="bg-blue-500 text-white px-3 py-2 rounded"
-            >
-              Add
-            </button>
+        <div className="bg-[#2F4138]/5 rounded-xl p-6">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
+            <Users className="w-4 h-4 inline mr-2" />
+            Participants
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={participant.name}
+                onChange={(e) => setParticipant({ ...participant, name: e.target.value })}
+                placeholder="Participant name"
+                className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+              />
+              <input
+                type="text"
+                value={participant.role}
+                onChange={(e) => setParticipant({ ...participant, role: e.target.value })}
+                placeholder="Role"
+                className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+              />
+              <button
+                type="button"
+                onClick={handleAddParticipant}
+                disabled={!participant.name || !participant.role}
+                className="px-4 py-3 rounded-xl bg-[#2F4138] text-white hover:bg-[#3A4F44] 
+                  disabled:bg-[#2F4138]/20 disabled:text-white/50 disabled:cursor-not-allowed
+                  transition-colors duration-200"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+
+            {formData.participants.length > 0 && (
+              <div className="space-y-2">
+                {formData.participants.map((p, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-white rounded-xl border border-[#2F4138]/10"
+                  >
+                    <div>
+                      <p className="font-medium text-[#2F4138]">{p.name}</p>
+                      <p className="text-sm text-[#2F4138]/70">{p.role}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveParticipant(index)}
+                      className="p-1 hover:bg-[#2F4138]/10 rounded-full transition-colors duration-200"
+                    >
+                      <AlertCircle className="w-5 h-5 text-[#2F4138]/70" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Image Upload */}
-        <div className="mt-4">
+        <div className="bg-[#2F4138]/5 rounded-xl p-6">
+          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Exhibition Images</h3>
           <CloudinaryUpload onImagesUploaded={handleImageUpload} />
         </div>
 
-        {/* Submit */}
-        <div className="pt-4">
+        {/* Submit Button */}
+        <div className="flex justify-end pt-4">
           <button
             type="submit"
-            className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
+            disabled={isSubmitting}
+            className="flex items-center px-6 py-3 bg-[#2F4138] text-white rounded-xl
+              hover:bg-[#3A4F44] disabled:bg-[#2F4138]/20 disabled:cursor-not-allowed
+              transition-colors duration-200"
           >
-            {existingData ? "Update" : "Create"} Exhibition
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5 mr-2" />
+                {existingData ? "Update" : "Create"} Exhibition
+              </>
+            )}
           </button>
         </div>
       </form>
+      <ToastContainer />
     </div>
   );
 };
