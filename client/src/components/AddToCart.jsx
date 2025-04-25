@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { FaShoppingCart } from "react-icons/fa";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 
-const AddToCart = ({ item, showLabel = true }) => {
+const AddToCart = ({
+  item,
+  type = "product",
+  showLabel = true,
+  quantity = 1,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
@@ -11,11 +16,14 @@ const AddToCart = ({ item, showLabel = true }) => {
   if (!item || !item._id) return null;
 
   const { _id, stock, price } = item;
-  const isOutOfStock = stock === 0;
+  const isOutOfStock = type === "product" && stock === 0;
+  const isNotEnoughStock = type === "product" && quantity > stock;
 
   const handleAddToCart = async () => {
     if (!token || role !== "user") {
-      toast.info("You need to be logged in as a user to add items to the cart.");
+      toast.info(
+        "You need to be logged in as a user to add items to the cart."
+      );
       return;
     }
 
@@ -24,13 +32,17 @@ const AddToCart = ({ item, showLabel = true }) => {
       return;
     }
 
+    if (isNotEnoughStock) {
+      toast.warning(`Only ${stock} items available in stock.`);
+      return;
+    }
+
     setIsAdding(true);
     try {
       const payload = {
         items: [
           {
-            type: "product",
-            quantity: 1,
+            quantity,
             price,
             product_id: _id,
           },
@@ -46,7 +58,9 @@ const AddToCart = ({ item, showLabel = true }) => {
       );
 
       if (response.data.success) {
-        toast.success("Product added to the cart!");
+        toast.success(
+          `${quantity} ${quantity === 1 ? "item" : "items"} added to cart!`
+        );
       } else {
         toast.error(response.data.msg || "Failed to add to cart.");
       }
@@ -62,45 +76,33 @@ const AddToCart = ({ item, showLabel = true }) => {
     <button
       onClick={handleAddToCart}
       className={`flex items-center justify-center ${
-        showLabel ? "py-2 px-6" : "p-3"
-      } bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition ${
-        isAdding || isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
+        showLabel ? "py-3 px-8" : "p-4"
+      } bg-[#5b3b20] hover:bg-[#4a2e18] active:bg-[#3d2713] text-white rounded-lg transition-all duration-300 ${
+        isAdding || isOutOfStock || isNotEnoughStock
+          ? "opacity-60 cursor-not-allowed"
+          : ""
       }`}
-      disabled={isAdding || isOutOfStock}
+      disabled={isAdding || isOutOfStock || isNotEnoughStock}
       title={
         !token || role !== "user"
           ? "Login required"
           : isOutOfStock
           ? "Out of Stock"
+          : isNotEnoughStock
+          ? `Only ${stock} available`
           : "Add to cart"
       }
     >
-      {isOutOfStock ? (
-        showLabel ? (
-          <>
-            <FaShoppingCart className="mr-2" />
-            Out of Stock
-          </>
-        ) : (
-          <FaShoppingCart />
-        )
-      ) : isAdding ? (
-        showLabel ? (
-          <>
-            <FaShoppingCart className="mr-2 animate-spin" />
-            Adding...
-          </>
-        ) : (
-          <FaShoppingCart className="animate-spin" />
-        )
-      ) : showLabel ? (
-        <>
-          <FaShoppingCart className="mr-2" />
-          Add to Cart
-        </>
+      {isAdding ? (
+        <Loader2 className="animate-spin mr-2" />
       ) : (
-        <FaShoppingCart />
+        <ShoppingCart className="mr-2" />
       )}
+      {isOutOfStock
+        ? "Out of Stock"
+        : isNotEnoughStock
+        ? `Only ${stock} available`
+        : "Add to cart"}
     </button>
   );
 };

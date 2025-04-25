@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import CloudinaryUpload from "../components/CloudinaryUpload"; // Import Cloudinary Upload Component
+import ToastNotification from "../components/ToastNotification"; // Adjust path if needed
+
 
 const AdminCreateWorkshop = () => {
   const [formData, setFormData] = useState({
@@ -100,7 +102,10 @@ const AdminCreateWorkshop = () => {
 
       if (res.status !== 201) throw new Error("Failed to create workshop");
 
-      setMessage("Workshop created successfully!");
+      
+    ToastNotification.notifySuccess("Workshop created successfully!");
+
+     
       setFormData({
         title: "",
         instructor: "",
@@ -115,7 +120,7 @@ const AdminCreateWorkshop = () => {
       });
     } catch (err) {
       console.error(err);
-      setMessage("Something went wrong. Please try again.");
+      ToastNotification.notifyError("Something went wrong. Please try again.");
     }
   };
 

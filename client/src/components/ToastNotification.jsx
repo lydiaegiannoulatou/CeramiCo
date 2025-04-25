@@ -40,10 +40,10 @@ const ToastNotification = {
               No
             </button>
             <button
-              onClick={() => { onConfirm(); closeToast(); }} // Call onConfirm and close toast
+              onClick={() => { onConfirm(); closeToast(); }} 
               className="px-3 py-1 bg-red-500 text-white rounded"
             >
-              Yes, cancel
+              Yes
             </button>
           </div>
         </div>

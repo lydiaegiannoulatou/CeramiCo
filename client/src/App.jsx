@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Register from "./pages/RegisterPage";
 import Login from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
-// import { Footer } from "./components/Footer";
+import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
@@ -12,11 +12,12 @@ import WorkshopCheckoutPage from "./pages/WorkshopCheckoutPage";
 import ExhibitionsPage from "./pages/ExhibitionsPage";
 import ExhibitionDetailsPage from "./pages/ExhibitionDetailsPage";
 import ProfilePage from "./pages/ProfilePage"
-import Cart from "./pages/CartPage";
-import Checkout from "./pages/Checkout";
+import CartPage from "./pages/CartPage"
 import SuccessPage from "./pages/SuccessPage";
 import FailPage from "./pages/FailPage"
-import CalendarPage from "./pages/CalendarPage"
+import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
+import FaqPage from "./pages/FaqPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -38,12 +39,14 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
-        <Route path="/cart" element = {<Cart />}/>
-        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/cart" element = {<CartPage />}/>
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/cancel" element={<FailPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />       
        </Routes>
+       <Footer />
       <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
     </Router>
   );

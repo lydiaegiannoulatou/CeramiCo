@@ -6,9 +6,11 @@ const  {
     getUploadSignature,
     deleteImage,
   }  =require("../controllers/adminController")
+  const {subscribeUser, handleContactMessage}  = require("../controllers/newsletterController")
 const {authMiddleware, adminAccess} = require("../middleware/authMiddleware")
 
-
+router.post("/subscribe", subscribeUser);
+router.post('/contact', handleContactMessage)
 router.post("/newsletter", authMiddleware, adminAccess, sendNewsletter)
 router.get("/gallery",listGallery);      // list images
 router.post("/gallery/sign",authMiddleware,adminAccess, getUploadSignature); // signed upload

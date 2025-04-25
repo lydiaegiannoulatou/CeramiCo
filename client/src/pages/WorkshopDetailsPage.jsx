@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import { Calendar, Clock, Users, Loader2, ImageIcon } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
 
 const WorkshopDetailPage = () => {
   const { id } = useParams();
@@ -8,21 +11,30 @@ const WorkshopDetailPage = () => {
   const [workshop, setWorkshop] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
   const [availableSessions, setAvailableSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchWorkshop = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3050/workshops/${id}`
-        );
+        const response = await axios.get(`http://localhost:3050/workshops/${id}`);
         setWorkshop(response.data);
-
+        
+        // Filter out past sessions and sessions with no spots
+        const now = new Date();
         const available = response.data.sessions.filter(
-          (session) => session.availableSpots > 0
+          (session) => 
+            new Date(session.sessionDate) > now && 
+            session.availableSpots > 0
         );
         setAvailableSessions(available);
       } catch (err) {
         console.error("Failed to fetch workshop", err);
+        toast.error("Failed to load workshop details. Please try again later.", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -31,11 +43,18 @@ const WorkshopDetailPage = () => {
 
   const handleSelectTimeSlot = (session) => {
     setSelectedSession(session);
+    toast.success("Time slot selected!", {
+      position: "top-right",
+      autoClose: 2000,
+    });
   };
 
   const handleBooking = () => {
     if (!selectedSession) {
-      alert("Please select a time slot before booking.");
+      toast.warning("Please select a time slot before booking.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
   
@@ -44,84 +63,151 @@ const WorkshopDetailPage = () => {
     });
   };
 
-  if (!workshop) return <p className="text-center mt-10">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-12 h-12 text-[#2F4138] animate-spin" />
+          <p className="text-[#2F4138] text-lg font-medium">Loading workshop details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workshop) {
+    return (
+      <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
+        <div className="text-center text-[#2F4138]">
+          <p className="text-xl font-medium">Workshop not found</p>
+          <button
+            onClick={() => navigate("/workshops")}
+            className="mt-4 px-6 py-2 bg-[#2F4138] text-white rounded-full hover:bg-[#3A4F44] transition-colors duration-200"
+          >
+            Back to Workshops
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 bg-[#FAF7F1] min-h-screen">
-      <h1 className="text-2xl font-serif mb-6 border-b pb-2">
-        {workshop.title}
-      </h1>
+    <div className="min-h-screen bg-[#F5F2EB] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="font-display text-4xl text-[#2F4138] mb-4">{workshop.title}</h1>
+          <div className="h-1 w-32 bg-[#2F4138]/20 rounded-full"></div>
+        </div>
 
-      <div className="bg-[#F0E6D2] h-64 rounded shadow mb-6 flex items-center justify-center text-gray-500">
-        {workshop.image ? (
-          <img
-            src={workshop.image}
-            alt={workshop.title}
-            className="w-full h-full object-cover rounded"
-          />
-        ) : (
-          "Workshop Image"
-        )}
-      </div>
-
-      <div className="bg-white p-6 rounded shadow mb-6 min-h-[150px]">
-        <h2 className="text-lg font-serif mb-2">Workshop About</h2>
-        <p className="text-gray-700">{workshop.description}</p>
-      </div>
-
-      <div className="bg-white p-6 rounded shadow mb-6">
-        <h2 className="text-lg font-serif mb-4">Available Time Slots</h2>
-
-        <ul className="list-none">
-          {availableSessions.length === 0 ? (
-            <p>No available time slots left.</p>
+        {/* Image Section */}
+        <div className="aspect-video rounded-2xl overflow-hidden bg-[#2F4138]/5 mb-8">
+          {workshop.image ? (
+            <img
+              src={workshop.image}
+              alt={workshop.title}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            availableSessions.map((session) => (
-              <li
-                key={session._id}
-                className="cursor-pointer text-indigo-600 mb-2"
-                onClick={() => handleSelectTimeSlot(session)}
-              >
-                {new Date(session.sessionDate).toLocaleDateString()} -{" "}
-                {new Date(session.sessionDate).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
-                (Available spots: {session.availableSpots})
-              </li>
-            ))
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageIcon size={48} className="text-[#2F4138]/20" />
+            </div>
           )}
-        </ul>
+        </div>
 
-        {selectedSession && (
-          <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg">
-            <p>
-              <strong>Selected Date:</strong>{" "}
-              {new Date(selectedSession.sessionDate).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Selected Time:</strong>{" "}
-              {new Date(selectedSession.sessionDate).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
+        {/* Description Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-sm">
+          <h2 className="font-display text-2xl text-[#2F4138] mb-4">About this Workshop</h2>
+          <p className="font-sans text-[#5C6760] leading-relaxed">{workshop.description}</p>
+        </div>
+
+        {/* Sessions Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm">
+          <h2 className="font-display text-2xl text-[#2F4138] mb-6">Available Sessions</h2>
+
+          {availableSessions.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="mx-auto h-12 w-12 text-[#2F4138]/20 mb-4" />
+              <p className="text-[#5C6760] font-medium">No upcoming sessions available</p>
+              <p className="text-[#5C6760] mt-2">Check back later for new dates</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {workshop.sessions.map((session) => {
+                const sessionDate = new Date(session.sessionDate);
+                const isPastSession = sessionDate < new Date();
+                const isFullyBooked = session.availableSpots <= 0;
+                const isDisabled = isPastSession || isFullyBooked;
+
+                return (
+                  <button
+                    key={session._id}
+                    onClick={() => !isDisabled && handleSelectTimeSlot(session)}
+                    disabled={isDisabled}
+                    className={`w-full p-4 rounded-xl border transition-all duration-200 flex items-center justify-between
+                      ${isDisabled 
+                        ? "opacity-50 cursor-not-allowed border-[#2F4138]/10 bg-[#2F4138]/5"
+                        : selectedSession?._id === session._id
+                          ? "border-[#2F4138] bg-[#2F4138]/5"
+                          : "border-[#2F4138]/10 hover:border-[#2F4138]/30"
+                      }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Calendar className="h-5 w-5 text-[#2F4138]" />
+                      <div className="text-left">
+                        <p className="font-medium text-[#2F4138]">
+                          {sessionDate.toLocaleDateString("en-US", {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                        <div className="flex items-center space-x-4 mt-1 text-[#5C6760]">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>
+                              {sessionDate.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-1" />
+                            <span>
+                              {isFullyBooked 
+                                ? "Fully booked" 
+                                : isPastSession 
+                                  ? "Session ended"
+                                  : `${session.availableSpots} spots left`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
               })}
-            </p>
-            <p>
-              <strong>Available Spots:</strong>{" "}
-              {workshop.maxSpots - selectedSession.bookedSpots}
-            </p>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
 
-      <div className="text-center">
-        <button
-          onClick={handleBooking}
-          className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition"
-        >
-          Book Now
-        </button>
+          {/* Booking Button */}
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={handleBooking}
+              disabled={!selectedSession || availableSessions.length === 0}
+              className={`px-8 py-4 rounded-full font-medium flex items-center space-x-2 transition-all duration-200
+                ${selectedSession
+                  ? "bg-[#2F4138] text-white hover:bg-[#3A4F44] transform hover:scale-105"
+                  : "bg-[#2F4138]/20 text-[#2F4138] cursor-not-allowed"
+                }`}
+            >
+              <span>Book this Workshop</span>
+              {selectedSession && <Calendar className="w-5 h-5 ml-2" />}
+            </button>
+          </div>
+        </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

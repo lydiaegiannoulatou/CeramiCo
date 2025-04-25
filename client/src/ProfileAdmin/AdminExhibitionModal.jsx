@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CloudinaryUpload from "../components/CloudinaryUpload";
+import ToastNotification from "../components/ToastNotification"; 
 
 const AdminExhibitionPage = ({ existingData }) => {
   const [formData, setFormData] = useState({
@@ -65,21 +66,28 @@ const AdminExhibitionPage = ({ existingData }) => {
     try {
       let response;
       if (existingData) {
+        // Updating an existing exhibition
         response = await axios.put(
           `http://localhost:3050/exhibitions/${existingData._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        ToastNotification.notifySuccess("Exhibition updated successfully!");
       } else {
+        // Creating a new exhibition
         response = await axios.post(
           "http://localhost:3050/exhibitions/add",
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        ToastNotification.notifySuccess("Exhibition created successfully!");
       }
-      console.log(response.data);  // Handle the created or updated exhibition
+
+      console.log(response.data);  // Handle the created or updated exhibition response
+
     } catch (err) {
       console.error("Error saving exhibition:", err);
+      ToastNotification.notifyError("Failed to save exhibition.");
     }
   };
 

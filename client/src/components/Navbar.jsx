@@ -3,11 +3,13 @@ import { jwtDecode } from "jwt-decode";
 import { useEffect, useState, useContext, useCallback } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
+import { Menu, X, ShoppingBag, User2, LogOut } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 const Navbar = () => {
-  const navigate      = useNavigate();
+  const navigate = useNavigate();
   const { refreshAuth } = useContext(AuthContext);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [userId, setUserId] = useState(null);
@@ -51,26 +53,26 @@ const Navbar = () => {
   const confirmLogout = () => {
     toast(
       ({ closeToast }) => (
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 shadow-xl w-72">
-          <h4 className="font-semibold text-lg mb-2 text-center">
+        <div className="p-6 rounded-2xl bg-[#2F4138] shadow-xl w-72">
+          <h4 className="font-display text-xl mb-3 text-center text-white">
             Log out of CeramiCo?
           </h4>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center mb-4">
-            You’ll need to sign in again to access your account.
+          <p className="font-sans text-sm text-white/80 text-center mb-6">
+            You'll need to sign in again to access your account.
           </p>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-4">
             <button
               onClick={() => { performLogout(); closeToast(); }}
-              className="px-4 py-1.5 rounded-lg bg-orange-700 hover:bg-orange-800 text-white text-sm font-medium"
+              className="px-6 py-2.5 rounded-full bg-white text-[#2F4138] hover:bg-white/90 text-sm font-medium transition-colors duration-200"
             >
-              Yes, log me out
+              Yes, log out
             </button>
             <button
               onClick={closeToast}
-              className="px-4 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm"
+              className="px-6 py-2.5 rounded-full border border-white/20 text-white hover:bg-white/10 text-sm transition-colors duration-200"
             >
-              Stay
+              Stay signed in
             </button>
           </div>
         </div>
@@ -81,42 +83,123 @@ const Navbar = () => {
         closeOnClick: false,
         draggable: false,
         hideProgressBar: true,
-        className: "bg-transparent shadow-none",   // let our inner card style show
+        className: "bg-transparent shadow-none",
       }
     );
   };
 
-  /* ---------- RENDER ---------- */
+  const NavLink = ({ to, children }) => (
+    <Link
+      to={to}
+      className="font-sans text-white/90 hover:text-white transition-colors duration-200 relative group"
+      onClick={() => setIsMenuOpen(false)}
+    >
+      {children}
+      <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full" />
+    </Link>
+  );
+
   return (
     <>
-      <nav className="flex justify-between items-center p-4 bg-orange-800 text-white">
-        <h1 className="text-xl font-bold">
-          <Link to="/" className="hover:underline">CeramiCo</Link>
-        </h1>
+      <nav className="bg-[#7C3C21]/95 backdrop-blur-sm sticky top-0 z-50 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <Link to="/" className="font-display text-2xl text-white hover:text-white/90 transition-colors duration-200">
+              CeramiCo
+            </Link>
 
-        <ul className="flex space-x-6">
-          <li><Link to="/exhibitions">Exhibitions</Link></li>
-          <li><Link to="/workshops">Workshops</Link></li>
-          <li><Link to="/shop">Shop</Link></li>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <NavLink to="/exhibitions">Exhibitions</NavLink>
+              <NavLink to="/workshops">Workshops</NavLink>
+              <NavLink to="/shop">Shop</NavLink>
 
-          {token ? (
-            <>
-              {userId && <li><Link to={`/profile/${userId}`}>My Profile</Link></li>}
-              {role !== "admin" && <li><Link to="/cart">My Cart</Link></li>}
+              {token ? (
+                <>
+                  {userId && (
+                    <Link 
+                      to={`/profile/${userId}`}
+                      className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors duration-200"
+                    >
+                      <User2 size={20} className="text-white" />
+                    </Link>
+                  )}
+                  {role !== "admin" && (
+                    <Link 
+                      to="/cart"
+                      className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors duration-200"
+                    >
+                      <ShoppingBag size={20} className="text-white" />
+                    </Link>
+                  )}
+                  <button
+                    onClick={confirmLogout}
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors duration-200"
+                  >
+                    <LogOut size={20} className="text-white" />
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="px-6 py-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
 
-              <li>
-                <button onClick={confirmLogout} className="hover:underline">
-                  Logout
-                </button>
-              </li>
-            </>
-          ) : (
-            <li><Link to="/login">Login</Link></li>
-          )}
-        </ul>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden w-10 h-10 flex items-center justify-center"
+            >
+              {isMenuOpen ? (
+                <X size={24} className="text-white" />
+              ) : (
+                <Menu size={24} className="text-white" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-[#8B4513] border-t border-white/10">
+            <div className="px-4 py-6 space-y-4">
+              <NavLink to="/exhibitions">Exhibitions</NavLink>
+              <NavLink to="/workshops">Workshops</NavLink>
+              <NavLink to="/shop">Shop</NavLink>
+
+              {token ? (
+                <>
+                  {userId && <NavLink to={`/profile/${userId}`}>My Profile</NavLink>}
+                  {role !== "admin" && <NavLink to="/cart">My Cart</NavLink>}
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      confirmLogout();
+                    }}
+                    className="font-sans text-white/90 hover:text-white transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-6 py-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors duration-200 text-center"
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Toast mount‑point */}
       <ToastContainer newestOnTop limit={3} />
     </>
   );
