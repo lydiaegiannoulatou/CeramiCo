@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
+const path = require("path");
 
 const main = require("./config/connection");
 const userRoutes = require("./routes/userRoutes");
@@ -10,11 +11,13 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const exhibitionRoutes = require("./routes/exhibitionRoutes");
-const workshopRoutes = require("./routes/workshopRoutes")
-const bookingRoutes = require("./routes/bookingRoutes")
+const workshopRoutes = require("./routes/workshopRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 const { stripeWebhook } = require("./controllers/paymentController");
+
 const app = express();
-const port = process.env.PORT
+const port = process.env.PORT;
+
 
 app.post(
   "/payment/webhook",
@@ -22,10 +25,12 @@ app.post(
   stripeWebhook
 );
 
+
 app.use(express.json());
 app.use(cors());
 
 main();
+
 
 app.use("/user", userRoutes);
 app.use("/shop", productRoutes);
@@ -34,9 +39,17 @@ app.use("/payment", paymentRoutes);
 app.use("/order", orderRoutes);
 app.use("/admin", adminRoutes);
 app.use("/exhibitions", exhibitionRoutes);
-app.use("/workshops",workshopRoutes)
-app.use("/bookings", bookingRoutes)
+app.use("/workshops", workshopRoutes);
+app.use("/bookings", bookingRoutes);
 
-require("./cron/completeBookings"); 
+
+app.use(express.static(path.join(__dirname, "../client/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build/index.html"));
+});
+
+
+require("./cron/completeBookings");
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));
