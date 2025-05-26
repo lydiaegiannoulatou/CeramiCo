@@ -27,7 +27,7 @@ const ContactPage = () => {
     });
     
     try {
-      const response = await axios.post('http://localhost:3050/admin/contact', formData);
+      const response = await axios.post('http://localhost:3050/newsletter/contact', formData);
       if (response.status === 200) {
         toast.success('Message sent successfully!', {
           position: "top-right",

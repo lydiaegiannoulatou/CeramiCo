@@ -19,65 +19,87 @@ const AddToCartModal = ({ isOpen, onClose, product, type = "product", onAddToCar
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#f7f4ea] rounded-2xl p-6 max-w-md w-full mx-4 relative transform transition-all duration-300 scale-100">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div 
+        className="absolute inset-0 bg-[#2F4138]/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl border border-[#2F4138]/10 transform transition-all duration-300 scale-100">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-[#713818] hover:text-[#5a2c14] transition-colors duration-200"
+          className="absolute right-4 top-4 p-2 text-[#2F4138] hover:text-[#3C685A] transition-colors duration-200 hover:bg-[#2F4138]/5 rounded-full"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
-        <div className="flex items-center mb-6">
-          <ShoppingCart className="text-[#713818] mr-3" size={24} />
-          <h2 className="text-2xl font-serif text-[#713818]">Add to Cart</h2>
+        <div className="flex items-center mb-8">
+          <ShoppingCart className="text-[#3C685A] mr-3" size={24} />
+          <h2 className="text-2xl font-display text-[#2F4138]">Add to Cart</h2>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <img
-              src={product.images?.[0] || "/placeholder-image.jpg"}
-              alt={product.title || product.name}
-              className="w-20 h-20 object-cover rounded-lg"
-            />
+        <div className="mb-8">
+          <div className="flex items-start gap-6 mb-6">
+            <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border border-[#2F4138]/10">
+              <img
+                src={product.images?.[0] || "/placeholder-image.jpg"}
+                alt={product.title || product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div>
-              <h3 className="font-medium text-[#5b3b20]">{product.title || product.name}</h3>
-              <p className="text-[#3f612d] font-semibold">€{product.price.toFixed(2)}</p>
+              <h3 className="text-lg font-medium text-[#2F4138] mb-2">
+                {product.title || product.name}
+              </h3>
+              <p className="text-xl font-light text-[#3C685A]">
+                €{product.price.toFixed(2)}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-[#eee6d2] p-4 rounded-lg">
-            <span className="text-[#5b3b20]">Quantity:</span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
-                className="p-1.5 rounded-full text-[#713818] hover:bg-[#e5dbc5] disabled:opacity-30 transition-all duration-200"
-              >
-                <Minus size={16} />
-              </button>
-              <span className="w-8 text-center font-medium text-[#5b3b20]">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                disabled={type === "product" && quantity >= product.stock}
-                className="p-1.5 rounded-full text-[#713818] hover:bg-[#e5dbc5] disabled:opacity-30 transition-all duration-200"
-              >
-                <Plus size={16} />
-              </button>
+          <div className="bg-[#f5f2eb] rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#2F4138] font-medium">Quantity</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-[#2F4138] hover:bg-[#2F4138] hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-[#2F4138] transition-all duration-200 border border-[#2F4138]/10"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="w-8 text-center font-medium text-[#2F4138]">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={type === "product" && quantity >= product.stock}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-[#2F4138] hover:bg-[#2F4138] hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-[#2F4138] transition-all duration-200 border border-[#2F4138]/10"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
             </div>
+            {type === "product" && (
+              <p className="text-sm text-[#5C6760]">
+                {product.stock} items available
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-6 p-3 bg-[#f0ece0] rounded-lg">
-          <span className="text-[#5b3b20]">Total:</span>
-          <span className="text-[#3f612d] font-bold">€{(product.price * quantity).toFixed(2)}</span>
+        <div className="flex justify-between items-center mb-8 p-4 bg-[#f5f2eb] rounded-xl">
+          <span className="text-[#2F4138] font-medium">Total</span>
+          <span className="text-xl font-medium text-[#3C685A]">
+            €{(product.price * quantity).toFixed(2)}
+          </span>
         </div>
 
         <button
           onClick={handleSubmit}
-          className="w-full bg-[#713818] text-white py-3 rounded-xl font-medium hover:bg-[#5a2c14] transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full bg-[#2F4138] text-white py-4 rounded-xl font-medium hover:bg-[#3C685A] transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
         >
-          Add to Cart
+          <ShoppingCart size={20} />
+          <span>Add to Cart</span>
         </button>
       </div>
     </div>

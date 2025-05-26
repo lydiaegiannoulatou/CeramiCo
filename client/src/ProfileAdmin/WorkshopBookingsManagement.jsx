@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import BookingDetailsModal from "../ProfileUser/BookingDetailsModal";
-import { Calendar, Filter, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-react";
+import {
+  Calendar,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 
 const bookingsPerPage = 15;
 
@@ -17,11 +24,16 @@ const WorkshopBookingsManagement = () => {
 
   const getBookingStatusColor = (st) => {
     switch (st) {
-      case "pending":   return "bg-[#F5F2EB] text-[#D36B3C]";
-      case "confirmed": return "bg-[#EDF7ED] text-[#2F4138]";
-      case "completed": return "bg-[#E8F4F2] text-[#2D6A6E]";
-      case "canceled":  return "bg-[#FBEAEA] text-[#D32F2F]";
-      default:          return "bg-[#F5F2EB] text-[#2F4138]";
+      case "pending":
+        return "bg-[#F5F2EB] text-[#D36B3C]";
+      case "confirmed":
+        return "bg-[#EDF7ED] text-[#2F4138]";
+      case "completed":
+        return "bg-[#E8F4F2] text-[#2D6A6E]";
+      case "canceled":
+        return "bg-[#FBEAEA] text-[#D32F2F]";
+      default:
+        return "bg-[#F5F2EB] text-[#2F4138]";
     }
   };
 
@@ -63,20 +75,22 @@ const WorkshopBookingsManagement = () => {
   const closeModal = () => setSelectedId(null);
 
   const FilterTabBtn = ({ status, label }) => {
-    const count = status === "all" 
-      ? bookings.length 
-      : bookings.filter((b) => b.status === status).length;
+    const count =
+      status === "all"
+        ? bookings.length
+        : bookings.filter((b) => b.status === status).length;
 
     return (
       <button
-        onClick={() => { 
-          setSelectedStatus(status); 
-          setCurrentPage(1); 
+        onClick={() => {
+          setSelectedStatus(status);
+          setCurrentPage(1);
         }}
         className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2
-          ${selectedStatus === status
-            ? "bg-[#2F4138] text-white"
-            : "bg-[#2F4138]/5 text-[#2F4138] hover:bg-[#2F4138]/10"
+          ${
+            selectedStatus === status
+              ? "bg-[#2F4138] text-white"
+              : "bg-[#2F4138]/5 text-[#2F4138] hover:bg-[#2F4138]/10"
           }`}
       >
         <span>{label}</span>
@@ -130,17 +144,27 @@ const WorkshopBookingsManagement = () => {
         <table className="w-full">
           <thead>
             <tr className="bg-[#2F4138]/5">
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Booking #</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Workshop Title</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Date</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Payment Status</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Status</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
+                Booking #
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
+                Workshop Title
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
+                Date
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
+                Payment Status
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
+                Status
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#2F4138]/10">
             {filteredBookings.map((b) => (
-              <tr 
-                key={b._id} 
+              <tr
+                key={b._id}
                 onClick={() => openModal(b._id)}
                 className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
               >
@@ -148,8 +172,9 @@ const WorkshopBookingsManagement = () => {
                   {String(b._id).slice(-5)}
                 </td>
                 <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {b.workshop_id.title}
+                  {b.workshop_id?.title || "Unknown Workshop"}
                 </td>
+
                 <td className="px-6 py-4 text-sm text-[#2F4138]">
                   {new Date(b.date).toLocaleDateString()}
                 </td>
@@ -157,7 +182,11 @@ const WorkshopBookingsManagement = () => {
                   {b.paymentStatus}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getBookingStatusColor(b.status)}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${getBookingStatusColor(
+                      b.status
+                    )}`}
+                  >
                     {b.status}
                   </span>
                 </td>
@@ -165,7 +194,10 @@ const WorkshopBookingsManagement = () => {
             ))}
             {filteredBookings.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-[#2F4138]/70">
+                <td
+                  colSpan={5}
+                  className="px-6 py-8 text-center text-[#2F4138]/70"
+                >
                   <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   No bookings found
                 </td>
@@ -205,7 +237,10 @@ const WorkshopBookingsManagement = () => {
 
       {/* Modal */}
       {selectedBookingId && (
-        <BookingDetailsModal bookingId={selectedBookingId} onClose={closeModal} />
+        <BookingDetailsModal
+          bookingId={selectedBookingId}
+          onClose={closeModal}
+        />
       )}
     </div>
   );

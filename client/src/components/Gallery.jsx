@@ -11,7 +11,7 @@ export default function Gallery() {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get("http://localhost:3050/admin/gallery");
+        const response = await axios.get("http://localhost:3050/gallery");
         setImgs(response.data);
       } catch (error) {
         console.error(error);

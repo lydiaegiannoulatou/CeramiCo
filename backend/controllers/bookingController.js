@@ -2,6 +2,8 @@ const Booking = require("../models/bookingModel");
 const Workshop = require("../models/workshopModel");
 const User = require("../models/userModel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { sendWorkshopBookingConfirmationEmail } = require("../controllers/emailController");
+
 
 // 🟢 Fetch all bookings (Admin only)
 const getAllBookings = async (req, res) => {
@@ -84,6 +86,15 @@ const handleBookNow = async (req, res) => {
 
     session.bookedSpots += 1;
     await workshop.save();
+
+    // Send booking confirmation email
+try {
+  const user = await User.findById(userId).select("name email");
+  const bookingDetails = `${workshop.title} on ${new Date(session.date).toLocaleString()}`;
+  await sendWorkshopBookingConfirmationEmail(user, bookingDetails);
+} catch (emailErr) {
+  console.error("Failed to send booking confirmation email:", emailErr);
+}
 
     res.status(201).json({ success: true, booking });
   } catch (error) {

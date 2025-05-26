@@ -1,15 +1,28 @@
 import React, { useState } from "react";
-import { ArrowRight } from "lucide-react"; // You can still use the ArrowRight icon if needed for the subscribe button
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios from "axios"; 
 
 const Footer = () => {
   const [email, setEmail] = useState("");
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    // Handle subscription logic here
-    console.log(`Subscribing email: ${email}`);
-    setEmail("");
+
+    try {
+      const response = await axios.post("http://localhost:3050/newsletter/subscribe", { email });
+
+      toast.success(response.data.message || "Subscribed successfully!");
+      setEmail("");
+    } catch (error) {
+      if (error.response && error.response.data) {
+        toast.error(error.response.data.error || "Failed to subscribe.");
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    }
   };
 
   return (
@@ -18,22 +31,14 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left Column */}
           <div className="space-y-8">
-            {/* Social Media Section - Using text links instead of icons */}
+            {/* Social Media Section */}
             <div>
               <h3 className="text-lg font-medium mb-4 border-b border-white/20 pb-2">Connect with Social</h3>
               <div className="flex space-x-4">
-                <a href="https://facebook.com" className="text-white hover:text-gray-400">
-                  Facebook
-                </a>
-                <a href="https://twitter.com" className="text-white hover:text-gray-400">
-                  Twitter
-                </a>
-                <a href="https://instagram.com" className="text-white hover:text-gray-400">
-                  Instagram
-                </a>
-                <a href="https://youtube.com" className="text-white hover:text-gray-400">
-                  YouTube
-                </a>
+                <a href="https://facebook.com" className="text-white hover:text-gray-400">Facebook</a>
+                <a href="https://twitter.com" className="text-white hover:text-gray-400">Twitter</a>
+                <a href="https://instagram.com" className="text-white hover:text-gray-400">Instagram</a>
+                <a href="https://youtube.com" className="text-white hover:text-gray-400">YouTube</a>
               </div>
             </div>
 
@@ -63,27 +68,24 @@ const Footer = () => {
           {/* Right Column */}
           <div className="flex justify-start md:justify-end">
             <nav className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-              <Link to="/faq" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">
-                FAQ
-              </Link>
-              <Link to="/about" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">
-                About
-              </Link>
-              <Link to="/contact" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">
-                Contact Us
-              </Link>
+              <Link to="/faq" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">FAQ</Link>
+              <Link to="/about" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">About</Link>
+              <Link to="/contact" className="text-white/90 hover:text-white font-medium text-lg transition-colors duration-200">Contact Us</Link>
             </nav>
           </div>
         </div>
 
         <div className="mt-12 pt-4 border-t border-white/20 text-white/60 text-sm flex flex-col md:flex-row justify-between">
-          <p>&copy; {new Date().getFullYear()} Your Company Name. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} CeramiCo - Created by Lydia Elli Giannoulatou. All rights reserved.</p>
           <div className="flex gap-4 mt-2 md:mt-0">
             <Link to="/privacy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link>
           </div>
         </div>
       </div>
+
+      {/* Toast Notifications */}
+      <ToastContainer position="bottom-right" />
     </footer>
   );
 };

@@ -2,7 +2,7 @@ const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
 
 // Utility function to check if MongoDB ObjectId is valid
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // ADD PRODUCT TO CART
@@ -30,6 +30,11 @@ const addToCart = async (req, res) => {
       if (!product) {
         return res.status(404).send({ msg: "Product not found" });
       }
+      if (quantity > product.stock) {
+        return res.status(400).send({
+          msg: `Only ${product.stock} units of '${product.title}' available in stock`,
+        });
+      }
 
       // Get the price from the product
       const price = product.price;
@@ -51,7 +56,12 @@ const addToCart = async (req, res) => {
         );
 
         if (existingItemIndex >= 0) {
-          // If it exists, update the quantity
+          const existingQuantity = cart.items[existingItemIndex].quantity;
+          if (existingQuantity + quantity > product.stock) {
+            return res.status(400).send({
+              msg: `Adding ${quantity} exceeds stock. You already have ${existingQuantity} in cart and only ${product.stock} are available.`,
+            });
+          }
           cart.items[existingItemIndex].quantity += quantity;
         } else {
           // Otherwise, add a new item to the cart
@@ -65,11 +75,10 @@ const addToCart = async (req, res) => {
     }
 
     // Populate the cart with product details
-    const populatedCart = await Cart.findOne({ user_id: userId })
-      .populate({
-        path: "items.product_id",
-        select: "title price images",
-      });
+    const populatedCart = await Cart.findOne({ user_id: userId }).populate({
+      path: "items.product_id",
+      select: "title price images",
+    });
 
     if (!populatedCart) {
       return res.status(404).send({ msg: "Populated cart not found" });
@@ -93,14 +102,15 @@ const getCart = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    let cart = await Cart.findOne({ user_id: userId })
-      .populate({
-        path: 'items.product_id',
-        select: 'title price images',
-      });
+    let cart = await Cart.findOne({ user_id: userId }).populate({
+      path: "items.product_id",
+      select: "title price images stock",
+    });
 
     if (!cart) {
-      return res.status(200).send({ msg: "Cart is empty", cart: { items: [] } });
+      return res
+        .status(200)
+        .send({ msg: "Cart is empty", cart: { items: [] } });
     }
 
     res.status(200).send({ msg: "Cart retrieved successfully", cart });
@@ -133,10 +143,14 @@ const deleteItemFromCart = async (req, res) => {
     await cart.save();
 
     // Populate before returning
-    const populatedCart = await Cart.findOne({ user_id: userId })
-      .populate("items.product_id", "title price images");
+    const populatedCart = await Cart.findOne({ user_id: userId }).populate(
+      "items.product_id",
+      "title price images"
+    );
 
-    res.status(200).send({ msg: "Item removed from cart", cart: populatedCart });
+    res
+      .status(200)
+      .send({ msg: "Item removed from cart", cart: populatedCart });
   } catch (error) {
     console.error(error);
     res.status(500).send({
@@ -151,31 +165,49 @@ const updateItemQuantityInCart = async (req, res) => {
     const userId = req.user.userId;
     const { product_id, quantity } = req.body;
 
+    if (!product_id || !isValidObjectId(product_id)) {
+      return res.status(400).send({ msg: "Invalid product ID" });
+    }
+
     if (quantity <= 0) {
       return res.status(400).send({ msg: "Quantity must be greater than zero" });
     }
 
-    // Validate ObjectId for product
-    if (product_id && !isValidObjectId(product_id)) {
-      return res.status(400).send({ msg: "Invalid product ID" });
+    // Fetch the product
+    const product = await Product.findById(product_id);
+    if (!product) {
+      return res.status(404).send({ msg: "Product not found" });
     }
 
-    let cart = await Cart.findOne({ user_id: userId });
-    if (!cart) return res.status(404).send({ msg: "Cart not found" });
+    // Check if the desired quantity exceeds stock
+    if (quantity > product.stock) {
+      return res.status(400).send({
+        msg: `Only ${product.stock} units of '${product.title}' are available`,
+      });
+    }
 
+    // Find the user's cart
+    const cart = await Cart.findOne({ user_id: userId });
+    if (!cart) {
+      return res.status(404).send({ msg: "Cart not found" });
+    }
+
+    // Find the item in the cart
     const itemIndex = cart.items.findIndex(
       (item) => item.product_id && item.product_id.toString() === product_id
     );
 
-    if (itemIndex === -1) return res.status(404).send({ msg: "Item not found in cart" });
+    if (itemIndex === -1) {
+      return res.status(404).send({ msg: "Item not found in cart" });
+    }
 
     // Update the quantity
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
 
-    // Populate before returning
+    // Populate and return the updated cart
     const populatedCart = await Cart.findOne({ user_id: userId })
-      .populate("items.product_id", "title price images");
+      .populate("items.product_id", "title price images stock");
 
     res.status(200).send({ msg: "Item quantity updated", cart: populatedCart });
   } catch (error) {
@@ -185,6 +217,7 @@ const updateItemQuantityInCart = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   addToCart,

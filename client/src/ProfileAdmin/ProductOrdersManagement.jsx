@@ -80,6 +80,26 @@ const ProductOrders = () => {
     </button>
   );
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      // Update order status in the backend
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:3050/order/update/${orderId}`,
+        { orderStatus: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Update local state to reflect status change
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, orderStatus: newStatus } : order
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update order status", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -203,7 +223,7 @@ const ProductOrders = () => {
             <OrderDetailsModal 
               order={selectedOrder} 
               onClose={() => setSelectedOrder(null)} 
-              onStatusChange={() => {}} 
+              onStatusChange={handleStatusChange} // Pass the status change handler here
             />
           </div>
         </div>

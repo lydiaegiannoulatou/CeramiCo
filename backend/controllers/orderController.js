@@ -1,6 +1,7 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel")
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
+const { sendOrderConfirmationEmail } = require("../controllers/emailController");
 
 
 
@@ -39,6 +40,20 @@ const createOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
+
+    try {
+  const userEmail = session.customer_details.email; // Stripe email
+  const userName = session.customer_details.name || "Customer"; // Fallback
+  const user = { email: userEmail, name: userName };
+
+  const orderDetails = items.map(item => 
+    `• ${item.title || item.name || "Item"} x${item.quantity}`
+  ).join('\n');
+
+  await sendOrderConfirmationEmail(user, orderDetails);
+} catch (emailErr) {
+  console.error("Failed to send order confirmation email:", emailErr);
+}
 
     res.status(201).json({ msg: "Order created successfully", order: savedOrder });
   } catch (error) {

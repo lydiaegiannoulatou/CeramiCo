@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { useEffect, useState, useContext, useCallback } from "react";
+import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
-import { Menu, X, ShoppingBag, User2, LogOut } from "lucide-react";
+import { Menu, X, ShoppingCart, User2, LogOut } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 const Navbar = () => {
@@ -42,51 +42,73 @@ const Navbar = () => {
   }, [navigate]);
 
   /* ---------- LOGOUT ROUTINE ---------- */
-  const performLogout = useCallback(() => {
-    localStorage.clear();
-    setToken(null); setUserId(null); setRole(null);
+ const performLogout = () => {
+  localStorage.clear();
+  setToken(null);
+  setUserId(null);
+  setRole(null);
+  setTimeout(() => {
     refreshAuth();
     navigate("/");
-  }, [refreshAuth, navigate]);
+  }, 0); 
+};
 
-  /* ---------- TOAST CONFIRM ---------- */
-  const confirmLogout = () => {
-    toast(
-      ({ closeToast }) => (
-        <div className="p-6 rounded-2xl bg-[#2F4138] shadow-xl w-72">
-          <h4 className="font-display text-xl mb-3 text-center text-white">
-            Log out of CeramiCo?
-          </h4>
-          <p className="font-sans text-sm text-white/80 text-center mb-6">
-            You'll need to sign in again to access your account.
-          </p>
+/* ---------- TOAST CONFIRM ---------- */
+const logoutToastId = useRef(null);
 
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => { performLogout(); closeToast(); }}
-              className="px-6 py-2.5 rounded-full bg-white text-[#2F4138] hover:bg-white/90 text-sm font-medium transition-colors duration-200"
-            >
-              Yes, log out
-            </button>
-            <button
-              onClick={closeToast}
-              className="px-6 py-2.5 rounded-full border border-white/20 text-white hover:bg-white/10 text-sm transition-colors duration-200"
-            >
-              Stay signed in
-            </button>
-          </div>
+const confirmLogout = () => {
+  if (logoutToastId.current !== null && toast.isActive(logoutToastId.current)) {
+    return; // prevent multiple instances
+  }
+
+  logoutToastId.current = toast(
+    ({ closeToast }) => (
+      <div className="p-8 rounded-2xl bg-gradient-to-br from-[#2F4138] to-[#3C685A] shadow-xl w-80">
+        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <LogOut size={28} className="text-white" />
         </div>
-      ),
-      {
-        position: "top-center",
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-        hideProgressBar: true,
-        className: "bg-transparent shadow-none",
-      }
-    );
-  };
+
+        <h4 className="font-display text-2xl mb-3 text-center text-white">
+          Ready to Leave?
+        </h4>
+        <p className="font-sans text-sm text-white/80 text-center mb-8">
+          You'll need to sign in again to access your account and saved items.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => {
+              performLogout();
+              closeToast();
+            }}
+            className="w-full px-6 py-3 rounded-xl bg-white text-[#2F4138] hover:bg-white/90 font-medium transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            Yes, log out
+          </button>
+          <button
+            onClick={closeToast}
+            className="w-full px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      position: "top-center",
+      autoClose: false,
+      closeOnClick: false,
+      draggable: false,
+      hideProgressBar: true,
+      closeButton: false,
+      className: "bg-transparent shadow-none",
+      onClose: () => {
+        logoutToastId.current = null; 
+      },
+    }
+  );
+};
+
 
   const NavLink = ({ to, children }) => (
     <Link
@@ -101,7 +123,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-[#7C3C21]/95 backdrop-blur-sm sticky top-0 z-50 border-b border-white/10">
+      <nav className="bg-[#7C3C21]/95 backdrop-blur-sm top-0 z-50 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -130,7 +152,7 @@ const Navbar = () => {
                       to="/cart"
                       className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors duration-200"
                     >
-                      <ShoppingBag size={20} className="text-white" />
+                      <ShoppingCart size={20} className="text-white" />
                     </Link>
                   )}
                   <button

@@ -1,7 +1,6 @@
 const express = require("express");
-require("dotenv").config();
 const cors = require("cors");
-const path = require("path");
+// const path = require("path");
 
 const main = require("./config/connection");
 const userRoutes = require("./routes/userRoutes");
@@ -9,7 +8,8 @@ const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+const newsletterRoutes = require("./routes/emailRoutes");
+const galleryRoutes = require("./routes/galleryRoutes")
 const exhibitionRoutes = require("./routes/exhibitionRoutes");
 const workshopRoutes = require("./routes/workshopRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
@@ -37,17 +37,18 @@ app.use("/shop", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/order", orderRoutes);
-app.use("/admin", adminRoutes);
+app.use("/newsletter", newsletterRoutes);
+app.use("/gallery", galleryRoutes)
 app.use("/exhibitions", exhibitionRoutes);
 app.use("/workshops", workshopRoutes);
 app.use("/bookings", bookingRoutes);
 
 
-app.use(express.static(path.join(__dirname, "../client/build")));
+// app.use(express.static(path.join(__dirname, "../client/build")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/build/index.html"));
-});
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../client/build/index.html"));
+// });
 
 
 require("./cron/completeBookings");

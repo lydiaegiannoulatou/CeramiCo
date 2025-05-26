@@ -3,18 +3,17 @@ import axios from "axios";
 
 const STATUS_FLOW = ["processing", "shipped", "delivered", "canceled"];
 
-const OrderDetailsModal = ({ order }) => {
+const OrderDetailsModal = ({ order, onClose }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [orderStatus, setOrderStatus] = useState(order.orderStatus); // <- actual status text
+  const [orderStatus, setOrderStatus] = useState(order.orderStatus);
 
   const userId = order.user_id;
   const isAdmin = localStorage.getItem("role") === "admin";
   const lowerStatus = orderStatus.toLowerCase();
   const isCanceled = lowerStatus === "canceled";
 
-  /* fetch user profile ------------------------------------------------ */
   useEffect(() => {
     if (!userId) return;
     axios
@@ -23,7 +22,6 @@ const OrderDetailsModal = ({ order }) => {
       .catch(e => console.error("Error fetching user details:", e));
   }, [userId]);
 
-  /* helpers ----------------------------------------------------------- */
   const authHeader = { Authorization: `Bearer ${localStorage.getItem("token")}` };
 
   const backendUpdate = newStatus =>
@@ -40,7 +38,6 @@ const OrderDetailsModal = ({ order }) => {
       { headers: authHeader }
     );
 
-  /* admin dropdown change -------------------------------------------- */
   const handleStatusChange = async newStatus => {
     if (!window.confirm(`Change status to ${newStatus}?`)) return;
     try {
@@ -54,7 +51,6 @@ const OrderDetailsModal = ({ order }) => {
     }
   };
 
-  /* cancel button / entry -------------------------------------------- */
   const handleCancelOrder = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setIsCancelling(true);
@@ -71,22 +67,28 @@ const OrderDetailsModal = ({ order }) => {
     }
   };
 
-  /* disable dropdown items that move backward ------------------------ */
   const disabled = status =>
     STATUS_FLOW.indexOf(status) < STATUS_FLOW.indexOf(lowerStatus);
 
-  /* ------------------------------------------------------------------ */
   if (!order) return null;
   if (!userDetails) return <p>Loading user details…</p>;
 
   const { orderNumber, paymentStatus, shippingAddress, totalCost, currency, items, createdAt } = order;
 
   return (
-    <div className="border p-6 rounded-2xl shadow-md bg-white mt-6 space-y-4">
+    <div className="relative border p-6 rounded-2xl shadow-md bg-white mt-6 space-y-4">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Order Confirmation</h2>
 
-        {/* red cancel button — only for non‑admin & not cancelled */}
         {!isAdmin && !isCanceled && (
           <button
             onClick={handleCancelOrder}
@@ -97,7 +99,6 @@ const OrderDetailsModal = ({ order }) => {
           </button>
         )}
 
-        {/* admin dropdown ------------------------------------------------ */}
         {isAdmin && !isCanceled && (
           <div className="relative">
             <button
@@ -121,8 +122,6 @@ const OrderDetailsModal = ({ order }) => {
                     Mark as {st}
                   </button>
                 ))}
-
-                {/* Cancel option for admin */}
                 <button
                   onClick={handleCancelOrder}
                   className="w-full text-left px-4 py-2 hover:bg-gray-200 text-red-600"
@@ -135,7 +134,7 @@ const OrderDetailsModal = ({ order }) => {
         )}
       </div>
 
-      {/* --- summary fields ------------------------------------------------ */}
+      {/* Order details summary */}
       <div className="grid grid-cols-2 gap-4 text-base">
         <p><strong>Order #:</strong> {orderNumber}</p>
         <p><strong>Status:</strong> {orderStatus}</p>
@@ -144,14 +143,14 @@ const OrderDetailsModal = ({ order }) => {
         <p><strong>Date:</strong> {new Date(createdAt).toLocaleString()}</p>
       </div>
 
-      {/* --- user details ------------------------------------------------ */}
+      {/* User details */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-2">User Details</h3>
         <p><strong>Name:</strong> {userDetails.name}</p>
         <p><strong>Email:</strong> {userDetails.email}</p>
       </div>
 
-      {/* --- shipping address ------------------------------------------------ */}
+      {/* Shipping address */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-2">Shipping Address</h3>
         {shippingAddress ? (
@@ -173,7 +172,7 @@ const OrderDetailsModal = ({ order }) => {
         )}
       </div>
 
-      {/* --- items list ------------------------------------------------ */}
+      {/* Items list */}
       <div className="pt-4 border-t">
         <h3 className="text-xl font-semibold mb-4">Items</h3>
         {Array.isArray(items) && items.length ? (

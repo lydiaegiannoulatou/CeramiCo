@@ -10,7 +10,7 @@ function GalleryAdmin() {
 
   const refresh = async () => {
     try {
-      const response = await axios.get("http://localhost:3050/admin/gallery", {
+      const response = await axios.get("http://localhost:3050/gallery", {
         headers: {
           Authorization: `Bearer ${token}`, 
         },
@@ -32,7 +32,7 @@ function GalleryAdmin() {
 
     try {
       // 1. Get signed params
-      const { data: sig } = await axios.post("http://localhost:3050/admin/gallery/sign", null, {
+      const { data: sig } = await axios.post("http://localhost:3050/gallery/sign", null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -68,7 +68,7 @@ function GalleryAdmin() {
   
     try {
       await axios.delete(
-        `http://localhost:3050/admin/gallery/${encodeURIComponent(publicId)}`,
+        `http://localhost:3050/gallery/${encodeURIComponent(publicId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setImgs(prev => prev.filter(img => img.public_id !== publicId));

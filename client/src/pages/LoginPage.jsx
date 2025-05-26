@@ -109,7 +109,7 @@ const Login = () => {
         </form>
 
         <div className="mt-10 flex items-center justify-between text-sm">
-          <span className="text-gray-600">Create account</span>
+        
           <Link
             to="/register"
             className="inline-flex items-center gap-1 text-[#713818] hover:underline"

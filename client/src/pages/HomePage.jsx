@@ -6,7 +6,7 @@ const HomePage = () => {
   return (
     <div className="bg-[#F5F2EB]">
       {/* Hero Section */}
-      <div className="relative h-screen">
+      <div className="relative h-[90vh]">
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center"

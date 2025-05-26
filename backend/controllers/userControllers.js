@@ -97,11 +97,9 @@ const registerUser = async (req, res) => {
 
 const userProfile = async (req, res) => {
   try {
-    const { id } = req.params;  // Get user id from the URL parameters
-    console.log("User ID from URL:", id);
+    const { id } = req.params; 
 
-    const user = await User.findById(id).select("-password"); // Exclude password field
-
+    const user = await User.findById(id).select("-password"); 
     if (!user) {
       return res.status(404).send({ msg: "User not found." });
     }

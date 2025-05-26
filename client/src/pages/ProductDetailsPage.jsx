@@ -146,35 +146,40 @@ const ProductDetailsPage = () => {
             </div>
 
             <div className="pt-6 border-t border-[#f1e8d8]">
-              {userRole === "admin" ? (
-                <div className="flex items-start space-x-2 bg-[#f9f6f1] p-4 rounded-lg">
-                  <Info className="w-5 h-5 text-[#8a7563] mt-0.5 flex-shrink-0" />
-                  <p className="text-[#8a7563] italic text-sm">
-                    Admin accounts cannot add products to the cart. Please use a regular user account to make purchases.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {product.stock > 0 && (
-                    <div className="mb-6">
-                      <QuantitySelector 
-                        quantity={quantity}
-                        setQuantity={setQuantity}
-                        max={product.stock}
-                        label="Select Quantity"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <AddToCart
-                      item={product}
-                      quantity={quantity}
-                      showLabel={true}
-                    />
-                                      </div>
-                </>
-              )}
+       {userRole === "admin" ? (
+  <div className="flex items-start space-x-2 bg-[#f9f6f1] p-4 rounded-lg">
+    <Info className="w-5 h-5 text-[#8a7563] mt-0.5 flex-shrink-0" />
+    <p className="text-[#8a7563] italic text-sm">
+      As much as we admire your admin powers, adding products to the cart is a task reserved for regular users.
+    </p>
+  </div>
+) : !localStorage.getItem("token") ? (
+  <div className="flex items-start space-x-2 bg-[#fff3cd] border border-[#ffeeba] text-[#856404] p-4 rounded-lg">
+    <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+    <p className="italic text-sm">Please log in to add this product to your cart.</p>
+  </div>
+) : (
+  <>
+    {product.stock > 0 && (
+      <div className="mb-6">
+        <QuantitySelector 
+          quantity={quantity}
+          setQuantity={setQuantity}
+          max={product.stock}
+          label="Select Quantity"
+        />
+      </div>
+    )}
+    <div className="flex flex-col sm:flex-row gap-4">
+      <AddToCart
+        item={product}
+        quantity={quantity}
+        showLabel={true}
+      />
+    </div>
+  </>
+)}
+
             </div>
           </div>
         </div>

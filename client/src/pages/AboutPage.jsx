@@ -7,28 +7,38 @@ const AboutPage = () => {
 
       <div className="text-lg space-y-6">
         <p>
-          Welcome to <strong>CeramiCo</strong>, a unique online platform dedicated to bringing you high-quality, handmade pottery products. Whether you're a pottery enthusiast or someone looking to add a special touch to your home decor, CeramiCo offers a wide range of beautiful and authentic ceramic pieces.
+          Welcome to <strong>CeramiCo</strong>—a unique online space where pottery meets creativity and craftsmanship. Whether you're a seasoned enthusiast or simply looking to add an artisanal touch to your home, CeramiCo offers a curated selection of beautiful, high-quality handmade ceramics.
         </p>
+
         <p>
-          CeramiCo is more than just a store—it's also a place where you can unleash your creativity! We offer pottery workshops for individuals interested in learning the art of pottery and creating their own pieces.
+          But CeramiCo is more than just an online shop. It’s also a place to explore your own creativity. We host pottery workshops designed to help you discover the joy of shaping clay and creating something truly personal with your own hands.
         </p>
+
         <p>
-          This website was created as part of a <strong>graduation project at Socialhackers Academy</strong>, aiming to combine the beauty of handmade pottery with modern e-commerce. As part of my journey as a developer, I wanted to create an online experience that merges art and technology, allowing people to discover the magic of pottery.
+          This platform was created as part of my <strong>graduation project at Social Hackers Academy</strong>. With a background in Fine Arts and a deep love for working with clay, my original plan was to open a physical pottery studio. But along the way, I discovered the world of Full Stack Development, and it opened up new creative possibilities. CeramiCo is the result—a blend of two passions: pottery and programming.
         </p>
+
         <p>
-          The stunning handmade products featured on CeramiCo are sourced from <a href="https://www.giftedartisan.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500">Gifted Artisan</a>, a platform that celebrates and promotes talented artisans who create authentic, handcrafted pottery. These products are crafted with love, care, and skill, and each piece tells a unique story.
+          The beautiful ceramics featured on CeramiCo are sourced from <a href="https://www.giftedartisan.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500">Gifted Artisan</a>, a platform that celebrates the work of talented artisans around the world. Each piece tells its own story—handcrafted with care, creativity, and tradition.
         </p>
+
         <p>
-          <strong>Creator:</strong> The website was developed by <strong>Lydia Elli Giannoulatou</strong>, a passionate individual who loves both technology and artistry. This project was my way of merging my interests in design, coding, and craftsmanship.
+          <strong>Creator:</strong> This project was developed by <strong>Lydia Elli Giannoulatou</strong>—an artist at heart and a developer by passion. CeramiCo is a reflection of my journey to bring together the worlds of art, design, and code into one meaningful experience.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8">Our Mission</h2>
         <p>
-          At CeramiCo, we believe in the timeless beauty of handmade pottery. Our mission is to provide people with high-quality ceramic products while supporting local artisans. Through our workshops, we also aim to inspire others to create and explore their artistic potential.
+          At CeramiCo, we believe in the enduring beauty of handmade pottery. Our mission is to support skilled artisans, promote creativity, and make authentic ceramics accessible to everyone. Through our workshops, we also aim to inspire others to get their hands dirty and connect with the timeless craft of pottery.
         </p>
+
+        <h2 className="text-2xl font-semibold mt-8">Image Credits</h2>
+        <p>
+          The gallery and workshop images used on this site are sourced from <a href="https://www.freepik.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500">Freepik</a>, and the exhibition images are sourced from Google Images.
+        </p>
+
         <h2 className="text-2xl font-semibold mt-8">Contact Us</h2>
         <p>
-          If you have any questions or inquiries, feel free to <a href="/contact" className="text-blue-500">reach out</a>. We would love to hear from you!
+          Have a question or just want to say hello? Feel free to <a href="/contact" className="text-blue-500">get in touch</a>. We’d love to hear from you!
         </p>
       </div>
     </div>

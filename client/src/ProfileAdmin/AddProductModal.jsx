@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import ImageUpload from "../components/CloudinaryUpload";
-import { Package, Tag, DollarSign, Boxes, Send, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { FiCheckCircle } from "react-icons/fi";
+import { Package, Tag, DollarSign, Boxes, Send, Loader2,  AlertCircle } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 const AddProductPage = () => {
