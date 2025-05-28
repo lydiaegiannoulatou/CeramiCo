@@ -276,59 +276,71 @@ const ShopPage = () => {
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {currentProducts.map((product) => (
-            <div
-              key={product._id}
-              className="group relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-[#2F4138]/10 transition-all duration-500 hover:shadow-xl hover:scale-[1.02]"
-            >
-              <Link
-                to={`/product/${product._id}`}
-                className="block aspect-square overflow-hidden"
-              >
-                <img
-                  src={product.images?.[0] || "/placeholder-image.jpg"}
-                  alt={product.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-              </Link>
+<div
+  key={product._id}
+  className="group relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-[#2F4138]/10 transition-all duration-500 hover:shadow-xl hover:scale-[1.02]"
+>
+  {/* Out of Stock Overlay */}
+  {product.stock <= 0 && (
+    <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 rounded-2xl">
+      <span className="text-white font-bold text-lg uppercase tracking-wide">
+        Out of Stock
+      </span>
+    </div>
+  )}
 
-              <div className="p-6">
-                <Link to={`/product/${product._id}`}>
-                  <h3 className="text-xl font-medium text-[#2F4138] mb-2 line-clamp-1 group-hover:text-[#3C685A] transition-colors">
-                    {product.title}
-                  </h3>
-                  <p className="text-2xl font-light text-[#3C685A]">
-                    €{product.price.toFixed(2)}
-                  </p>
-                </Link>
+  <Link
+    to={`/product/${product._id}`}
+    className="block aspect-square overflow-hidden"
+  >
+    <img
+      src={product.images?.[0] || "/placeholder-image.jpg"}
+      alt={product.title}
+      className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
+        product.stock <= 0 ? "opacity-50" : ""
+      }`}
+    />
+  </Link>
 
-                {token && !isAdmin && (
-                  <button
-                    onClick={() => handleOpenCartModal(product)}
-                    className="mt-4 w-full py-3 bg-[#2F4138] text-white rounded-full flex items-center justify-center space-x-2 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#3C685A]"
-                  >
-                    <ShoppingCart size={18} />
-                    <span>Add to Cart</span>
-                  </button>
-                )}
+  <div className="p-6 relative z-20">
+    <Link to={`/product/${product._id}`}>
+      <h3 className="text-xl font-medium text-[#2F4138] mb-2 line-clamp-1 group-hover:text-[#3C685A] transition-colors">
+        {product.title}
+      </h3>
+      <p className="text-2xl font-light text-[#3C685A]">
+        €{product.price.toFixed(2)}
+      </p>
+    </Link>
 
-                {isAdmin && (
-                  <div className="absolute top-4 right-4 flex space-x-2">
-                    <button
-                      onClick={(e) => handleUpdate(e, product)}
-                      className="p-2 bg-[#2F4138] text-white rounded-full shadow-sm hover:bg-[#3C685A] transition-all duration-300"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, product._id)}
-                      className="p-2 bg-[#8B3E2F] text-white rounded-full shadow-sm hover:bg-[#A04B3C] transition-all duration-300"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+    {token && !isAdmin && product.stock > 0 && (
+      <button
+        onClick={() => handleOpenCartModal(product)}
+        className="mt-4 w-full py-3 bg-[#2F4138] text-white rounded-full flex items-center justify-center space-x-2 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#3C685A]"
+      >
+        <ShoppingCart size={18} />
+        <span>Add to Cart</span>
+      </button>
+    )}
+
+    {isAdmin && (
+      <div className="absolute top-4 right-4 flex space-x-2">
+        <button
+          onClick={(e) => handleUpdate(e, product)}
+          className="p-2 bg-[#2F4138] text-white rounded-full shadow-sm hover:bg-[#3C685A] transition-all duration-300"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          onClick={(e) => handleDelete(e, product._id)}
+          className="p-2 bg-[#8B3E2F] text-white rounded-full shadow-sm hover:bg-[#A04B3C] transition-all duration-300"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+
           ))}
         </div>
 

@@ -110,20 +110,25 @@ const confirmLogout = () => {
 };
 
 
-  const NavLink = ({ to, children }) => (
-    <Link
-      to={to}
-      className="font-sans text-white/90 hover:text-white transition-colors duration-200 relative group"
-      onClick={() => setIsMenuOpen(false)}
-    >
-      {children}
-      <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full" />
-    </Link>
-  );
+const NavLink = ({ to, children, className = "" }) => (
+  <Link
+    to={to}
+    className={`font-sans text-white/90 hover:text-white transition-colors duration-200 relative group block ${className}`}
+    onClick={() => setIsMenuOpen(false)}
+  >
+    {children}
+    <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full" />
+  </Link>
+);
+
 
   return (
     <>
-      <nav className="bg-[#7C3C21]/95 backdrop-blur-sm top-0 z-50 border-b border-white/10">
+      <nav
+  className="bg-[#5c1f06]/95 backdrop-blur-sm top-0 z-50 border-b border-white/10"
+  style={{ boxShadow: "0 4px 12px rgba(92, 31, 6, 0.4)" }}
+>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
@@ -133,9 +138,9 @@ const confirmLogout = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <NavLink to="/exhibitions">Exhibitions</NavLink>
-              <NavLink to="/workshops">Workshops</NavLink>
-              <NavLink to="/shop">Shop</NavLink>
+              <NavLink to="/exhibitions"className="py-3">Exhibitions</NavLink>
+              <NavLink to="/workshops" className="py-3">Workshops</NavLink>
+              <NavLink to="/shop" className="py-3">Shop</NavLink>
 
               {token ? (
                 <>

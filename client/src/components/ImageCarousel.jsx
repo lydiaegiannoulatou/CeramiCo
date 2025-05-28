@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Maximize2 } from "lucide-react";
 
-const ImageCarousel = ({ images = [] }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const ImageCarousel = ({ images = [], initialIndex = 0, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadedImages, setLoadedImages] = useState({});
   const [touchStart, setTouchStart] = useState(0);
@@ -19,9 +19,11 @@ const ImageCarousel = ({ images = [] }) => {
   };
   
   const closeModal = () => {
-    setIsModalOpen(false);
-    document.body.style.overflow = "auto";
-  };
+  setIsModalOpen(false);
+  document.body.style.overflow = "auto";
+  if (onClose) onClose();
+};
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {

@@ -3,10 +3,13 @@ import axios from "axios";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ImageIcon, Loader2 } from 'lucide-react';
+import ImageCarousel from "./ImageCarousel"
 
 export default function Gallery() {
   const [imgs, setImgs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCarouselOpen, setIsCarouselOpen] = useState(false);
+  const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -26,6 +29,17 @@ export default function Gallery() {
 
     fetchImages();
   }, []);
+
+  const openCarousel = (index) => {
+    setStartIndex(index);
+    setIsCarouselOpen(true);
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeCarousel = () => {
+    setIsCarouselOpen(false);
+    document.body.style.overflow = "auto";
+  };
 
   if (loading) {
     return (
@@ -49,16 +63,19 @@ export default function Gallery() {
     );
   }
 
+  const imageUrls = imgs.map(img => img.secure_url);
+
   return (
-    <section className="py-16 bg-[#F5F2EB]">
+    <section className="py-16 bg-[#F5F2EB] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-4xl font-bold text-center text-[#2F4138] mb-12">Our Gallery</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {imgs.map((img) => (
+          {imgs.map((img, index) => (
             <div 
               key={img.public_id}
-              className="group relative overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:scale-105"
+              className="group relative overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer"
+              onClick={() => openCarousel(index)}
             >
               <img
                 src={`${img.secure_url}?w=400&h=400&fit=crop&auto=format`}
@@ -72,6 +89,16 @@ export default function Gallery() {
         </div>
       </div>
       <ToastContainer />
+
+      {isCarouselOpen && (
+        <div className="fixed inset-0 z-50 bg-black/90">
+          <ImageCarousel
+            images={imageUrls}
+            initialIndex={startIndex}
+            onClose={closeCarousel}
+          />
+        </div>
+      )}
     </section>
   );
 }
