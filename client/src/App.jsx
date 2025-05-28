@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 import Register from "./pages/RegisterPage";
 import Login from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
@@ -26,9 +28,14 @@ import "./App.css";
 
 
 function App() {
+    const { isAuthReady } = useContext(AuthContext);
+    if (!isAuthReady) {
+    return <div>Loading...</div>;
+  }
   return (
     <Router>
       <Navbar />
+      <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/exhibitions" element={<ExhibitionsPage />} />
@@ -50,7 +57,7 @@ function App() {
         <Route path="/admin/workshops/edit/:id" element={<UpdateWorkshop />} />
        </Routes>
        <Footer />
-      <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+      
     </Router>
   );
 }

@@ -14,7 +14,7 @@ const AdminCreateWorkshop = () => {
     duration: "",
     startDate: "",
     recurringPattern: "weekly",
-    recurringTime: "17:00",
+    recurringTime: "",
     maxSpots: "",
     image: "",
   });
@@ -210,7 +210,7 @@ const AdminCreateWorkshop = () => {
                 Start Date
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}

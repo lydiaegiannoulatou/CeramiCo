@@ -19,12 +19,9 @@ const getClassById = async (req, res) => {
       return res.status(404).json({ error: "Workshop not found" });
     }
 
-    console.log("Workshop fetched:", classItem);  // Log the workshop item
-
     // Calculate available spots for each session
     const sessionsWithAvailability = classItem.sessions.map((session) => {
-      console.log("Processing session:", session); // Log each session to see if sessionDate is available
-
+     
       return {
         sessionDate: session.sessionDate, // Log if sessionDate is coming through correctly
         bookedSpots: session.bookedSpots,
@@ -33,7 +30,7 @@ const getClassById = async (req, res) => {
       };
     });
 
-    console.log("Sessions with availability:", sessionsWithAvailability); // Log the final result
+ 
 
     const workshopWithSessions = {
       ...classItem.toObject(),

@@ -341,6 +341,7 @@ const CartAndCheckout = () => {
                   { name: "postalCode", label: "Postal Code", icon: Mail },
                   { name: "country", label: "Country", icon: Globe },
                   { name: "phone", label: "Phone", icon: Phone },
+               // eslint-disable-next-line no-unused-vars
                 ].map(({ name, label, icon: Icon }) => (
                   <div key={name}>
                     <label className="block text-sm font-medium text-[#5C6760] mb-1">

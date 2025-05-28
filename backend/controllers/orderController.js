@@ -1,66 +1,9 @@
 const Order = require("../models/orderModel");
-const Product = require("../models/productModel")
+const Product = require("../models/productModel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
-const { sendOrderConfirmationEmail } = require("../controllers/emailController");
-
-
-
-
-const createOrder = async (req, res) => {
-  const { sessionId } = req.body;
-
-  try {
-    if (!sessionId) {
-      return res.status(400).json({ msg: "Session ID is required." });
-    }
-
-    // Fetch the session details from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (!session) {
-      return res.status(404).json({ msg: "Stripe session not found." });
-    }
-
-    // Extract necessary details from the session
-    const userId = session.metadata.userId; // Assuming userId is stored in metadata
-    const items = JSON.parse(session.metadata.items); // Assuming items are stored in metadata
-    const shippingAddress = JSON.parse(session.metadata.shippingAddress); // Assuming shippingAddress is stored in metadata
-
-    // Create a new order
-    const newOrder = new Order({
-      user_id: userId,
-      items,
-      shippingAddress,
-      totalCost: session.amount_total / 100,
-      currency: session.currency,
-      stripeSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent,
-      paymentStatus: "paid",
-      orderStatus: "processing",
-    });
-
-    const savedOrder = await newOrder.save();
-
-    try {
-  const userEmail = session.customer_details.email; // Stripe email
-  const userName = session.customer_details.name || "Customer"; // Fallback
-  const user = { email: userEmail, name: userName };
-
-  const orderDetails = items.map(item => 
-    `• ${item.title || item.name || "Item"} x${item.quantity}`
-  ).join('\n');
-
-  await sendOrderConfirmationEmail(user, orderDetails);
-} catch (emailErr) {
-  console.error("Failed to send order confirmation email:", emailErr);
-}
-
-    res.status(201).json({ msg: "Order created successfully", order: savedOrder });
-  } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).json({ msg: "Could not create order", error: error.message });
-  }
-};
+const {
+  sendOrderConfirmationEmail,
+} = require("../controllers/emailController");
 
 
 
@@ -76,9 +19,8 @@ const getOrder = async (req, res) => {
     // Find the order by sessionId and populate user details
     const order = await Order.findOne({ stripeSessionId: sessionId })
       .populate("user_id", "name email") // Populate user details
-      .populate("items.product_id", "title images")
+      .populate("items.product_id", "title images");
 
-      console.log("Order fetched:", order);
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
     }
@@ -93,25 +35,35 @@ const getOrder = async (req, res) => {
   }
 };
 
-
-
 // Fetch all product orders
 const productOrders = async (req, res) => {
   try {
-    const products = await Order.find({ "items.type": "product" })
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'items.product_id', // Populate product_id for product items
-        select: 'title image images price',
-      });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const status = req.query.status;
 
-    console.log('Fetched product orders:', products);  // Log the result
+    // Base filter for product orders
+    let filter = { "items.type": "product" };
 
-    if (!products || products.length === 0) {
-      return res.status(200).json({ msg: "No product orders found", products: [] });
+    // If a status filter is provided and not 'all', add it
+    if (status && status !== "all") {
+      filter.orderStatus = status;
     }
 
-    res.status(200).json({ msg: "Product orders fetched successfully", products });
+    // Get total count of filtered orders (for pagination)
+    const totalOrders = await Order.countDocuments(filter);
+
+    // Fetch paginated orders with filter
+    const products = await Order.find(filter).sort({ createdAt: -1 }).populate({
+      path: "items.product_id",
+      select: "title image images price",
+    });
+
+    res.status(200).json({
+      msg: "Product orders fetched successfully",
+      products,
+      totalOrders,
+    });
   } catch (error) {
     console.error("Error fetching product orders:", error);
     res.status(500).send({ msg: "Something went wrong" });
@@ -126,10 +78,10 @@ const getOrdersByUser = async (req, res) => {
     const orders = await Order.find({ user_id: userId })
       .sort({ createdAt: -1 })
       .populate({
-        path: 'items.product_id', // Populate product_id for product items
-        select: 'title image images price',
-      })
-     
+        path: "items.product_id", // Populate product_id for product items
+        select: "title image images price",
+      });
+
     res.status(200).send({ msg: "Orders fetched successfully", orders });
   } catch (error) {
     console.error("Error fetching orders for user:", error);
@@ -141,11 +93,11 @@ const getOrdersByUser = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log("Received orderId:", orderId);  // Log the orderId from the URL
+    console.log("Received orderId:", orderId); // Log the orderId from the URL
 
     const order = await Order.findById(orderId);
     if (!order) {
-      console.log("Order not found for ID:", orderId);  // Log if order is not found
+      console.log("Order not found for ID:", orderId); // Log if order is not found
       return res.status(404).json({ msg: "Order not found" });
     }
 
@@ -154,12 +106,19 @@ const cancelOrder = async (req, res) => {
 
     // Ensure the logged-in user owns this order
     if (order.user_id.toString() !== req.user.userId) {
-      console.log("Unauthorized access attempt by user:", req.user.userId);  // Log unauthorized user access
-      return res.status(403).json({ msg: "You are not authorized to cancel this order." });
+      console.log("Unauthorized access attempt by user:", req.user.userId); // Log unauthorized user access
+      return res
+        .status(403)
+        .json({ msg: "You are not authorized to cancel this order." });
     }
 
-    if (order.user_id.toString() !== req.user.userId && req.user.role !== "admin") {
-      return res.status(403).json({ msg: "You are not authorized to cancel this order." });
+    if (
+      order.user_id.toString() !== req.user.userId &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ msg: "You are not authorized to cancel this order." });
     }
 
     // Log the user ID
@@ -169,12 +128,17 @@ const cancelOrder = async (req, res) => {
     // Only refund if the order is paid
     if (order.paymentStatus === "paid") {
       if (!order.stripePaymentIntentId) {
-        console.log("No paymentIntentId found for order:", orderId);  // Log if paymentIntentId is missing
-        return res.status(400).json({ msg: "No paymentIntentId found for this order" });
+        console.log("No paymentIntentId found for order:", orderId); // Log if paymentIntentId is missing
+        return res
+          .status(400)
+          .json({ msg: "No paymentIntentId found for this order" });
       }
 
       // Log refund attempt
-      console.log("Attempting to refund payment with paymentIntentId:", order.paymentIntentId);
+      console.log(
+        "Attempting to refund payment with paymentIntentId:",
+        order.paymentIntentId
+      );
 
       const refund = await stripe.refunds.create({
         payment_intent: order.stripePaymentIntentId,
@@ -185,7 +149,9 @@ const cancelOrder = async (req, res) => {
       await order.save();
 
       console.log("Updated order status after refund:", order.orderStatus);
-      return res.status(200).json({ msg: "Order refunded successfully", refund });
+      return res
+        .status(200)
+        .json({ msg: "Order refunded successfully", refund });
     } else {
       // Log cancellation process
       console.log("Cancelling order without refund. Updating status...");
@@ -198,7 +164,7 @@ const cancelOrder = async (req, res) => {
       return res.status(200).json({ msg: "Order canceled successfully" });
     }
   } catch (error) {
-    console.error("Error cancelling order:", error);  // Log the error details
+    console.error("Error cancelling order:", error); // Log the error details
     res.status(500).json({ msg: "Could not cancel order", error });
   }
 };
@@ -219,20 +185,24 @@ const updateOrder = async (req, res) => {
     /* ── validate proposed status change ──────────────────────────── */
     if (orderStatus) {
       const currentIdx = STATUS_FLOW.indexOf(order.orderStatus);
-      const nextIdx    = STATUS_FLOW.indexOf(orderStatus);
+      const nextIdx = STATUS_FLOW.indexOf(orderStatus);
 
       // unknown status or move backwards → reject
       if (nextIdx === -1)
-        return res.status(400).json({ msg: `Invalid orderStatus "${orderStatus}".` });
+        return res
+          .status(400)
+          .json({ msg: `Invalid orderStatus "${orderStatus}".` });
 
       if (nextIdx < currentIdx)
         return res.status(400).json({
-          msg: `Cannot change status from "${order.orderStatus}" to "${orderStatus}".`
+          msg: `Cannot change status from "${order.orderStatus}" to "${orderStatus}".`,
         });
 
       // if already canceled, forbid any further change
       if (order.orderStatus === "canceled")
-        return res.status(400).json({ msg: "Canceled orders cannot be modified." });
+        return res
+          .status(400)
+          .json({ msg: "Canceled orders cannot be modified." });
 
       order.orderStatus = orderStatus;
     }
@@ -241,23 +211,17 @@ const updateOrder = async (req, res) => {
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
-    return res
-      .status(200)
-      .json({ msg: "Order updated successfully", order });
-
+    return res.status(200).json({ msg: "Order updated successfully", order });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ msg: "Could not update order status", error });
   }
 };
 
-
 module.exports = {
   getOrder,
-  createOrder,
   productOrders,
   getOrdersByUser,
   cancelOrder,
   updateOrder,
-  
 };

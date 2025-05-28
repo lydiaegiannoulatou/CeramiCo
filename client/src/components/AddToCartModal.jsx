@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, ShoppingCart, Minus, Plus } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const AddToCartModal = ({ isOpen, onClose, product, type = "product", onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
@@ -15,6 +16,7 @@ const AddToCartModal = ({ isOpen, onClose, product, type = "product", onAddToCar
 
   const handleSubmit = () => {
     onAddToCart(product._id, quantity, type);
+    toast.success(`${product.title || product.name} added to cart!`);
     onClose();
   };
 

@@ -8,7 +8,7 @@ const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
 
-  console.log("token from AddToCart:", token);
+ 
 
   if (!item || !item._id) return null;
 

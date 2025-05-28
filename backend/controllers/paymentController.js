@@ -1,6 +1,9 @@
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
+const {
+  sendOrderConfirmationEmail,
+  sendWorkshopBookingConfirmationEmail,
+} = require("../controllers/emailController");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const Workshop = require("../models/workshopModel");
@@ -143,7 +146,7 @@ const stripeWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log("✅ Webhook received:", event.type);
+  
   } catch (err) {
     console.error("Webhook error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -156,12 +159,12 @@ const stripeWebhook = async (req, res) => {
       // Update order status to paid
       const order = await Order.findOne({ stripeSessionId: session.id });
       if (order) {
-        console.log("Found order for session ID:", session.id);
+        
 
         order.paymentStatus = "paid";
         order.stripePaymentIntentId = session.payment_intent;
         await order.save();
-        console.log("Order updated with payment intent ID:", session.payment_intent);
+       
 
         // Update product stock
         for (const item of order.items) {
@@ -196,10 +199,32 @@ const stripeWebhook = async (req, res) => {
         }
       }
 
+      // Get user
+const user = await User.findOne({ email: session.customer_email });
+
+// Send order confirmation email if it's a product order
+if (order && user) {
+  const orderDetails = order.items
+    .map((item) => `• ${item.quantity} x Product ID: ${item.product_id}`)
+    .join("\n");
+
+  await sendOrderConfirmationEmail(user, orderDetails);
+}
+
+// Send workshop booking confirmations
+if (bookings.length > 0 && user) {
+  const bookingDetails = bookings
+    .map((b) => `• ${new Date(b.date).toLocaleString()} - Workshop ID: ${b.workshop_id}`)
+    .join("\n");
+
+  await sendWorkshopBookingConfirmationEmail(user, bookingDetails);
+}
+
+
       // Clear cart after successful payment
       await Cart.findOneAndDelete({ user_id: userId });
 
-      console.log(`✅ Payment processed for user ${userId}`);
+      
     } catch (err) {
       console.error("❌ Error handling webhook:", err);
     }

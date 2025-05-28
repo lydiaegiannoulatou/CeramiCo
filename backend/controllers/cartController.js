@@ -8,8 +8,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // ADD PRODUCT TO CART
 const addToCart = async (req, res) => {
   try {
-    console.log("req.user:", req.user);
-    console.log("User ID from req.user:", req.user.userId);
+   
 
     const { items } = req.body;
     const userId = req.user.userId;

@@ -7,7 +7,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { refreshAuth } = useContext(AuthContext);
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,31 +22,31 @@ const Login = () => {
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
-  
+
     if (!usernameOrEmail || !password) {
       setError("Both username/email and password are required.");
       return;
     }
-  
+
     const isEmail = /\S+@\S+\.\S+/.test(usernameOrEmail);
-  
+
     let userInfo = {
       password,
       ...(isEmail ? { email: usernameOrEmail } : { username: usernameOrEmail }),
     };
-  
+
     try {
       let response = await axios.post(
         "http://localhost:3050/user/login",
         userInfo
       );
-  
+
       localStorage.setItem("token", response.data.token);
       const decodedToken = jwtDecode(response.data.token);
       localStorage.setItem("role", decodedToken.role);
-  
+
       refreshAuth(); // 🔥 This is what makes the magic happen
-  
+
       alert(response.data.msg);
       navigate("/");
     } catch (error) {
@@ -54,11 +54,15 @@ const Login = () => {
       console.log(error);
     }
   }
-  
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-[#f7f4ea] px-4">
-      <div className="w-full max-w-md bg-[#eee6d2]/70 shadow-lg rounded-xl p-12">
+    <section
+      className="min-h-screen flex items-center justify-center bg-[#f7f4ea] px-4 bg-cover bg-center"
+      style={{
+        backgroundImage: `url('https://res.cloudinary.com/drszm8sem/image/upload/v1748372325/talented-woman-doing-pottery_r34bpr.jpg')`,
+      }}
+    >
+      <div className="w-full max-w-md bg-[#eee6d2]/90 shadow-lg rounded-xl p-12">
         <h2 className="font-serif text-3xl text-center mb-10">Login</h2>
 
         {error && (
@@ -70,17 +74,17 @@ const Login = () => {
             type="text"
             placeholder="Email or Username"
             value={usernameOrEmail}
-            onChange={e => setUsernameOrEmail(e.target.value)}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
             className="w-full border-b border-gray-400 bg-transparent focus:outline-none focus:border-[#713818] placeholder:italic placeholder:text-gray-500 py-2"
             required
           />
 
           <div className="relative">
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full border-b border-gray-400 bg-transparent focus:outline-none focus:border-[#713818] placeholder:italic placeholder:text-gray-500 py-2 pr-10"
               required
             />
@@ -109,7 +113,6 @@ const Login = () => {
         </form>
 
         <div className="mt-10 flex items-center justify-between text-sm">
-        
           <Link
             to="/register"
             className="inline-flex items-center gap-1 text-[#713818] hover:underline"
@@ -121,6 +124,6 @@ const Login = () => {
       </div>
     </section>
   );
-}
+};
 
 export default Login;

@@ -63,8 +63,13 @@ const Register = () => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-[#f7f4ea] px-4">
-      <div className="w-full max-w-lg bg-[#eee6d2]/80 shadow-xl rounded-2xl p-12">
+     <section
+      className="min-h-screen flex items-center justify-center bg-[#f7f4ea] px-4 bg-cover bg-center"
+      style={{
+        backgroundImage: `url('https://res.cloudinary.com/drszm8sem/image/upload/v1748372325/talented-woman-doing-pottery_r34bpr.jpg')`,
+      }}
+    >
+      <div className="w-full max-w-lg bg-[#eee6d2]/90 shadow-xl rounded-2xl p-12">
         <h1 className="font-serif text-3xl text-center mb-10">
           Create new account
         </h1>

@@ -43,7 +43,7 @@ const HomePage = () => {
                   href="/workshops"
                   className="group inline-flex items-center px-8 py-4 bg-[#2F4138]/20 text-white rounded-full hover:bg-[#2F4138]/30 transition-all duration-300 text-lg font-sans backdrop-blur-sm border border-white/30"
                 >
-                  Join Our Workshop
+                  Join Our Workshops
                 </a>
               </div>
             </div>

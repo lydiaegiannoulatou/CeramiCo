@@ -5,19 +5,26 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { sendWorkshopBookingConfirmationEmail } = require("../controllers/emailController");
 
 
-// 🟢 Fetch all bookings (Admin only)
+// Fetch all bookings with pagination and optional status filter (Admin only)
 const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
+    const status = req.query.status;
+
+    const query = status && status !== "all" ? { status } : {};
+
+    const bookings = await Booking.find(query)
       .populate("user_id", "name email")
       .populate("workshop_id", "title sessions instructor image");
+
     res.status(200).json({ bookings });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch bookings", details: error.message });
   }
 };
 
-// 🟢 Fetch single booking by ID
+
+
+// Fetch single booking by ID
 const getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
@@ -32,7 +39,7 @@ const getBookingById = async (req, res) => {
   }
 };
 
-// 🟢 Fetch bookings for the logged-in user
+// Fetch bookings for the logged-in user
 const bookingsByUser = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -46,64 +53,8 @@ const bookingsByUser = async (req, res) => {
   }
 };
 
-// 🟢 Handle Book Now (after payment success)
-const handleBookNow = async (req, res) => {
-  try {
-    const { workshopId, userId, sessionId, stripeSessionId, paymentIntentId } = req.body;
 
-    const workshop = await Workshop.findById(workshopId);
-    if (!workshop) return res.status(404).json({ error: "Workshop not found" });
-
-    const session = workshop.sessions.id(sessionId);
-    if (!session) return res.status(404).json({ error: "Session not found" });
-
-    if (session.bookedSpots >= session.maxSpots) {
-      return res.status(400).json({ error: "This session is fully booked" });
-    }
-
-    const alreadyBooked = await Booking.findOne({
-      user_id: userId,
-      workshop_id: workshopId,
-      date: session.date, // Optional: avoid duplicate bookings by date
-    });
-
-    if (alreadyBooked) {
-      return res.status(400).json({ error: "User already booked this workshop session" });
-    }
-
-    const booking = new Booking({
-      user_id: userId,
-      workshop_id: workshopId,
-      stripeSessionId,
-      paymentIntentId,
-      date: session.date,
-      status: "confirmed",
-      paymentStatus: "paid",
-      image: workshop.image,
-    });
-
-    await booking.save();
-
-    session.bookedSpots += 1;
-    await workshop.save();
-
-    // Send booking confirmation email
-try {
-  const user = await User.findById(userId).select("name email");
-  const bookingDetails = `${workshop.title} on ${new Date(session.date).toLocaleString()}`;
-  await sendWorkshopBookingConfirmationEmail(user, bookingDetails);
-} catch (emailErr) {
-  console.error("Failed to send booking confirmation email:", emailErr);
-}
-
-    res.status(201).json({ success: true, booking });
-  } catch (error) {
-    console.error("Error booking workshop:", error);
-    res.status(500).json({ error: "Booking process failed", details: error.message });
-  }
-};
-
-// 🟢 Get booking after successful payment
+// Get booking after successful payment
 const getBookingSuccess = async (req, res) => {
   const { sessionId } = req.params;
 
@@ -142,10 +93,10 @@ const cancelBooking = async (req, res) => {
     if (booking.status === "canceled")
       return res.status(400).json({ message: "Booking is already canceled." });
 
-    // 1. mark booking canceled
+  
     booking.status = "canceled";
 
-    // 2. free the workshop spot
+    
     const workshop = await Workshop.findById(booking.workshop_id);
     if (workshop?.sessions?.length) {
       const session = workshop.sessions.find(
@@ -158,7 +109,7 @@ const cancelBooking = async (req, res) => {
       }
     }
 
-    // 3. refund if necessary
+    
     if (booking.paymentStatus === "paid" && booking.paymentIntentId) {
       try {
         const refund = await stripe.refunds.create({
@@ -202,7 +153,6 @@ module.exports = {
   getAllBookings,
   getBookingById,
   bookingsByUser,
-  handleBookNow,
   getBookingSuccess,
   cancelBooking,
   updateBookingStatus,

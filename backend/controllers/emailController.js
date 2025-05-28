@@ -101,7 +101,7 @@ async function subscribeUser(req, res) {
 /* ────────────── ORDER CONFIRMATION ────────────── */
 async function sendOrderConfirmationEmail(user, orderDetails) {
   const mailOptions = {
-    from: `"Pottery Studio" <${process.env.MAIL_USER}>`,
+    from: `"CeramiCo Pottery Studio" <${process.env.MAIL_USER}>`,
     to: user.email,
     subject: "Your Pottery Order Confirmation",
     text: `Hi ${user.name || 'Customer'},\n\nThank you for your order!\n\nOrder Details:\n${orderDetails}\n\nWe'll notify you once it's shipped.\n\nBest regards,\nCeramico Pottery Team`,

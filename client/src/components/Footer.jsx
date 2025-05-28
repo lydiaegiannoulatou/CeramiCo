@@ -77,10 +77,7 @@ const Footer = () => {
 
         <div className="mt-12 pt-4 border-t border-white/20 text-white/60 text-sm flex flex-col md:flex-row justify-between">
           <p>&copy; {new Date().getFullYear()} CeramiCo - Created by Lydia Elli Giannoulatou. All rights reserved.</p>
-          <div className="flex gap-4 mt-2 md:mt-0">
-            <Link to="/privacy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link>
-          </div>
+         
         </div>
       </div>
 

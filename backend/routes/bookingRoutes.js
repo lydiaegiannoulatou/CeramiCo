@@ -4,8 +4,7 @@ const {
   getAllBookings,
   getBookingById,
   bookingsByUser,
-  handleBookNow,
-  getBookingSuccess,
+   getBookingSuccess,
   cancelBooking, 
   updateBookingStatus,
 } = require("../controllers/bookingController");
@@ -15,7 +14,6 @@ const { authMiddleware, adminAccess } = require("../middleware/authMiddleware");
 router.get("/user", authMiddleware, bookingsByUser); 
 router.get("/", authMiddleware, adminAccess, getAllBookings);
 router.get("/:id", authMiddleware, getBookingById);
-router.post("/book-now", authMiddleware, handleBookNow);
 router.get("/success/:sessionId", authMiddleware, getBookingSuccess);
 router.put("/cancel/:id", authMiddleware, cancelBooking);
 router.patch("/bookings/:id", updateBookingStatus);

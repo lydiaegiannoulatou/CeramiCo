@@ -14,12 +14,13 @@ const ProductOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState(statusGroups[0]);
 
+  // Fetch all product orders once, no pagination params
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
       try {
         const { data } = await axios.get(
-          `http://localhost:3050/order/product_orders?page=${currentPage}&limit=${ordersPerPage}`,
+          `http://localhost:3050/order/product_orders`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setOrders(data?.products || []);
@@ -30,7 +31,7 @@ const ProductOrders = () => {
         setLoading(false);
       }
     })();
-  }, [currentPage]);
+  }, []);
 
   const getStatusColor = (st) => {
     switch (st) {
@@ -42,6 +43,7 @@ const ProductOrders = () => {
     }
   };
 
+  // Count how many orders per status
   const statusCounts = useMemo(() => {
     return statusGroups.reduce((acc, st) => {
       if (st === "all") {
@@ -53,19 +55,27 @@ const ProductOrders = () => {
     }, {});
   }, [orders]);
 
-  const visibleOrders = statusFilter === "all"
-    ? orders
-    : orders.filter((o) => o.orderStatus === statusFilter);
+  // Filter orders based on statusFilter
+  const filteredOrders = useMemo(() => {
+    if (statusFilter === "all") return orders;
+    return orders.filter((o) => o.orderStatus === statusFilter);
+  }, [orders, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(statusCounts[statusFilter] / ordersPerPage));
+  // Pagination logic: calculate total pages & slice visible orders
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ordersPerPage));
+  const visibleOrders = useMemo(() => {
+    const start = (currentPage - 1) * ordersPerPage;
+    return filteredOrders.slice(start, start + ordersPerPage);
+  }, [filteredOrders, currentPage]);
+
   const disableNext = currentPage >= totalPages;
   const disablePrev = currentPage <= 1;
 
   const FilterTabBtn = ({ status }) => (
     <button
-      onClick={() => { 
-        setStatusFilter(status); 
-        setCurrentPage(1); 
+      onClick={() => {
+        setStatusFilter(status);
+        setCurrentPage(1); // reset page to 1 on filter change
       }}
       className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2
         ${statusFilter === status
@@ -82,14 +92,12 @@ const ProductOrders = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // Update order status in the backend
       const token = localStorage.getItem("token");
       await axios.put(
         `http://localhost:3050/order/update/${orderId}`,
         { orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update local state to reflect status change
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order._id === orderId ? { ...order, orderStatus: newStatus } : order
@@ -202,6 +210,9 @@ const ProductOrders = () => {
           <ChevronLeft className="w-5 h-5 mr-1" />
           Previous
         </button>
+           <span className="text-sm text-[#2F4138] font-medium">
+          Page {currentPage} of {totalPages || 1}
+        </span>
         <button
           disabled={disableNext}
           onClick={() => setCurrentPage((p) => p + 1)}
@@ -223,7 +234,7 @@ const ProductOrders = () => {
             <OrderDetailsModal 
               order={selectedOrder} 
               onClose={() => setSelectedOrder(null)} 
-              onStatusChange={handleStatusChange} // Pass the status change handler here
+              onStatusChange={handleStatusChange} 
             />
           </div>
         </div>

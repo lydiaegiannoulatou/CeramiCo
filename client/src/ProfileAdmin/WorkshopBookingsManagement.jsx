@@ -13,13 +13,11 @@ import {
 const bookingsPerPage = 15;
 
 const WorkshopBookingsManagement = () => {
-  const [bookings, setBookings] = useState([]);
-  const [filteredBookings, setFiltered] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBookingId, setSelectedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
 
   const getBookingStatusColor = (st) => {
@@ -37,6 +35,7 @@ const WorkshopBookingsManagement = () => {
     }
   };
 
+  // Fetch all bookings once on mount, ignoring pagination params
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -47,13 +46,13 @@ const WorkshopBookingsManagement = () => {
       }
 
       try {
+        setLoading(true);
+        // NOTE: no page or limit params here, fetch all bookings at once
         const { data } = await axios.get("http://localhost:3050/bookings", {
           headers: { Authorization: `Bearer ${token}` },
-          params: { page: currentPage, limit: bookingsPerPage },
         });
 
-        setBookings(data.bookings);
-        setTotalPages(Math.ceil(data.totalBookings / bookingsPerPage));
+        setAllBookings(data.bookings);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch bookings");
@@ -61,15 +60,27 @@ const WorkshopBookingsManagement = () => {
         setLoading(false);
       }
     })();
-  }, [currentPage]);
+  }, []);
 
+  // Filter bookings based on selectedStatus
+  const filteredBookings =
+    selectedStatus === "all"
+      ? allBookings
+      : allBookings.filter((b) => b.status === selectedStatus);
+
+  // Calculate pagination variables
+  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * bookingsPerPage,
+    currentPage * bookingsPerPage
+  );
+
+  // Reset currentPage if filter changes and current page is out of range
   useEffect(() => {
-    const list =
-      selectedStatus === "all"
-        ? bookings
-        : bookings.filter((b) => b.status === selectedStatus);
-    setFiltered(list);
-  }, [selectedStatus, bookings]);
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   const openModal = (id) => setSelectedId(id);
   const closeModal = () => setSelectedId(null);
@@ -77,8 +88,8 @@ const WorkshopBookingsManagement = () => {
   const FilterTabBtn = ({ status, label }) => {
     const count =
       status === "all"
-        ? bookings.length
-        : bookings.filter((b) => b.status === status).length;
+        ? allBookings.length
+        : allBookings.filter((b) => b.status === status).length;
 
     return (
       <button
@@ -94,9 +105,7 @@ const WorkshopBookingsManagement = () => {
           }`}
       >
         <span>{label}</span>
-        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
-          {count}
-        </span>
+        <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{count}</span>
       </button>
     );
   };
@@ -144,60 +153,34 @@ const WorkshopBookingsManagement = () => {
         <table className="w-full">
           <thead>
             <tr className="bg-[#2F4138]/5">
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
-                Booking #
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
-                Workshop Title
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
-                Date
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
-                Payment Status
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">
-                Status
-              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Booking #</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Workshop Title</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Date</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Payment Status</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#2F4138]/10">
-            {filteredBookings.map((b) => (
+            {paginatedBookings.map((b) => (
               <tr
                 key={b._id}
                 onClick={() => openModal(b._id)}
                 className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
               >
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {String(b._id).slice(-5)}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {b.workshop_id?.title || "Unknown Workshop"}
-                </td>
-
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {new Date(b.date).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {b.paymentStatus}
-                </td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">{String(b._id).slice(-5)}</td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">{b.workshop_id?.title || "Unknown Workshop"}</td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">{new Date(b.date).toLocaleDateString()}</td>
+                <td className="px-6 py-4 text-sm text-[#2F4138]">{b.paymentStatus}</td>
                 <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getBookingStatusColor(
-                      b.status
-                    )}`}
-                  >
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getBookingStatusColor(b.status)}`}>
                     {b.status}
                   </span>
                 </td>
               </tr>
             ))}
-            {filteredBookings.length === 0 && (
+            {paginatedBookings.length === 0 && (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-6 py-8 text-center text-[#2F4138]/70"
-                >
+                <td colSpan={5} className="px-6 py-8 text-center text-[#2F4138]/70">
                   <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   No bookings found
                 </td>
@@ -208,7 +191,7 @@ const WorkshopBookingsManagement = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-8 space-x-4">
+      <div className="flex justify-center items-center mt-8 space-x-4">
         <button
           disabled={isPrevButtonDisabled}
           onClick={() => setCurrentPage((p) => p - 1)}
@@ -221,6 +204,11 @@ const WorkshopBookingsManagement = () => {
           <ChevronLeft className="w-5 h-5 mr-1" />
           Previous
         </button>
+
+        <span className="text-sm text-[#2F4138] font-medium">
+          Page {currentPage} of {totalPages || 1}
+        </span>
+
         <button
           disabled={isNextButtonDisabled}
           onClick={() => setCurrentPage((p) => p + 1)}
@@ -236,12 +224,7 @@ const WorkshopBookingsManagement = () => {
       </div>
 
       {/* Modal */}
-      {selectedBookingId && (
-        <BookingDetailsModal
-          bookingId={selectedBookingId}
-          onClose={closeModal}
-        />
-      )}
+      {selectedBookingId && <BookingDetailsModal bookingId={selectedBookingId} onClose={closeModal} />}
     </div>
   );
 };
