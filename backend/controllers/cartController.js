@@ -76,7 +76,7 @@ const addToCart = async (req, res) => {
     // Populate the cart with product details
     const populatedCart = await Cart.findOne({ user_id: userId }).populate({
       path: "items.product_id",
-      select: "title price images",
+      select: "title price images stock",
     });
 
     if (!populatedCart) {
@@ -144,7 +144,7 @@ const deleteItemFromCart = async (req, res) => {
     // Populate before returning
     const populatedCart = await Cart.findOne({ user_id: userId }).populate(
       "items.product_id",
-      "title price images"
+      "title price images stock"
     );
 
     res

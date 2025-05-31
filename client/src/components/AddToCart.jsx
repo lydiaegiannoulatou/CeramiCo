@@ -1,35 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { ShoppingCart, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { AuthContext } from "../context/AuthContext"; // ✅ Adjust the import path as needed
 
 const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const role = localStorage.getItem("role");
-  const token = localStorage.getItem("token");
+  const { user, isLoggedIn, isAuthReady } = useContext(AuthContext);
+  const token = localStorage.getItem("token"); // only used for API request
 
- 
-
-  if (!item || !item._id) return null;
+  if (!isAuthReady || !item || !item._id) return null;
 
   const { _id, stock, price } = item;
+  const role = user?.role;
   const isOutOfStock = stock === 0;
   const isNotEnoughStock = quantity > stock;
 
   const handleAddToCart = async () => {
-    // Notify if the item is out of stock
+    if (!isLoggedIn || role !== "user") {
+      toast.warning("You must be logged in as a user to add items to the cart.");
+      return;
+    }
+
     if (isOutOfStock) {
       toast.warning("This product is currently out of stock.");
       return;
     }
 
-    // Notify if not enough stock is available
     if (isNotEnoughStock) {
       toast.warning(`Only ${stock} ${stock === 1 ? "item" : "items"} available in stock.`);
       return;
     }
 
-    // Start the adding process
     setIsAdding(true);
     try {
       const payload = {
@@ -43,7 +45,6 @@ const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
         ],
       };
 
-      // Post the add to cart request
       const response = await axios.post(
         "http://localhost:3050/cart/add-to-cart",
         payload,
@@ -52,9 +53,8 @@ const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
         }
       );
 
-      // If the item is successfully added to the cart
       if (response.data.success) {
-        toast.success(`${quantity} ${quantity === 1 ? 'item' : 'items'} added to cart!`);
+        toast.success(`${quantity} ${quantity === 1 ? "item" : "items"} added to cart!`);
       } else {
         toast.error(response.data.msg || "Failed to add to cart.");
       }
@@ -78,7 +78,7 @@ const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
       }`}
       disabled={isAdding || isOutOfStock || isNotEnoughStock}
       title={
-        !token || role !== "user"
+        !isLoggedIn || role !== "user"
           ? "Login required"
           : isOutOfStock
           ? "Out of Stock"

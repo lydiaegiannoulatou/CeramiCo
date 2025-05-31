@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ShoppingCart,
+  Search,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import AddProductModal from "../components/AddProductModal";
 import AddToCartModal from "../components/AddToCartModal";
 
@@ -15,6 +22,7 @@ const ShopPage = () => {
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
@@ -32,24 +40,48 @@ const ShopPage = () => {
   const isAdmin = localStorage.getItem("role") === "admin";
 
   const categories = [
-    "Mugs", "Bowls", "Plates", "Vases", "Teapots", "Jugs",
-    "Sculptures", "Pitchers", "Candle Holders", "Planters",
+    "Mugs",
+    "Bowls",
+    "Plates",
+    "Vases",
+    "Teapots",
+    "Jugs",
+    "Sculptures",
+    "Pitchers",
+    "Candle Holders",
+    "Planters",
   ];
 
   const keywordsList = [
-    "Mug", "Bowl", "Plate", "Vase", "Ceramic", "Handmade",
-    "Pottery", "Clay", "Rustic", "Unique", "Modern", "Decorative",
-    "Animal", "Marble", "Painted", "Natural",
+    "Mug",
+    "Bowl",
+    "Plate",
+    "Vase",
+    "Ceramic",
+    "Handmade",
+    "Pottery",
+    "Clay",
+    "Rustic",
+    "Unique",
+    "Modern",
+    "Decorative",
+    "Animal",
+    "Marble",
+    "Painted",
+    "Natural",
   ];
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const fetchProducts = async () => {
@@ -57,8 +89,13 @@ const ShopPage = () => {
       const res = await axios.get("http://localhost:3050/shop", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProducts(res.data);
-      setFilteredProducts(res.data);
+
+      const sortedProducts = res.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      setProducts(sortedProducts);
+      setFilteredProducts(sortedProducts);
     } catch (err) {
       console.error("Error fetching products", err);
       setError("Could not load products.");
@@ -93,7 +130,7 @@ const ShopPage = () => {
       );
     });
 
-    setFilteredProducts(filtered);
+    setFilteredProducts(sortProducts(filtered, sortOption));
     setCurrentPage(1);
   }, [searchTerm, products]);
 
@@ -108,7 +145,8 @@ const ShopPage = () => {
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("Are you sure you want to delete this product?"))
+      return;
 
     try {
       await axios.delete(`http://localhost:3050/shop/products/delete/${id}`, {
@@ -121,6 +159,28 @@ const ShopPage = () => {
       toast.error("Failed to delete product.");
     }
   };
+
+  const sortProducts = (products, option) => {
+    switch (option) {
+      case "priceAsc":
+        return [...products].sort((a, b) => a.price - b.price);
+      case "priceDesc":
+        return [...products].sort((a, b) => b.price - a.price);
+      case "oldest":
+        return [...products].sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+      case "newest":
+      default:
+        return [...products].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+    }
+  };
+
+  useEffect(() => {
+    setFilteredProducts((prev) => sortProducts(prev, sortOption));
+  }, [sortOption]);
 
   const handleAddToCart = async (productId, quantity) => {
     try {
@@ -141,7 +201,9 @@ const ShopPage = () => {
       );
 
       if (response.data.success) {
-        toast.success(`${quantity} ${quantity === 1 ? "item" : "items"} added to cart!`);
+        toast.success(
+          `${quantity} ${quantity === 1 ? "item" : "items"} added to cart!`
+        );
         setIsCartModalOpen(false);
         setSelectedProduct(null);
       } else {
@@ -184,7 +246,12 @@ const ShopPage = () => {
 
     const payload = { ...form };
 
-    if (!payload.title || !payload.price || !payload.category || !payload.stock) {
+    if (
+      !payload.title ||
+      !payload.price ||
+      !payload.category ||
+      !payload.stock
+    ) {
       toast.error("Please fill in all the required fields.");
       return;
     }
@@ -227,7 +294,9 @@ const ShopPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#f5f2eb]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#2F4138] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-[#2F4138] font-medium">Loading our artisanal collection...</p>
+          <p className="mt-4 text-[#2F4138] font-medium">
+            Loading our artisanal collection...
+          </p>
         </div>
       </div>
     );
@@ -246,9 +315,12 @@ const ShopPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-display text-[#2F4138] mb-4">Our Collection</h1>
+          <h1 className="text-4xl font-display text-[#2F4138] mb-4">
+            Our Collection
+          </h1>
           <p className="text-[#5C6760] max-w-2xl mx-auto">
-            Discover our handcrafted ceramics, each piece telling its own unique story
+            Discover our handcrafted ceramics, each piece telling its own unique
+            story
           </p>
         </div>
 
@@ -263,84 +335,100 @@ const ShopPage = () => {
                 placeholder="Search our collection..."
                 className="w-full px-6 py-4 pl-14 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-[#2F4138]/10 focus:outline-none focus:ring-2 focus:ring-[#3C685A] transition-all duration-300"
               />
-              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[#3C685A]" size={20} />
+              <Search
+                className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[#3C685A]"
+                size={20}
+              />
             </div>
             {searchTerm && (
               <p className="text-center mt-4 text-[#5C6760]">
-                Found {filteredProducts.length} {filteredProducts.length === 1 ? "piece" : "pieces"}
+                Found {filteredProducts.length}{" "}
+                {filteredProducts.length === 1 ? "piece" : "pieces"}
               </p>
             )}
           </div>
+        </div>
+        {/* Filtering */}
+        <div className="flex justify-end mb-6">
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-4 py-2 border border-[#2F4138]/20 rounded-md bg-white text-[#2F4138] focus:outline-none focus:ring-2 focus:ring-[#3C685A]"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="priceAsc">Price: Low to High</option>
+            <option value="priceDesc">Price: High to Low</option>
+          </select>
         </div>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {currentProducts.map((product) => (
-<div
-  key={product._id}
-  className="group relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-[#2F4138]/10 transition-all duration-500 hover:shadow-xl hover:scale-[1.02]"
->
-  {/* Out of Stock Overlay */}
-  {product.stock <= 0 && (
-    <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 rounded-2xl">
-      <span className="text-white font-bold text-lg uppercase tracking-wide">
-        Out of Stock
-      </span>
-    </div>
-  )}
+            <div
+              key={product._id}
+              className="group relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-[#2F4138]/10 transition-all duration-500 hover:shadow-xl hover:scale-[1.02]"
+            >
+              {/* Out of Stock Overlay */}
+              {product.stock <= 0 && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 rounded-2xl">
+                  <span className="text-white font-bold text-lg uppercase tracking-wide">
+                    Out of Stock
+                  </span>
+                </div>
+              )}
 
-  <Link
-    to={`/product/${product._id}`}
-    className="block aspect-square overflow-hidden"
-  >
-    <img
-      src={product.images?.[0] || "/placeholder-image.jpg"}
-      alt={product.title}
-      className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
-        product.stock <= 0 ? "opacity-50" : ""
-      }`}
-    />
-  </Link>
+              <Link
+                to={`/product/${product._id}`}
+                className="block aspect-square overflow-hidden"
+              >
+                <img
+                  src={product.images?.[0] || "/placeholder-image.jpg"}
+                  alt={product.title}
+                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
+                    product.stock <= 0 ? "opacity-50" : ""
+                  }`}
+                />
+              </Link>
 
-  <div className="p-6 relative z-20">
-    <Link to={`/product/${product._id}`}>
-      <h3 className="text-xl font-medium text-[#2F4138] mb-2 line-clamp-1 group-hover:text-[#3C685A] transition-colors">
-        {product.title}
-      </h3>
-      <p className="text-2xl font-light text-[#3C685A]">
-        €{product.price.toFixed(2)}
-      </p>
-    </Link>
+              <div className="p-6 relative z-20">
+                <Link to={`/product/${product._id}`}>
+                  <h3 className="text-xl font-medium text-[#2F4138] mb-2 line-clamp-1 group-hover:text-[#3C685A] transition-colors">
+                    {product.title}
+                  </h3>
+                  <p className="text-2xl font-light text-[#3C685A]">
+                    €{product.price.toFixed(2)}
+                  </p>
+                </Link>
 
-    {token && !isAdmin && product.stock > 0 && (
-      <button
-        onClick={() => handleOpenCartModal(product)}
-        className="mt-4 w-full py-3 bg-[#2F4138] text-white rounded-full flex items-center justify-center space-x-2 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#3C685A]"
-      >
-        <ShoppingCart size={18} />
-        <span>Add to Cart</span>
-      </button>
-    )}
+                {token && !isAdmin && product.stock > 0 && (
+                  <button
+                    onClick={() => handleOpenCartModal(product)}
+                    className="mt-4 w-full py-3 bg-[#2F4138] text-white rounded-full flex items-center justify-center space-x-2 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#3C685A]"
+                  >
+                    <ShoppingCart size={18} />
+                    <span>Add to Cart</span>
+                  </button>
+                )}
 
-    {isAdmin && (
-      <div className="absolute top-4 right-4 flex space-x-2">
-        <button
-          onClick={(e) => handleUpdate(e, product)}
-          className="p-2 bg-[#2F4138] text-white rounded-full shadow-sm hover:bg-[#3C685A] transition-all duration-300"
-        >
-          <Pencil size={16} />
-        </button>
-        <button
-          onClick={(e) => handleDelete(e, product._id)}
-          className="p-2 bg-[#8B3E2F] text-white rounded-full shadow-sm hover:bg-[#A04B3C] transition-all duration-300"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-    )}
-  </div>
-</div>
-
+                {isAdmin && (
+                  <div className="absolute top-4 right-4 flex space-x-2">
+                    <button
+                      onClick={(e) => handleUpdate(e, product)}
+                      className="p-2 bg-[#2F4138] text-white rounded-full shadow-sm hover:bg-[#3C685A] transition-all duration-300"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDelete(e, product._id)}
+                      className="p-2 bg-[#8B3E2F] text-white rounded-full shadow-sm hover:bg-[#A04B3C] transition-all duration-300"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -361,7 +449,7 @@ const ShopPage = () => {
             >
               <ChevronLeft size={24} />
             </button>
-            
+
             <div className="flex items-center space-x-2">
               {[...Array(totalPages)].map((_, idx) => (
                 <button
