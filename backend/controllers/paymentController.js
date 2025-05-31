@@ -10,6 +10,8 @@ const Workshop = require("../models/workshopModel");
 const Cart = require("../models/cartModel");
 const Booking = require("../models/bookingModel");
 const User = require("../models/userModel");
+const fs = require('fs');
+console.log('Files in models:', fs.readdirSync(__dirname + '/../models'));
 
 const createCheckoutSession = async (req, res) => {
   const { items, shippingAddress } = req.body;
