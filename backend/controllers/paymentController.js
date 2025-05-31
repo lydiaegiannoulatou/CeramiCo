@@ -6,7 +6,7 @@ const {
 } = require("../controllers/emailController");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
-const Workshop = require("../models/workshopModel");
+const Workshop = require("../models/workshopModel")
 const Cart = require("../models/cartModel");
 const Booking = require("../models/bookingModel");
 const User = require("../models/userModel");
