@@ -1,15 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
-try {
-  const modelsDir = path.join(__dirname, '../models');
-  const files = fs.readdirSync(modelsDir);
-  console.log('DEBUG: Models folder contents:', files);
-} catch (err) {
-  console.error('DEBUG ERROR: Cannot read models directory:', err);
-}
-
-
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const {
@@ -18,7 +6,7 @@ const {
 } = require("../controllers/emailController");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
-const Workshop = require("../models/workshopModel");
+const Workshop = require("../models/WorkshopModel");
 const Cart = require("../models/cartModel");
 const Booking = require("../models/bookingModel");
 const User = require("../models/userModel");
