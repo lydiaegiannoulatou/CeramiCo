@@ -3,7 +3,7 @@ const Workshop= require("../models/workshopModel");
 //ALL CLASSES
 const getAllClasses = async (req, res) => {
   try {
-    const classes = await Workshop.find().sort({ date: 1 }); // Sorted by date
+    const classes = await Workshop.find().sort({ date: 1 }); 
     res.status(200).json(classes);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch classes", details: error.message });
@@ -19,11 +19,10 @@ const getClassById = async (req, res) => {
       return res.status(404).json({ error: "Workshop not found" });
     }
 
-    // Calculate available spots for each session
     const sessionsWithAvailability = classItem.sessions.map((session) => {
      
       return {
-        sessionDate: session.sessionDate, // Log if sessionDate is coming through correctly
+        sessionDate: session.sessionDate,
         bookedSpots: session.bookedSpots,
         availableSpots: classItem.maxSpots - session.bookedSpots,
         _id: session._id,
@@ -50,32 +49,26 @@ const getClassById = async (req, res) => {
 //ADD NEW CLASS (ADMIN)
 const createClass = async (req, res) => {
   try {
-    // Destructure the data from the request body
+
     const { title, instructor, description, price, duration, startDate, recurringTime, maxSpots, image } = req.body;
 
-    // Validate required fields
     if (!title || !instructor || !description || !price || !duration || !startDate || !recurringTime || !maxSpots) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
-    // Ensure the price and maxSpots are numbers
     if (typeof price !== 'number' || typeof maxSpots !== 'number') {
       return res.status(400).json({ error: "Price and maxSpots must be numbers." });
     }
-
-    // Parse startDate if it's a string (e.g., datetime-local input)
     const parsedStartDate = new Date(startDate);
     if (isNaN(parsedStartDate)) {
       return res.status(400).json({ error: "Invalid start date format." });
     }
 
-    // Calculate the sessions based on recurringTime (e.g., every Monday at 5 PM)
     const sessions = generateSessions(parsedStartDate, recurringTime);
 
-    // Create the new class object
     const newClass = new Workshop({
       title,
-      image, // Optional field
+      image,
       instructor,
       description,
       price,
@@ -83,13 +76,11 @@ const createClass = async (req, res) => {
       startDate: parsedStartDate,
       recurringTime,
       maxSpots,
-      sessions, // Add the generated sessions to the class
+      sessions, 
     });
 
-    // Save the class to the database
     const savedClass = await newClass.save();
 
-    // Send a success response
     res.status(201).json(savedClass);
   } catch (error) {
     console.error("Error creating class:", error);
@@ -97,7 +88,6 @@ const createClass = async (req, res) => {
   }
 };
 
-// Helper function to generate sessions based on recurring time
 const generateSessions = (startDate, time) => {
   const sessions = [];
   const currentDate = new Date(startDate);
@@ -177,7 +167,7 @@ const getClassesForCalendar = async (req, res) => {
   // BOOK A SESSION (User selects a specific session)
 const bookSession = async (req, res) => {
   try {
-    const { workshopId, sessionId } = req.body; // Receiving the workshopId and sessionId from the client
+    const { workshopId, sessionId } = req.body; 
 
     const workshop = await Workshop.findById(workshopId);
 
@@ -185,22 +175,19 @@ const bookSession = async (req, res) => {
       return res.status(404).json({ error: "Workshop not found" });
     }
 
-    // Find the selected session
+
     const session = workshop.sessions.id(sessionId);
 
     if (!session) {
       return res.status(404).json({ error: "Session not found" });
     }
 
-    // Check if there are available spots
     if (session.bookedSpots >= workshop.maxSpots) {
       return res.status(400).json({ error: "No available spots for this session" });
     }
 
-    // Increment the booked spots for this session
     session.bookedSpots += 1;
 
-    // Save the workshop with updated session data
     await workshop.save();
 
     res.status(200).json({ success: true, message: "Booking confirmed" });
@@ -223,28 +210,27 @@ const getSessionsForCalendar = async (req, res) => {
     workshops.forEach((workshop) => {
       workshop.sessions.forEach((s) => {
         if (
-          s.sessionDate >= new Date() &&  // future-only
-          s.bookedSpots < workshop.maxSpots  // spots left
+          s.sessionDate >= new Date() &&  
+          s.bookedSpots < workshop.maxSpots  
         ) {
           events.push({
-            id: s._id,  // session id
+            id: s._id,  
             workshopId: workshop._id,
             title: workshop.title,
             start: s.sessionDate,
             end: new Date(
               new Date(s.sessionDate).getTime() +
-                workshop.duration * 60 * 1000  // duration in mins
+                workshop.duration * 60 * 1000  
             ),
             availableSpots: workshop.maxSpots - s.bookedSpots,
           });
         }
       });
     });
-
-    console.log("Fetched events:", events);  // Add log to check response
+ 
     res.status(200).json(events);
   } catch (err) {
-    console.error("Error fetching sessions:", err);  // Add more logging for better insight
+    console.error("Error fetching sessions:", err);
     res.status(500).json({ error: "Failed to fetch sessions", details: err.message });
   }
 };

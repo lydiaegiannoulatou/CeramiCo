@@ -40,7 +40,7 @@ function getUploadSignature(req, res) {
 
 async function deleteImage(req, res) {
   try {
-    const publicId = req.params.id; 
+    const publicId = req.params.id;
     const result = await cloudinary.uploader.destroy(publicId);
 
     if (result.result === "not found") {

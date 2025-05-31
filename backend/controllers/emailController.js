@@ -1,10 +1,10 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 const User = require("../models/userModel");
 const NewsletterSubscription = require("../models/newsletterModel");
 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -21,10 +21,10 @@ async function sendNewsletter(req, res) {
 
   try {
     const enrolledUsers = await User.find({ enrolled: true }, "email");
-    const userEmails = enrolledUsers.map(user => user.email);
+    const userEmails = enrolledUsers.map((user) => user.email);
 
     const guestSubscribers = await NewsletterSubscription.find({}, "email");
-    const guestEmails = guestSubscribers.map(sub => sub.email);
+    const guestEmails = guestSubscribers.map((sub) => sub.email);
 
     const allEmails = [...new Set([...userEmails, ...guestEmails])];
 
@@ -51,22 +51,22 @@ async function handleContactMessage(req, res) {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
-    return res.status(400).json({ error: 'All fields are required' });
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   const mailOptions = {
     from: email,
-    to: 'ceramico.pottery@gmail.com',
+    to: "ceramico.pottery@gmail.com",
     subject: `New Message from ${name} (${email})`,
     text: message,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: 'Message sent successfully!' });
+    res.status(200).json({ message: "Message sent successfully!" });
   } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ error: 'Error sending message' });
+    console.error("Error sending email:", error);
+    res.status(500).json({ error: "Error sending message" });
   }
 }
 
@@ -104,7 +104,9 @@ async function sendOrderConfirmationEmail(user, orderDetails) {
     from: `"CeramiCo Pottery Studio" <${process.env.MAIL_USER}>`,
     to: user.email,
     subject: "Your Pottery Order Confirmation",
-    text: `Hi ${user.name || 'Customer'},\n\nThank you for your order!\n\nOrder Details:\n${orderDetails}\n\nWe'll notify you once it's shipped.\n\nBest regards,\nCeramico Pottery Team`,
+    text: `Hi ${
+      user.name || "Customer"
+    },\n\nThank you for your order!\n\nOrder Details:\n${orderDetails}\n\nWe'll notify you once it's shipped.\n\nBest regards,\nCeramico Pottery Team`,
   };
 
   try {
@@ -121,7 +123,9 @@ async function sendWorkshopBookingConfirmationEmail(user, bookingDetails) {
     from: `"Pottery Studio" <${process.env.MAIL_USER}>`,
     to: user.email,
     subject: "Your Workshop Booking Confirmation",
-    text: `Hi ${user.name || 'Participant'},\n\nThanks for booking a workshop with us!\n\nWorkshop Details:\n${bookingDetails}\n\nLooking forward to seeing you!\n\nBest,\nCeramico Pottery Team`,
+    text: `Hi ${
+      user.name || "Participant"
+    },\n\nThanks for booking a workshop with us!\n\nWorkshop Details:\n${bookingDetails}\n\nLooking forward to seeing you!\n\nBest,\nCeramico Pottery Team`,
   };
 
   try {

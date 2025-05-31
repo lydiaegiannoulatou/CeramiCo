@@ -1,11 +1,6 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Stripe init
-const {
-  sendOrderConfirmationEmail,
-} = require("../controllers/emailController");
-
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // GET A SINGLE ORDER WITH STRIPE SESSION ID FOR SUCCESS PATH
 const getOrder = async (req, res) => {
@@ -16,9 +11,8 @@ const getOrder = async (req, res) => {
       return res.status(400).json({ message: "Session ID is required." });
     }
 
-    // Find the order by sessionId and populate user details
     const order = await Order.findOne({ stripeSessionId: sessionId })
-      .populate("user_id", "name email") // Populate user details
+      .populate("user_id", "name email")
       .populate("items.product_id", "title images");
 
     if (!order) {
@@ -41,19 +35,14 @@ const productOrders = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const status = req.query.status;
-
-    // Base filter for product orders
     let filter = { "items.type": "product" };
 
-    // If a status filter is provided and not 'all', add it
     if (status && status !== "all") {
       filter.orderStatus = status;
     }
 
-    // Get total count of filtered orders (for pagination)
     const totalOrders = await Order.countDocuments(filter);
 
-    // Fetch paginated orders with filter
     const products = await Order.find(filter).sort({ createdAt: -1 }).populate({
       path: "items.product_id",
       select: "title image images price",
@@ -78,7 +67,7 @@ const getOrdersByUser = async (req, res) => {
     const orders = await Order.find({ user_id: userId })
       .sort({ createdAt: -1 })
       .populate({
-        path: "items.product_id", // Populate product_id for product items
+        path: "items.product_id",
         select: "title image images price",
       });
 
@@ -93,20 +82,18 @@ const getOrdersByUser = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log("Received orderId:", orderId); // Log the orderId from the URL
+    console.log("Received orderId:", orderId);
 
     const order = await Order.findById(orderId);
     if (!order) {
-      console.log("Order not found for ID:", orderId); // Log if order is not found
+      console.log("Order not found for ID:", orderId);
       return res.status(404).json({ msg: "Order not found" });
     }
 
-    // Log the order details
     console.log("Found order:", order);
 
-    // Ensure the logged-in user owns this order
     if (order.user_id.toString() !== req.user.userId) {
-      console.log("Unauthorized access attempt by user:", req.user.userId); // Log unauthorized user access
+      console.log("Unauthorized access attempt by user:", req.user.userId);
       return res
         .status(403)
         .json({ msg: "You are not authorized to cancel this order." });
@@ -121,20 +108,17 @@ const cancelOrder = async (req, res) => {
         .json({ msg: "You are not authorized to cancel this order." });
     }
 
-    // Log the user ID
     console.log("Logged-in user ID:", req.user.userId);
     console.log("Order user ID:", order.user_id.toString());
 
-    // Only refund if the order is paid
     if (order.paymentStatus === "paid") {
       if (!order.stripePaymentIntentId) {
-        console.log("No paymentIntentId found for order:", orderId); // Log if paymentIntentId is missing
+        console.log("No paymentIntentId found for order:", orderId);
         return res
           .status(400)
           .json({ msg: "No paymentIntentId found for this order" });
       }
 
-      // Log refund attempt
       console.log(
         "Attempting to refund payment with paymentIntentId:",
         order.paymentIntentId
@@ -153,7 +137,6 @@ const cancelOrder = async (req, res) => {
         .status(200)
         .json({ msg: "Order refunded successfully", refund });
     } else {
-      // Log cancellation process
       console.log("Cancelling order without refund. Updating status...");
 
       order.orderStatus = "canceled";
@@ -164,7 +147,7 @@ const cancelOrder = async (req, res) => {
       return res.status(200).json({ msg: "Order canceled successfully" });
     }
   } catch (error) {
-    console.error("Error cancelling order:", error); // Log the error details
+    console.error("Error cancelling order:", error);
     res.status(500).json({ msg: "Could not cancel order", error });
   }
 };
@@ -177,17 +160,13 @@ const updateOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { orderStatus, paymentStatus } = req.body;
-
-    /* ── fetch order ──────────────────────────────────────────────── */
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ msg: "Order not found" });
 
-    /* ── validate proposed status change ──────────────────────────── */
     if (orderStatus) {
       const currentIdx = STATUS_FLOW.indexOf(order.orderStatus);
       const nextIdx = STATUS_FLOW.indexOf(orderStatus);
 
-      // unknown status or move backwards → reject
       if (nextIdx === -1)
         return res
           .status(400)
@@ -198,7 +177,6 @@ const updateOrder = async (req, res) => {
           msg: `Cannot change status from "${order.orderStatus}" to "${orderStatus}".`,
         });
 
-      // if already canceled, forbid any further change
       if (order.orderStatus === "canceled")
         return res
           .status(400)
@@ -206,8 +184,6 @@ const updateOrder = async (req, res) => {
 
       order.orderStatus = orderStatus;
     }
-
-    /* ── payment status may change independently (optional) ───────── */
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();

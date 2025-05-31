@@ -14,7 +14,8 @@ const getAllExhibitions = async (req, res) => {
 const getExhibitionById = async (req, res) => {
   try {
     const exhibition = await Exhibition.findById(req.params.id);
-    if (!exhibition) return res.status(404).json({ msg: "Exhibition not found" });
+    if (!exhibition)
+      return res.status(404).json({ msg: "Exhibition not found" });
 
     res.status(200).json(exhibition);
   } catch (error) {
@@ -27,7 +28,9 @@ const addExhibition = async (req, res) => {
   try {
     const newExhibition = new Exhibition(req.body);
     await newExhibition.save();
-    res.status(201).json({ msg: "Exhibition created", exhibition: newExhibition });
+    res
+      .status(201)
+      .json({ msg: "Exhibition created", exhibition: newExhibition });
   } catch (error) {
     res.status(400).json({ msg: "Failed to create exhibition", error });
   }
@@ -36,9 +39,13 @@ const addExhibition = async (req, res) => {
 // Update exhibition (admin only)
 const updateExhibition = async (req, res) => {
   try {
-    const updated = await Exhibition.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const updated = await Exhibition.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
 
     if (!updated) return res.status(404).json({ msg: "Exhibition not found" });
 

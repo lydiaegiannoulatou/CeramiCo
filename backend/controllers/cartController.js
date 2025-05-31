@@ -8,8 +8,6 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // ADD PRODUCT TO CART
 const addToCart = async (req, res) => {
   try {
-   
-
     const { items } = req.body;
     const userId = req.user.userId;
 
@@ -17,14 +15,12 @@ const addToCart = async (req, res) => {
       return res.status(400).send({ msg: "No items in the request body" });
     }
 
-    // Iterate through each item being added to the cart
     for (let item of items) {
       const { product_id, quantity } = item;
       if (!product_id || !isValidObjectId(product_id)) {
         return res.status(400).send({ msg: "Invalid or missing product ID" });
       }
 
-      // Validate the product
       let product = await Product.findById(product_id);
       if (!product) {
         return res.status(404).send({ msg: "Product not found" });
@@ -35,21 +31,17 @@ const addToCart = async (req, res) => {
         });
       }
 
-      // Get the price from the product
       const price = product.price;
 
-      // Find the user's cart or create a new one if not found
       let cart = await Cart.findOne({ user_id: userId });
 
       if (!cart) {
-        // Create the new cart with the item
         const newItem = { product_id, quantity, price };
         cart = new Cart({
           user_id: userId,
           items: [newItem],
         });
       } else {
-        // Check if the item already exists in the cart
         const existingItemIndex = cart.items.findIndex(
           (cartItem) => cartItem.product_id.toString() === product_id
         );
@@ -63,17 +55,15 @@ const addToCart = async (req, res) => {
           }
           cart.items[existingItemIndex].quantity += quantity;
         } else {
-          // Otherwise, add a new item to the cart
+          2222;
           const newItem = { product_id, quantity, price };
           cart.items.push(newItem);
         }
       }
 
-      // Save the updated cart
       await cart.save();
     }
 
-    // Populate the cart with product details
     const populatedCart = await Cart.findOne({ user_id: userId }).populate({
       path: "items.product_id",
       select: "title price images stock",
@@ -127,7 +117,6 @@ const deleteItemFromCart = async (req, res) => {
     const userId = req.user.userId;
     const { product_id } = req.body;
 
-    // Validate ObjectId
     if (product_id && !isValidObjectId(product_id)) {
       return res.status(400).send({ msg: "Invalid product ID" });
     }
@@ -135,13 +124,11 @@ const deleteItemFromCart = async (req, res) => {
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) return res.status(404).send({ msg: "Cart not found" });
 
-    // Remove the item based on product_id
     cart.items = cart.items.filter(
       (item) => item.product_id.toString() !== product_id
     );
     await cart.save();
 
-    // Populate before returning
     const populatedCart = await Cart.findOne({ user_id: userId }).populate(
       "items.product_id",
       "title price images stock"
@@ -169,29 +156,27 @@ const updateItemQuantityInCart = async (req, res) => {
     }
 
     if (quantity <= 0) {
-      return res.status(400).send({ msg: "Quantity must be greater than zero" });
+      return res
+        .status(400)
+        .send({ msg: "Quantity must be greater than zero" });
     }
 
-    // Fetch the product
     const product = await Product.findById(product_id);
     if (!product) {
       return res.status(404).send({ msg: "Product not found" });
     }
 
-    // Check if the desired quantity exceeds stock
     if (quantity > product.stock) {
       return res.status(400).send({
         msg: `Only ${product.stock} units of '${product.title}' are available`,
       });
     }
 
-    // Find the user's cart
     const cart = await Cart.findOne({ user_id: userId });
     if (!cart) {
       return res.status(404).send({ msg: "Cart not found" });
     }
 
-    // Find the item in the cart
     const itemIndex = cart.items.findIndex(
       (item) => item.product_id && item.product_id.toString() === product_id
     );
@@ -200,13 +185,13 @@ const updateItemQuantityInCart = async (req, res) => {
       return res.status(404).send({ msg: "Item not found in cart" });
     }
 
-    // Update the quantity
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
 
-    // Populate and return the updated cart
-    const populatedCart = await Cart.findOne({ user_id: userId })
-      .populate("items.product_id", "title price images stock");
+    const populatedCart = await Cart.findOne({ user_id: userId }).populate(
+      "items.product_id",
+      "title price images stock"
+    );
 
     res.status(200).send({ msg: "Item quantity updated", cart: populatedCart });
   } catch (error) {
@@ -216,7 +201,6 @@ const updateItemQuantityInCart = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   addToCart,

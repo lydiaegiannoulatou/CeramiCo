@@ -2,7 +2,7 @@ const Booking = require("../models/bookingModel");
 const Workshop = require("../models/workshopModel");
 const User = require("../models/userModel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const { sendWorkshopBookingConfirmationEmail } = require("../controllers/emailController");
+
 
 
 // Fetch all bookings with pagination and optional status filter (Admin only)

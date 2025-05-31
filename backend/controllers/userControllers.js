@@ -15,7 +15,7 @@ const loginUser = async (req, res) => {
         .send({ msg: "Username/Email and Password are required fields" });
     }
     let isUserRegistered = await User.findOne({
-      $or: [{ email }, { username }], // $or -> MongoDB or operator
+      $or: [{ email }, { username }],
     });
     if (!isUserRegistered) {
       return res.status(400).send({
@@ -50,8 +50,7 @@ const loginUser = async (req, res) => {
 //USER REGISTRATION
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, username, enrolled, role } =
-      req.body;
+    const { name, email, password, username, enrolled, role } = req.body;
     if (!name || !email || !password || !username) {
       return res
         .status(400)
@@ -73,7 +72,7 @@ const registerUser = async (req, res) => {
       role,
     });
 
-//Generate token
+    //Generate token
     const payload = {
       userId: newUser._id,
       email: newUser.email,
@@ -97,9 +96,9 @@ const registerUser = async (req, res) => {
 
 const userProfile = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
 
-    const user = await User.findById(id).select("-password"); 
+    const user = await User.findById(id).select("-password");
     if (!user) {
       return res.status(404).send({ msg: "User not found." });
     }
@@ -108,13 +107,12 @@ const userProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      role: user.role
+      role: user.role,
     });
   } catch (error) {
     console.error(error);
     res.status(500).send({ msg: "Server error." });
   }
 };
-
 
 module.exports = { loginUser, registerUser, userProfile };
