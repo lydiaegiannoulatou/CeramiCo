@@ -1,3 +1,15 @@
+const fs = require('fs');
+const path = require('path');
+
+try {
+  const modelsDir = path.join(__dirname, '../models');
+  const files = fs.readdirSync(modelsDir);
+  console.log('DEBUG: Models folder contents:', files);
+} catch (err) {
+  console.error('DEBUG ERROR: Cannot read models directory:', err);
+}
+
+
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const {
