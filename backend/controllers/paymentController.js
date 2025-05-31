@@ -1,3 +1,15 @@
+const fs = require('fs');
+const path = require('path');
+
+try {
+  const modelsDir = path.join(__dirname, '../models');
+  const files = fs.readdirSync(modelsDir);
+  console.log('DEBUG: Models folder contents:', files);
+} catch (err) {
+  console.error('DEBUG ERROR: Cannot read models directory:', err);
+}
+
+
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const {
@@ -10,8 +22,7 @@ const Workshop = require("../models/workshopModel");
 const Cart = require("../models/cartModel");
 const Booking = require("../models/bookingModel");
 const User = require("../models/userModel");
-const fs = require('fs');
-console.log('Files in models:', fs.readdirSync(__dirname + '/../models'));
+
 
 const createCheckoutSession = async (req, res) => {
   const { items, shippingAddress } = req.body;
