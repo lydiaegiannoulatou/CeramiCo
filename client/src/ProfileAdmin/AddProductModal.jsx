@@ -18,6 +18,7 @@ const AddProductPage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +56,7 @@ const AddProductPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3050/shop/products/add", 
+        `${baseUrl}/shop/products/add`, 
         form,
         {
           headers: {

@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
 
         if (decodedToken.exp < currentTime) {
           localStorage.removeItem("token");
+          localStorage.removeItem("role");
           setIsLoggedIn(false);
           setUser(null);
         } else {
@@ -27,10 +28,12 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("Invalid token:", error);
         localStorage.removeItem("token");
+        localStorage.removeItem("role");
         setIsLoggedIn(false);
         setUser(null);
       }
     } else {
+      localStorage.removeItem("role");
       setIsLoggedIn(false);
       setUser(null);
     }

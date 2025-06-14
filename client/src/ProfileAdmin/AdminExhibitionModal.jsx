@@ -19,7 +19,7 @@ const AdminExhibitionPage = ({ existingData }) => {
 
   const [participant, setParticipant] = useState({ name: "", role: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     if (existingData) {
       setFormData({
@@ -78,7 +78,7 @@ const AdminExhibitionPage = ({ existingData }) => {
       let response;
       if (existingData) {
         response = await axios.put(
-          `http://localhost:3050/exhibitions/${existingData._id}`,
+          `${baseUrl}/exhibitions/${existingData._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -93,7 +93,7 @@ const AdminExhibitionPage = ({ existingData }) => {
         });
       } else {
         response = await axios.post(
-          "http://localhost:3050/exhibitions/add",
+          `${baseUrl}/exhibitions/add`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );

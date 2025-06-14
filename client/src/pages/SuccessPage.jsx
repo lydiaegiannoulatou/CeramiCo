@@ -9,6 +9,7 @@ import OrderSummary from "../components/OrderSummary";
 const SuccessPage = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -36,7 +37,7 @@ const SuccessPage = () => {
         let response;
         if (type === "workshop") {
           response = await axios.get(
-            `http://localhost:3050/bookings/success/${sessionId}`,
+            `${baseUrl}/bookings/success/${sessionId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -46,7 +47,7 @@ const SuccessPage = () => {
           setPaymentData(response.data);
         } else if (type === "product") {
           response = await axios.get(
-            `http://localhost:3050/order/success/${sessionId}`,
+            `${baseUrl}/order/success/${sessionId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

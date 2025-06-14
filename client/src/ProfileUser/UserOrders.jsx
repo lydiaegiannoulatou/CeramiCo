@@ -6,11 +6,11 @@ const UserOrders = ({ token }) => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:3050/order/user", {
+        const response = await axios.get(`${baseUrl}/order/user`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(response.data.orders || []);

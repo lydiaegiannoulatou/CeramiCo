@@ -7,6 +7,7 @@ const NewsletterPage = () => {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const handleSendNewsletter = async () => {
     if (!subject || !message) {
@@ -19,7 +20,7 @@ const NewsletterPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3050/admin/newsletter",
+        `${baseUrl}/admin/newsletter`,
         { subject, message },
         {
           headers: {

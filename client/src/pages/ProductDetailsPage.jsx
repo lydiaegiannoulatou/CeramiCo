@@ -19,11 +19,11 @@ const ProductDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [quantity, setQuantity] = useState(1);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`http://localhost:3050/shop/product/${id}`)
+      .get(`${baseUrl}/shop/product/${id}`)
       .then((res) => {
         setProduct(res.data);
         setError(null);

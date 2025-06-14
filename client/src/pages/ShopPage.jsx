@@ -25,6 +25,7 @@ const ShopPage = () => {
   const [sortOption, setSortOption] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const [form, setForm] = useState({
     title: "",
@@ -86,7 +87,7 @@ const ShopPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:3050/shop", {
+      const res = await axios.get(`${baseUrl}/shop`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -149,7 +150,7 @@ const ShopPage = () => {
       return;
 
     try {
-      await axios.delete(`http://localhost:3050/shop/products/delete/${id}`, {
+      await axios.delete(`${baseUrl}/shop/products/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchProducts();
@@ -195,7 +196,7 @@ const ShopPage = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:3050/cart/add-to-cart",
+        `${baseUrl}/cart/add-to-cart`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -259,13 +260,13 @@ const ShopPage = () => {
     try {
       if (selectedProduct) {
         await axios.put(
-          `http://localhost:3050/shop/products/update/${selectedProduct._id}`,
+          `${baseUrl}/shop/products/update/${selectedProduct._id}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Product updated successfully!");
       } else {
-        await axios.post("http://localhost:3050/shop/products/add", payload, {
+        await axios.post(`${baseUrl}/shop/products/add`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         toast.success("Product added successfully!");

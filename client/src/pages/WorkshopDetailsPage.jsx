@@ -14,12 +14,12 @@ const WorkshopDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchWorkshop = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3050/workshops/${id}`
+          `${baseUrl}/workshops/${id}`
         );
         setWorkshop(response.data);
 

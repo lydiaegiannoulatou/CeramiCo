@@ -11,12 +11,12 @@ const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
         try {
-          const response = await axios.get(`http://localhost:3050/user/profile/${user.userId}`, {
+          const response = await axios.get(`${baseUrl}/user/profile/${user.userId}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },

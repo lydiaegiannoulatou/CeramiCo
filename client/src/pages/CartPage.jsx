@@ -31,6 +31,7 @@ const CartAndCheckout = () => {
     country: "",
     phone: "",
   });
+const baseUrl = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -39,7 +40,7 @@ const CartAndCheckout = () => {
 
       try {
         const response = await axios.get(
-          "http://localhost:3050/cart/get-cart",
+          `${baseUrl}/cart/get-cart`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -96,7 +97,7 @@ const CartAndCheckout = () => {
 
     try {
       const res = await axios.put(
-        "http://localhost:3050/cart/update-quantity",
+        `${baseUrl}/cart/update-quantity`,
         { product_id: id, quantity: newQuantity },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -105,6 +106,7 @@ const CartAndCheckout = () => {
 
       if (res.status === 200) {
         setCart(res.data.cart);
+        toast.dismiss(); 
         toast.success("Cart updated successfully");
       }
     } catch (err) {
@@ -116,7 +118,7 @@ const CartAndCheckout = () => {
   const handleRemoveItem = async (id) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.delete("http://localhost:3050/cart/remove-item", {
+      const res = await axios.delete(`${baseUrl}/cart/remove-item`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { product_id: id },
       });
@@ -179,7 +181,7 @@ const CartAndCheckout = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3050/payment/checkout",
+       `${baseUrl}/payment/checkout`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },

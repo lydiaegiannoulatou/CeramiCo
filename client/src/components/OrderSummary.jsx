@@ -14,7 +14,7 @@ const OrderSummary = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const isAdmin = localStorage.getItem("role") === "admin";
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchOrder = async () => {
       if (!sessionId) {
@@ -25,7 +25,7 @@ const OrderSummary = () => {
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(
-          `http://localhost:3050/order/success/${sessionId}`,
+          `${baseUrl}/order/success/${sessionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -50,7 +50,7 @@ const OrderSummary = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:3050/order/update/${orderDetails._id}`,
+        `${baseUrl}/order/update/${orderDetails._id}`,
         { orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

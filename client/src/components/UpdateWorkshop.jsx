@@ -19,12 +19,13 @@ const UpdateWorkshop = () => {
     maxSpots: "",
     image: "",
   });
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     const fetchWorkshop = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`http://localhost:3050/workshops/${id}`, {
+        const response = await axios.get(`${baseUrl}/workshops/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -71,7 +72,7 @@ const UpdateWorkshop = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `http://localhost:3050/workshops/update/${id}`,
+        `${baseUrl}/workshops/update/${id}`,
         formData,
         {
           headers: {

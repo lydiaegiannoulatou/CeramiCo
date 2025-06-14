@@ -2,12 +2,13 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import { ShoppingCart, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-import { AuthContext } from "../context/AuthContext"; // ✅ Adjust the import path as needed
+import { AuthContext } from "../context/AuthContext"; 
 
 const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const { user, isLoggedIn, isAuthReady } = useContext(AuthContext);
-  const token = localStorage.getItem("token"); // only used for API request
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+  const token = localStorage.getItem("token"); 
 
   if (!isAuthReady || !item || !item._id) return null;
 
@@ -46,7 +47,7 @@ const AddToCart = ({ item, showLabel = true, quantity = 1 }) => {
       };
 
       const response = await axios.post(
-        "http://localhost:3050/cart/add-to-cart",
+        `${baseUrl}/cart/add-to-cart`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },

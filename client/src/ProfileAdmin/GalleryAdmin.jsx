@@ -7,10 +7,10 @@ function GalleryAdmin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const token = localStorage.getItem('token');
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const refresh = async () => {
     try {
-      const response = await axios.get("http://localhost:3050/gallery", {
+      const response = await axios.get(`${baseUrl}/gallery`, {
         headers: {
           Authorization: `Bearer ${token}`, 
         },
@@ -32,7 +32,7 @@ function GalleryAdmin() {
 
     try {
       // 1. Get signed params
-      const { data: sig } = await axios.post("http://localhost:3050/gallery/sign", null, {
+      const { data: sig } = await axios.post(`${baseUrl}/gallery/sign`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -68,7 +68,7 @@ function GalleryAdmin() {
   
     try {
       await axios.delete(
-        `http://localhost:3050/gallery/${encodeURIComponent(publicId)}`,
+        `${baseUrl}/gallery/${encodeURIComponent(publicId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setImgs(prev => prev.filter(img => img.public_id !== publicId));

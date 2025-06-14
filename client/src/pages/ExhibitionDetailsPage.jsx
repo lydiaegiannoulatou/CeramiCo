@@ -13,7 +13,7 @@ const ExhibitionDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchExhibition = async () => {
       const token = localStorage.getItem("token");
@@ -22,7 +22,7 @@ const ExhibitionDetailsPage = () => {
       setIsAdmin(userRole === "admin");
 
       try {
-        const res = await axios.get(`http://localhost:3050/exhibitions/${id}`, {
+        const res = await axios.get(`${baseUrl}/exhibitions/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setExhibition(res.data);
@@ -58,7 +58,7 @@ const ExhibitionDetailsPage = () => {
             onClick={async () => {
               const token = localStorage.getItem("token");
               try {
-                await axios.delete(`http://localhost:3050/exhibitions/${id}`, {
+                await axios.delete(`${baseUrl}/exhibitions/${id}`, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
                 toast.success("Exhibition deleted successfully");

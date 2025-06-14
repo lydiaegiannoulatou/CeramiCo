@@ -8,12 +8,13 @@ import "react-toastify/dist/ReactToastify.css";
 const WorkshopPage = () => {
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
 
   const fetchWorkshops = async () => {
     try {
-      const response = await axios.get("http://localhost:3050/workshops");
+      const response = await axios.get(`${baseUrl}/workshops`);
       setWorkshops(response.data);
     } catch (err) {
       console.error("Failed to fetch workshops", err);
@@ -38,7 +39,7 @@ const WorkshopPage = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:3050/workshops/delete/${id}`, {
+      await axios.delete(`${baseUrl}/workshops/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

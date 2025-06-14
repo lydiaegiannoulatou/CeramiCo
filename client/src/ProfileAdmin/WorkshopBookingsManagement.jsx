@@ -19,7 +19,7 @@ const WorkshopBookingsManagement = () => {
   const [selectedBookingId, setSelectedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("all");
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const getBookingStatusColor = (st) => {
     switch (st) {
       case "pending":
@@ -48,7 +48,7 @@ const WorkshopBookingsManagement = () => {
       try {
         setLoading(true);
         // NOTE: no page or limit params here, fetch all bookings at once
-        const { data } = await axios.get("http://localhost:3050/bookings", {
+        const { data } = await axios.get(`${baseUrl}/bookings`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

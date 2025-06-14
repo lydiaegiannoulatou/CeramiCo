@@ -10,11 +10,11 @@ export default function Gallery() {
   const [loading, setLoading] = useState(true);
   const [isCarouselOpen, setIsCarouselOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get("http://localhost:3050/gallery");
+        const response = await axios.get(`${baseUrl}/gallery`);
         setImgs(response.data);
       } catch (error) {
         console.error(error);

@@ -1,116 +1,97 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-// Cloudinary Upload Component
-const CloudinaryUpload = ({ onImagesUploaded, existingImagePublicIds = [] }) => {
+const CloudinaryUpload = ({
+  onImagesUploaded,
+  existingImagePublicIds = [],
+}) => {
   const [imageFiles, setImageFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
-
-  // Upload image to Cloudinary and apply transformations via URL
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+  // Get upload signature from backend and upload directly to Cloudinary
   const uploadImageToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "pottery_pics"); // Cloudinary preset
-
     try {
+      const sigRes = await axios.get(`${baseUrl}/gallery/sign`);
+      const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", timestamp);
+      formData.append("signature", signature);
+      formData.append("folder", folder);
+
       const res = await axios.post(
-        "https://api.cloudinary.com/v1_1/drszm8sem/image/upload",
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         formData
       );
 
-      // Applying transformations (resize to 500x500, format auto, quality auto)
       const imageUrl = res.data.secure_url;
       const publicId = res.data.public_id;
       const transformedUrl = `${imageUrl}?w=500&h=500&fit=crop&auto=format&quality=auto`;
 
-      return { transformedUrl, publicId }; // Return both URL and publicId
+      return { transformedUrl, publicId };
     } catch (error) {
-      console.error("Error uploading image", error);
+      console.error("Upload failed:", error);
       throw error;
     }
   };
 
-  // Check if the image already exists in Cloudinary (based on its publicId)
-  const checkForDuplicateImage = (file) => {
-    // You could check for duplicates based on some unique image properties or a stored hash
-    // For simplicity, we use an array of existing publicIds passed as props
-    const existingImage = existingImagePublicIds.find(
-      (publicId) => publicId === file.name // Simplified comparison using file name (or hash)
-    );
-    return existingImage;
-  };
-
-  // Delete image from Cloudinary by publicId
   const deleteImageFromCloudinary = async (publicId) => {
     try {
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/drszm8sem/image/destroy`,
-        {
-          public_id: publicId,
-        }
-      );
-
-      // Check if the deletion was successful
-      if (response.data.result === "ok") {
-        console.log(`Image with public_id ${publicId} deleted successfully.`);
-        return true;
-      } else {
-        console.error("Image deletion failed:", response.data);
-        return false;
-      }
+      await axios.delete(`${baseUrl}/gallery/${publicId}`);
+      return true;
     } catch (error) {
-      console.error("Error deleting image", error);
+      console.error("Delete failed:", error);
       return false;
     }
+  };
+
+  const checkForDuplicateImage = (file) => {
+    return existingImagePublicIds.find((publicId) => publicId === file.name);
   };
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
     setIsUploading(true);
+
     const imageUrls = [];
     const imagePublicIds = [];
 
     for (let file of files) {
       try {
-        // Check if the image already exists (by name or hash)
         const existingPublicId = checkForDuplicateImage(file);
-
-        // If the image exists, delete it from Cloudinary
         if (existingPublicId) {
           await deleteImageFromCloudinary(existingPublicId);
         }
 
-        // Upload new image to Cloudinary
-        const { transformedUrl, publicId } = await uploadImageToCloudinary(file);
+        const { transformedUrl, publicId } = await uploadImageToCloudinary(
+          file
+        );
         imageUrls.push(transformedUrl);
         imagePublicIds.push(publicId);
       } catch (error) {
-        console.error("Error uploading file", error);
+        console.error("Error handling file:", error);
       }
     }
 
     setIsUploading(false);
-    setImageFiles(imageUrls); // Store uploaded image URLs
-    setUploadedImages(imagePublicIds); // Store uploaded image public IDs
-    onImagesUploaded(imageUrls); // Pass URLs back to the parent component
+    setImageFiles(imageUrls);
+    setUploadedImages(imagePublicIds);
+    onImagesUploaded(imageUrls);
   };
 
-  // Handle image deletion from the state and Cloudinary
   const handleDeleteImage = async (publicId, index) => {
-    const isDeleted = await deleteImageFromCloudinary(publicId); // Wait for deletion to complete
-
+    const isDeleted = await deleteImageFromCloudinary(publicId);
     if (isDeleted) {
-      // Remove the image from the local state
       const updatedImages = [...uploadedImages];
-      updatedImages.splice(index, 1); // Remove image from the state
+      updatedImages.splice(index, 1);
       setUploadedImages(updatedImages);
 
       const updatedUrls = [...imageFiles];
-      updatedUrls.splice(index, 1); // Remove URL from the state
+      updatedUrls.splice(index, 1);
       setImageFiles(updatedUrls);
-    } else {
-      alert("Failed to delete the image. Please try again.");
     }
   };
 
@@ -137,7 +118,7 @@ const CloudinaryUpload = ({ onImagesUploaded, existingImagePublicIds = [] }) => 
                   className="w-20 h-20 object-cover rounded"
                 />
                 <button
-                  onClick={() => handleDeleteImage(uploadedImages[idx], idx)} // Pass publicId and index
+                  onClick={() => handleDeleteImage(uploadedImages[idx], idx)}
                   className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded"
                 >
                   Delete

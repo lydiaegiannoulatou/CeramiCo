@@ -20,7 +20,7 @@ const AdminCreateWorkshop = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -91,7 +91,7 @@ const AdminCreateWorkshop = () => {
     const token = localStorage.getItem('token');
     try {
       const res = await axios.post(
-        "http://localhost:3050/workshops/new_class",
+        `${baseUrl}/workshops/new_class`,
         workshopData,
         {
           headers: {

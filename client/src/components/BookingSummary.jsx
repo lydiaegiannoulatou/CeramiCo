@@ -47,7 +47,6 @@ const BookingSummary = ({ booking }) => {
   return (
     <section className="relative mx-auto max-w-4xl">
       <div className="rounded-2xl bg-white/95 p-8 backdrop-blur-sm shadow-sm border border-[#2F4138]/10">
-        {/* decorative elements */}
         <div className="pointer-events-none absolute -left-20 -top-20 -z-10 h-40 w-40 rounded-full bg-[#3C685A]/10 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 -bottom-20 -z-10 h-40 w-40 rounded-full bg-[#8B4513]/10 blur-3xl" />
 

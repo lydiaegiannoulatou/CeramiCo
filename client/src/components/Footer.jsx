@@ -7,12 +7,12 @@ import axios from "axios";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const handleSubscribe = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:3050/newsletter/subscribe", { email });
+      const response = await axios.post(`${baseUrl}/newsletter/subscribe`, { email });
 
       toast.success(response.data.message || "Subscribed successfully!");
       setEmail("");
@@ -80,9 +80,6 @@ const Footer = () => {
          
         </div>
       </div>
-
-      {/* Toast Notifications */}
-      <ToastContainer position="bottom-right" />
     </footer>
   );
 };

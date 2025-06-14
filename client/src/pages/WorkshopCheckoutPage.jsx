@@ -11,6 +11,7 @@ const WorkshopCheckoutPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const token = localStorage.getItem("token");
   const { workshopId, sessionId } = useParams();
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,7 +19,7 @@ const WorkshopCheckoutPage = () => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:3050/workshops/${workshopId}`
+          `${baseUrl}/workshops/${workshopId}`
         );
         const selectedSession = response.data.sessions.find(
           (s) => s._id === sessionId
@@ -58,7 +59,7 @@ const WorkshopCheckoutPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3050/payment/checkout",
+        `${baseUrl}/payment/checkout`,
         {
           items: [
             {

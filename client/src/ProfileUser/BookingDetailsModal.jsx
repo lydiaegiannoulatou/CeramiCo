@@ -6,8 +6,8 @@ import ToastNotification from '../components/ToastNotification';
 const BookingDetailsModal = ({ bookingId, onClose, onStatusChange }) => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Fetch booking data
+const baseUrl = import.meta.env.VITE_BASE_URL;
+  
   useEffect(() => {
     if (!bookingId) return;
 
@@ -15,7 +15,7 @@ const BookingDetailsModal = ({ bookingId, onClose, onStatusChange }) => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `http://localhost:3050/bookings/${bookingId}`,
+          `${baseUrl}/bookings/${bookingId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -45,7 +45,7 @@ const BookingDetailsModal = ({ bookingId, onClose, onStatusChange }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:3050/bookings/cancel/${booking._id}`,
+        `${baseUrl}/bookings/cancel/${booking._id}`,
         null,
         { headers: { Authorization: `Bearer ${token}` } }
       );

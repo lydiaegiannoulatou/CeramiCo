@@ -13,14 +13,14 @@ const ProductOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState(statusGroups[0]);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   // Fetch all product orders once, no pagination params
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
       try {
         const { data } = await axios.get(
-          `http://localhost:3050/order/product_orders`,
+          `${baseUrl}/order/product_orders`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setOrders(data?.products || []);
@@ -94,7 +94,7 @@ const ProductOrders = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:3050/order/update/${orderId}`,
+        `${baseUrl}/order/update/${orderId}`,
         { orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

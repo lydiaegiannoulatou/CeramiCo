@@ -8,7 +8,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [orderStatus, setOrderStatus] = useState(order.orderStatus);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const userId = order.user_id;
   const isAdmin = localStorage.getItem("role") === "admin";
   const lowerStatus = orderStatus.toLowerCase();
@@ -17,7 +17,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
   useEffect(() => {
     if (!userId) return;
     axios
-      .get(`http://localhost:3050/user/profile/${userId}`)
+      .get(`${baseUrl}/user/profile/${userId}`)
       .then(r => setUserDetails(r.data))
       .catch(e => console.error("Error fetching user details:", e));
   }, [userId]);
@@ -26,14 +26,14 @@ const OrderDetailsModal = ({ order, onClose }) => {
 
   const backendUpdate = newStatus =>
     axios.put(
-      `http://localhost:3050/order/update/${order._id}`,
+      `${baseUrl}/order/update/${order._id}`,
       { orderStatus: newStatus },
       { headers: authHeader }
     );
 
   const backendCancel = () =>
     axios.put(
-      `http://localhost:3050/order/cancel/${order._id}`,
+      `${baseUrl}/order/cancel/${order._id}`,
       null,
       { headers: authHeader }
     );

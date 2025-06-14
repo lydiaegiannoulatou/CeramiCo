@@ -10,6 +10,7 @@ const ContactPage = () => {
     email: '',
     message: '',
   });
+  const baseUrl = import.meta.env.VITE_BASE_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,7 +28,7 @@ const ContactPage = () => {
     });
     
     try {
-      const response = await axios.post('http://localhost:3050/newsletter/contact', formData);
+      const response = await axios.post(`${baseUrl}/newsletter/contact`, formData);
       if (response.status === 200) {
         toast.success('Message sent successfully!', {
           position: "top-right",

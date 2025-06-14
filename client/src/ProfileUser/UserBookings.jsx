@@ -7,14 +7,14 @@ const UserBookings = ({ token }) => {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchBookings = async () => {
       const token = localStorage.getItem("token");
 
       try {
         const response = await axios.get(
-          "http://localhost:3050/bookings/user",
+         `${baseUrl}/bookings/user`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

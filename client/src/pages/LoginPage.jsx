@@ -13,7 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   //_____Password visibility
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -37,7 +37,7 @@ const Login = () => {
 
     try {
       let response = await axios.post(
-        "http://localhost:3050/user/login",
+        `${baseUrl}/user/login`,
         userInfo
       );
 

@@ -14,7 +14,7 @@ const Register = () => {
   const [enrolled, setEnrolled] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   //_____Password visibility
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -44,7 +44,7 @@ const Register = () => {
       };
 
       let response = await axios.post(
-        "http://localhost:3050/user/register",
+        `${baseUrl}/user/register`,
         newUserInfo
       );
       console.log("response:", response);

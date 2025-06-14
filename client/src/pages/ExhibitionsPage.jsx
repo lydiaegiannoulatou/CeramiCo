@@ -9,12 +9,12 @@ const ExhibitionsPage = () => {
   const [exhibitions, setExhibitions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+const baseUrl = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
 
   const fetchExhibitions = async () => {
     try {
-      const res = await axios.get("http://localhost:3050/exhibitions", {
+      const res = await axios.get(`${baseUrl}/exhibitions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setExhibitions(res.data);
