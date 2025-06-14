@@ -18,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 
 const CartAndCheckout = () => {
+  
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);

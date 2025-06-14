@@ -47,7 +47,6 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
       try {
         setLoading(true);
-        // NOTE: no page or limit params here, fetch all bookings at once
         const { data } = await axios.get(`${baseUrl}/bookings`, {
           headers: { Authorization: `Bearer ${token}` },
         });

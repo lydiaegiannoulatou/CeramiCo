@@ -1,12 +1,11 @@
-// src/pages/FailPage.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { AiOutlineCloseCircle, AiOutlineArrowLeft } from "react-icons/ai"; // react‑icons
+import { AiOutlineCloseCircle, AiOutlineArrowLeft } from "react-icons/ai"; 
 
 const FailPage = () => {
   const navigate = useNavigate();
 
-  const handleBack = () => navigate("/cart"); // adjust as needed
+  const handleBack = () => navigate("/cart"); 
 
   return (
     <section className="relative mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center p-8">

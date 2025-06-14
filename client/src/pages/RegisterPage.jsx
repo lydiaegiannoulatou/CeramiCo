@@ -30,11 +30,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
       }
       setError("");
 
-      // if (!username || !email || !password || !name) {
-      //   setError("All required fields must be filled!");
-      //   return;
-      // }
-
+   
       let newUserInfo = {
         username,
         email,

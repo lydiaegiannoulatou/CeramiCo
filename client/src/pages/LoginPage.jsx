@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-const baseUrl = import.meta.env.VITE_BASE_URL;
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   //_____Password visibility
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -24,7 +25,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
     setError("");
 
     if (!usernameOrEmail || !password) {
-      setError("Both username/email and password are required.");
+      toast.warning("Both username/email and password are required.");
       return;
     }
 
@@ -36,21 +37,20 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
     };
 
     try {
-      let response = await axios.post(
-        `${baseUrl}/user/login`,
-        userInfo
-      );
+      let response = await axios.post(`${baseUrl}/user/login`, userInfo);
 
       localStorage.setItem("token", response.data.token);
       const decodedToken = jwtDecode(response.data.token);
       localStorage.setItem("role", decodedToken.role);
 
-      refreshAuth(); // 🔥 This is what makes the magic happen
+      refreshAuth();
 
-      alert(response.data.msg);
-      navigate("/");
+      toast.success("Login Successful!", {
+        autoClose: 1500,
+        onClose: () => navigate("/"),
+      });
     } catch (error) {
-      alert(error.response.data.msg);
+      toast.error(error.response?.data?.msg || "Login failed");
       console.log(error);
     }
   }
