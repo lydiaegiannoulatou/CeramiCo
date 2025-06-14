@@ -27,7 +27,10 @@ app.post(
 
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://ceramico.onrender.com'], 
+  credentials: true,
+}));
 
 main();
 
