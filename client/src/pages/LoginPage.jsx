@@ -44,11 +44,8 @@ const Login = () => {
       localStorage.setItem("role", decodedToken.role);
 
       refreshAuth();
-
-      toast.success("Login Successful!", {
-        autoClose: 1500,
-        onClose: () => navigate("/"),
-      });
+      toast.success("Login Successful!");
+      navigate("/");
     } catch (error) {
       toast.error(error.response?.data?.msg || "Login failed");
       console.log(error);
