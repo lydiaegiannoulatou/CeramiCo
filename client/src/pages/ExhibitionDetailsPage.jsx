@@ -2,8 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { Loader2, Calendar, MapPin, Users, Tag, Trash2, AlertCircle } from "lucide-react";
-import ImageCarousel from"../components/ImageCarousel"
+import {
+  Loader2,
+  Calendar,
+  MapPin,
+  Users,
+  Tag,
+  Trash2,
+  AlertCircle,
+} from "lucide-react";
+import ImageCarousel from "../components/ImageCarousel";
 import "react-toastify/dist/ReactToastify.css";
 
 const ExhibitionDetailsPage = () => {
@@ -13,7 +21,7 @@ const ExhibitionDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-const baseUrl = import.meta.env.VITE_BASE_URL;
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   useEffect(() => {
     const fetchExhibition = async () => {
       const token = localStorage.getItem("token");
@@ -28,12 +36,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         setExhibition(res.data);
       } catch (err) {
         console.log(err);
-        
+
         setError("Failed to load exhibition details");
-        toast.error("Failed to load exhibition details. Please try again later.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.error(
+          "Failed to load exhibition details. Please try again later.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
       } finally {
         setLoading(false);
       }
@@ -65,7 +76,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 navigate("/exhibitions");
               } catch (err) {
                 console.log(err);
-                
+
                 toast.error("Failed to delete exhibition");
               }
             }}
@@ -89,7 +100,9 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
       <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="w-12 h-12 text-[#2F4138] animate-spin" />
-          <p className="text-[#2F4138] text-lg font-medium">Loading exhibition details...</p>
+          <p className="text-[#2F4138] text-lg font-medium">
+            Loading exhibition details...
+          </p>
         </div>
       </div>
     );
@@ -100,7 +113,9 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
       <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
-          <p className="text-[#2F4138] text-xl font-medium">Exhibition not found</p>
+          <p className="text-[#2F4138] text-xl font-medium">
+            Exhibition not found
+          </p>
           <button
             onClick={() => navigate("/exhibitions")}
             className="px-6 py-2 bg-[#2F4138] text-white rounded-full hover:bg-[#3A4F44] transition-colors duration-200"
@@ -124,7 +139,9 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
         {/* Content */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm">
-          <h1 className="font-display text-4xl text-[#2F4138] mb-6">{exhibition.title}</h1>
+          <h1 className="font-display text-4xl text-[#2F4138] mb-6">
+            {exhibition.title}
+          </h1>
 
           <div className="space-y-6">
             {/* Dates and Location */}
@@ -167,12 +184,18 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                         />
                       )}
                       <div>
-                        <p className="font-medium text-[#2F4138]">{participant.name}</p>
+                        <p className="font-medium text-[#2F4138]">
+                          {participant.name}
+                        </p>
                         {participant.role && (
-                          <p className="text-sm text-[#5C6760]">{participant.role}</p>
+                          <p className="text-sm text-[#5C6760]">
+                            {participant.role}
+                          </p>
                         )}
                         {participant.bio && (
-                          <p className="text-sm text-[#5C6760] mt-1">{participant.bio}</p>
+                          <p className="text-sm text-[#5C6760] mt-1">
+                            {participant.bio}
+                          </p>
                         )}
                       </div>
                     </div>
