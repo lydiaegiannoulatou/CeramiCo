@@ -126,7 +126,12 @@ const createCheckoutSession = async (req, res) => {
 };
 
 const stripeWebhook = async (req, res) => {
+   console.log("Raw body (buffer length):", req.body.length);
+  console.log("Raw body content (string):", req.body.toString());
+
   const sig = req.headers["stripe-signature"];
+  console.log("Stripe signature header:", sig);
+  
   let event;
 
   try {
