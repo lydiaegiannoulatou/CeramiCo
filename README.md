@@ -30,9 +30,6 @@ With a background in Fine Arts and a love for working with clay, I originally en
 
 ---
 
-
----
-
 ## 🚀 Getting Started
 
 Follow these steps to run **CeramiCo** locally on your machine.
@@ -110,3 +107,17 @@ for more information check out this : https://docs.stripe.com/testing
 ---
 
 ## ✅ You're Ready!
+
+
+## Notes
+Because this is a graduation project, some security practices were relaxed to ease testing:
+
+- Password requirements are minimal — there are no enforced rules for length or special characters.
+
+- Test cards (like 4242 4242 4242 4242) are accepted for Stripe payments.
+
+- No CAPTCHA or rate limiting is implemented for authentication.
+
+Please keep in mind these decisions were made intentionally for demonstration purposes and would be revised in a production-ready version.
+
+-For checking admin functionalities contact lydiaelliegiannoulatou@gmail.com

@@ -9,10 +9,13 @@ const CloudinaryUpload = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const baseUrl = import.meta.env.VITE_BASE_URL;
+  
   // Get upload signature from backend and upload directly to Cloudinary
   const uploadImageToCloudinary = async (file) => {
+  console.log("baseUrl", baseUrl);
+
     try {
-      const sigRes = await axios.get(`${baseUrl}/gallery/sign`);
+      const sigRes = await axios.post(`${baseUrl}/gallery/sign`);
       const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
 
       const formData = new FormData();
