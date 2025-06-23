@@ -110,4 +110,3 @@ for more information check out this : https://docs.stripe.com/testing
 ---
 
 ## ✅ You're Ready!
-Visit http://localhost:5173 in your browser to explore CeramiCo.
