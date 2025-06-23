@@ -15,7 +15,16 @@ const CloudinaryUpload = ({
   console.log("baseUrl", baseUrl);
 
     try {
-      const sigRes = await axios.post(`${baseUrl}/gallery/sign`);
+      const token = localStorage.getItem("token");
+      const sigRes = await axios.post(
+      `${baseUrl}/gallery/sign`,
+      {}, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
       const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
 
       const formData = new FormData();
