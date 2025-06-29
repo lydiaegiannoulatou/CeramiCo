@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import ToastNotification from "../components/ToastNotification"
 import ImageUpload from "../components/CloudinaryUpload";
 import { FiCheckCircle } from "react-icons/fi";
 import { Package, Tag, DollarSign, Boxes, Send, Loader2,  AlertCircle } from "lucide-react";
@@ -39,17 +39,11 @@ const AddProductPage = () => {
     e.preventDefault();
     
     if (!form.title || !form.price || !form.category || !form.description || !form.stock || form.images.length === 0) {
-      toast.error("Please fill in all fields and upload at least one image.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+      ToastNotification.notifyError("Please fill in all fields and upload at least one image.", {
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
       });
       return;
-    }
+  }
 
     setIsSubmitting(true);
     const token = localStorage.getItem("token");
@@ -66,14 +60,8 @@ const AddProductPage = () => {
       );
 
       if (response.data.success) {
-        toast.success("Product added successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+       ToastNotification.notifySuccess("Product added successfully!", {
+          icon: <FiCheckCircle className="w-5 h-5 text-green-500" />,
         });
         setForm({
           title: "",
@@ -85,26 +73,14 @@ const AddProductPage = () => {
           images: [],
         });
       } else {
-        toast.error(response.data.msg || "Failed to add product.", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          icon: <AlertCircle className="w-5 h-5 text-red-500" />
+         ToastNotification.notifyError(response.data.msg || "Failed to add product.", {
+          icon: <AlertCircle className="w-5 h-5 text-red-500" />,
         });
       }
     } catch (error) {
       console.error("Error adding product:", error);
-      toast.error("Something went wrong. Please try again later.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+       ToastNotification.notifyError("Something went wrong. Please try again later.", {
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
       });
     } finally {
       setIsSubmitting(false);
@@ -241,6 +217,7 @@ const AddProductPage = () => {
               "Limited Edition",
               "Decorative",
               "Functional",
+              "Floral",
             ].map((keyword) => (
               <label key={keyword} className="flex items-center space-x-2 text-sm">
                 <input
@@ -293,7 +270,6 @@ const AddProductPage = () => {
           </button>
         </div>
       </form>
-      <ToastContainer />
     </div>
   );
 };
