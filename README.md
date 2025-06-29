@@ -70,7 +70,7 @@
   </div>
   
   <div style="flex: 1;">
-    <img src="./images/img.jpg" alt="CeramiCo Platform Screenshot" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+    <img src="./images/img.jpg" alt="CeramiCo Platform Screenshot" style="width: 50%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
   </div>
 </div>
 
