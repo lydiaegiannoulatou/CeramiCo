@@ -1,9 +1,10 @@
 # 🎨 CeramiCo Project
 
-<div style="display: flex; align-items: flex-start; gap: 2rem; margin: 2rem 0;">
-  <div style="flex: 1;">
+<div style="display: flex; align-items: flex-start; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+  <!-- Left column: text content -->
     <p><strong>CeramiCo</strong> is my graduation project for <strong>Social Hackers Academy</strong>.</p>    
-    <p>With a background in Fine Arts and a love for working with clay, I originally envisioned opening a physical pottery studio. But discovering Full Stack Development opened a new creative path — this platform blends both passions: <strong>pottery and programming</strong>.</p>    
+    <p>With a background in Fine Arts and a love for working with clay, I originally envisioned opening a physical pottery studio. But discovering Full Stack Development opened a new creative path — this platform blends both passions: <strong>pottery and programming</strong>.</p>  
+  <div style="flex: 1 1 400px; min-width: 300px;">
     <h3>🎯 Features:</h3>
     <ul>
       <li>E-commerce functionality</li>
@@ -12,7 +13,7 @@
       <li>Admin dashboard</li>
       <li>Responsive design</li>
     </ul>
-            <h3>🛠️ Technologies Used:</h3>
+        <h3>🛠️ Technologies Used:</h3>
     <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
       <thead>
         <tr style="background-color:rgba(248, 249, 250, 0.17);">
@@ -68,9 +69,10 @@
       </tbody>
     </table>
   </div>
-  
-  <div style="flex: 1;">
-    <img src="./images/img.jpg" alt="CeramiCo Platform Screenshot" style="width: 50%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+  <!-- Right column: image -->
+  <div style="flex: 0 0 45%; min-width: 280px;">
+    <img src="./images/img.jpg" alt="CeramiCo Platform Screenshot" 
+         style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
   </div>
 </div>
 
