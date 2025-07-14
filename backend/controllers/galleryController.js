@@ -1,6 +1,8 @@
 const cloudinary = require("../config/cloudinary");
 
 /* ──────────────  GALLERY  ────────────── */
+
+// List only images in the 'Gallery' folder
 async function listGallery(req, res) {
   try {
     const data = await cloudinary.search
@@ -16,19 +18,27 @@ async function listGallery(req, res) {
   }
 }
 
+// Secure upload signature generation
 function getUploadSignature(req, res) {
   try {
+    const allowedFolders = ["Gallery", "Products"];
+    const requestedFolder = req.body.folder || req.query.folder || "Gallery";
+
+    // Validate the folder to prevent unauthorized uploads
+    if (!allowedFolders.includes(requestedFolder)) {
+      return res.status(400).json({ error: "Invalid folder specified." });
+    }
+
     const timestamp = Math.round(Date.now() / 1000);
-    const folder = req.body.folder || req.query.folder || "Gallery";
     const signature = cloudinary.utils.api_sign_request(
-      { folder, timestamp },
+      { folder: requestedFolder, timestamp },
       process.env.CLOUDINARY_API_SECRET
     );
 
     res.json({
       timestamp,
       signature,
-      folder,
+      folder: requestedFolder,
       apiKey: process.env.CLOUDINARY_API_KEY,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
     });
@@ -38,16 +48,16 @@ function getUploadSignature(req, res) {
   }
 }
 
+// Delete image from Cloudinary
 async function deleteImage(req, res) {
   try {
     const publicId = req.params.id;
     const result = await cloudinary.uploader.destroy(publicId);
 
     if (result.result === "not found") {
-      return res
-        .status(404)
-        .json({ error: "Image not found or already deleted." });
+      return res.status(404).json({ error: "Image not found or already deleted." });
     }
+
     res.sendStatus(204);
   } catch (err) {
     console.error("Delete error:", err);
