@@ -19,7 +19,7 @@ async function listGallery(req, res) {
 function getUploadSignature(req, res) {
   try {
     const timestamp = Math.round(Date.now() / 1000);
-    const folder = "Gallery";
+    const folder = req.body.folder || req.query.folder || "Gallery";
     const signature = cloudinary.utils.api_sign_request(
       { folder, timestamp },
       process.env.CLOUDINARY_API_SECRET
