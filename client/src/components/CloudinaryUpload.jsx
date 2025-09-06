@@ -4,28 +4,26 @@ import axios from "axios";
 const CloudinaryUpload = ({
   onImagesUploaded,
   existingImagePublicIds = [],
+  folder = "Gallery",
 }) => {
-  const [imageFiles, setImageFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const baseUrl = import.meta.env.VITE_BASE_URL;
-  
-  // Get upload signature from backend and upload directly to Cloudinary
-  const uploadImageToCloudinary = async (file) => {
-  console.log("baseUrl", baseUrl);
 
+  const uploadImageToCloudinary = async (file) => {
     try {
       const token = localStorage.getItem("token");
       const sigRes = await axios.post(
-      `${baseUrl}/gallery/sign`,
-      {}, 
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-      const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
+        `${baseUrl}/gallery/sign`,
+        { folder: "Products" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const { timestamp, signature, apiKey, cloudName } = sigRes.data;
 
       const formData = new FormData();
       formData.append("file", file);
@@ -60,80 +58,114 @@ const CloudinaryUpload = ({
     }
   };
 
-  const checkForDuplicateImage = (file) => {
-    return existingImagePublicIds.find((publicId) => publicId === file.name);
-  };
-
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
     setIsUploading(true);
 
-    const imageUrls = [];
-    const imagePublicIds = [];
+    const newUploads = [];
 
     for (let file of files) {
       try {
-        const existingPublicId = checkForDuplicateImage(file);
-        if (existingPublicId) {
-          await deleteImageFromCloudinary(existingPublicId);
+        const duplicate = existingImagePublicIds.includes(file.name);
+        if (duplicate) {
+          await deleteImageFromCloudinary(file.name);
         }
 
-        const { transformedUrl, publicId } = await uploadImageToCloudinary(
-          file
-        );
-        imageUrls.push(transformedUrl);
-        imagePublicIds.push(publicId);
+        const { transformedUrl, publicId } = await uploadImageToCloudinary(file);
+        newUploads.push({ url: transformedUrl, publicId });
       } catch (error) {
-        console.error("Error handling file:", error);
+        console.error("Error uploading file:", error);
       }
     }
 
+    setUploadedImages((prev) => [...prev, ...newUploads]);
+    onImagesUploaded(newUploads.map((img) => img.url));
     setIsUploading(false);
-    setImageFiles(imageUrls);
-    setUploadedImages(imagePublicIds);
-    onImagesUploaded(imageUrls);
   };
 
-  const handleDeleteImage = async (publicId, index) => {
+  const handleDeleteImage = async (publicId) => {
     const isDeleted = await deleteImageFromCloudinary(publicId);
     if (isDeleted) {
-      const updatedImages = [...uploadedImages];
-      updatedImages.splice(index, 1);
-      setUploadedImages(updatedImages);
-
-      const updatedUrls = [...imageFiles];
-      updatedUrls.splice(index, 1);
-      setImageFiles(updatedUrls);
+      const updated = uploadedImages.filter((img) => img.publicId !== publicId);
+      setUploadedImages(updated);
+      onImagesUploaded(updated.map((img) => img.url));
     }
   };
 
   return (
-    <div>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleImageChange}
-        disabled={isUploading}
-        className="p-2 border rounded"
-      />
-      {isUploading && <p>Uploading images...</p>}
-      {imageFiles.length > 0 && (
-        <div className="mt-4">
-          <h3>Uploaded Images:</h3>
-          <div className="flex space-x-4">
-            {imageFiles.map((url, idx) => (
-              <div key={idx} className="relative">
+    <div className="space-y-4">
+      {/* File Upload Input */}
+      <label className="block">
+        <span className="text-gray-700 font-medium">Upload Images</span>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleImageChange}
+          disabled={isUploading}
+          className="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4
+                     file:rounded-full file:border-0 file:text-sm file:font-semibold
+                     file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100
+                     cursor-pointer disabled:opacity-50"
+        />
+      </label>
+
+      {/* Uploading Indicator */}
+      {isUploading && (
+        <div className="flex items-center space-x-2 text-blue-600 text-sm">
+          <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            ></path>
+          </svg>
+          <span>Uploading images...</span>
+        </div>
+      )}
+
+      {/* Image Grid*/}
+      {uploadedImages.length > 0 && (
+        <div>
+          <h3 className="text-gray-800 font-semibold mb-2">Uploaded Images</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {uploadedImages.map(({ url, publicId }, idx) => (
+              <div
+                key={publicId}
+                className="relative group overflow-hidden rounded-xl border shadow-sm"
+              >
                 <img
                   src={url}
                   alt={`Uploaded ${idx}`}
-                  className="w-20 h-20 object-cover rounded"
+                  className="w-full h-32 object-cover"
+                  title={publicId}
                 />
                 <button
-                  onClick={() => handleDeleteImage(uploadedImages[idx], idx)}
-                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded"
+                  onClick={() => handleDeleteImage(publicId)}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                  title="Delete"
                 >
-                  Delete
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
             ))}
