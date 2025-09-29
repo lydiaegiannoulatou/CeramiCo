@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CloudinaryUpload from "../components/CloudinaryUpload";
-import { Calendar, MapPin, Tag, Users, Send, Loader2, AlertCircle, CheckCircle, Plus } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Tag,
+  Users,
+  Send,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Plus,
+  X,
+} from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -19,7 +30,8 @@ const AdminExhibitionPage = ({ existingData }) => {
 
   const [participant, setParticipant] = useState({ name: "", role: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-const baseUrl = import.meta.env.VITE_BASE_URL;
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+
   useEffect(() => {
     if (existingData) {
       setFormData({
@@ -75,9 +87,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
     const token = localStorage.getItem("token");
 
     try {
-      let response;
       if (existingData) {
-        response = await axios.put(
+        await axios.put(
           `${baseUrl}/exhibitions/${existingData._id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -89,14 +100,12 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
         });
       } else {
-        response = await axios.post(
-          `${baseUrl}/exhibitions/add`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.post(`${baseUrl}/exhibitions/add`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Exhibition created successfully!", {
           position: "top-right",
           autoClose: 3000,
@@ -104,7 +113,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
         });
       }
 
@@ -130,7 +139,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        icon: <AlertCircle className="w-5 h-5 text-red-500" />
+        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
       });
     } finally {
       setIsSubmitting(false);
@@ -138,13 +147,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
   };
 
   return (
-    <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Basic Information */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Basic Information</h3>
-          
-          <div className="space-y-4">
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            Basic Information
+          </h3>
+
+          <div className="space-y-3 sm:space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
                 Exhibition Title
@@ -155,8 +166,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Enter exhibition title"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
@@ -170,9 +181,9 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Enter exhibition description"
-                rows="4"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                rows="3"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base resize-none"
                 required
               />
             </div>
@@ -180,13 +191,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         </div>
 
         {/* Dates and Location */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Dates and Location</h3>
-          
-          <div className="grid sm:grid-cols-2 gap-4">
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            Dates and Location
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Start Date
               </label>
               <input
@@ -194,15 +207,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 End Date
               </label>
               <input
@@ -210,8 +223,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
@@ -219,7 +232,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
           <div>
             <label className="block text-sm font-medium text-[#2F4138] mb-2">
-              <MapPin className="w-4 h-4 inline mr-2" />
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
               Location
             </label>
             <input
@@ -228,35 +241,35 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
               value={formData.location}
               onChange={handleInputChange}
               placeholder="Enter exhibition location"
-              className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
               required
             />
           </div>
         </div>
 
         {/* Tags */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
-            <Tag className="w-4 h-4 inline mr-2" />
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            <Tag className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Tags
           </h3>
-          
+
           <input
             type="text"
             value={formData.tags.join(", ")}
             onChange={handleTagChange}
             placeholder="Enter tags separated by commas"
-            className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-              placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+              placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
           />
-          
+
           {formData.tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {formData.tags.map((tag, index) => (
-                <span 
+                <span
                   key={index}
-                  className="px-3 py-1 bg-[#2F4138]/10 text-[#2F4138] rounded-full text-sm"
+                  className="px-3 py-1 bg-[#2F4138]/10 text-[#2F4138] rounded-full text-xs sm:text-sm"
                 >
                   #{tag}
                 </span>
@@ -266,59 +279,68 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         </div>
 
         {/* Participants */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
-            <Users className="w-4 h-4 inline mr-2" />
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Participants
           </h3>
 
-          <div className="space-y-4">
-            <div className="flex gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 value={participant.name}
-                onChange={(e) => setParticipant({ ...participant, name: e.target.value })}
+                onChange={(e) =>
+                  setParticipant({ ...participant, name: e.target.value })
+                }
                 placeholder="Participant name"
-                className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
               />
               <input
                 type="text"
                 value={participant.role}
-                onChange={(e) => setParticipant({ ...participant, role: e.target.value })}
+                onChange={(e) =>
+                  setParticipant({ ...participant, role: e.target.value })
+                }
                 placeholder="Role"
-                className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
               />
               <button
                 type="button"
                 onClick={handleAddParticipant}
                 disabled={!participant.name || !participant.role}
-                className="px-4 py-3 rounded-xl bg-[#2F4138] text-white hover:bg-[#3A4F44] 
+                className="sm:w-auto px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-[#2F4138] text-white hover:bg-[#3A4F44] 
                   disabled:bg-[#2F4138]/20 disabled:text-white/50 disabled:cursor-not-allowed
-                  transition-colors duration-200"
+                  transition-colors duration-200 flex items-center justify-center"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-0" />
+                <span className="sm:hidden ml-2">Add Participant</span>
               </button>
             </div>
 
             {formData.participants.length > 0 && (
               <div className="space-y-2">
                 {formData.participants.map((p, index) => (
-                  <div 
+                  <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-white rounded-xl border border-[#2F4138]/10"
+                    className="flex items-center justify-between p-3 bg-white rounded-lg sm:rounded-xl border border-[#2F4138]/10"
                   >
-                    <div>
-                      <p className="font-medium text-[#2F4138]">{p.name}</p>
-                      <p className="text-sm text-[#2F4138]/70">{p.role}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#2F4138] text-sm sm:text-base truncate">
+                        {p.name}
+                      </p>
+                      <p className="text-xs sm:text-sm text-[#2F4138]/70 truncate">
+                        {p.role}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveParticipant(index)}
-                      className="p-1 hover:bg-[#2F4138]/10 rounded-full transition-colors duration-200"
+                      className="p-1.5 hover:bg-[#2F4138]/10 rounded-full transition-colors duration-200 flex-shrink-0 ml-3"
                     >
-                      <AlertCircle className="w-5 h-5 text-[#2F4138]/70" />
+                      <X className="w-4 h-4 text-[#2F4138]/70" />
                     </button>
                   </div>
                 ))}
@@ -328,28 +350,30 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         </div>
 
         {/* Image Upload */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Exhibition Images</h3>
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            Exhibition Images
+          </h3>
           <CloudinaryUpload onImagesUploaded={handleImageUpload} />
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end pt-4">
+        <div className="flex flex-col sm:flex-row justify-end pt-4 gap-3">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center px-6 py-3 bg-[#2F4138] text-white rounded-xl
+            className="w-full sm:w-auto flex items-center justify-center px-4 sm:px-6 py-3 bg-[#2F4138] text-white rounded-lg sm:rounded-xl
               hover:bg-[#3A4F44] disabled:bg-[#2F4138]/20 disabled:cursor-not-allowed
-              transition-colors duration-200"
+              transition-colors duration-200 text-sm sm:text-base"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Send className="w-5 h-5 mr-2" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 {existingData ? "Update" : "Create"} Exhibition
               </>
             )}

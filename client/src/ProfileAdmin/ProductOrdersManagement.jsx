@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import OrderDetailsModal from "../ProfileUser/OrderDetailsModal";
-import { Filter, ChevronLeft, ChevronRight, Loader2, AlertCircle, Package } from "lucide-react";
+import { Filter, ChevronLeft, ChevronRight, Loader2, AlertCircle, Package, Menu } from "lucide-react";
 
 const statusGroups = ["all", "processing", "shipped", "delivered", "canceled"];
 const ordersPerPage = 15;
@@ -13,7 +13,9 @@ const ProductOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState(statusGroups[0]);
-const baseUrl = import.meta.env.VITE_BASE_URL;
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+
   // Fetch all product orders once, no pagination params
   useEffect(() => {
     (async () => {
@@ -75,9 +77,10 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
     <button
       onClick={() => {
         setStatusFilter(status);
-        setCurrentPage(1); // reset page to 1 on filter change
+        setCurrentPage(1);
+        setShowMobileFilters(false);
       }}
-      className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2
+      className={`w-full sm:w-auto px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-between sm:justify-center space-x-2
         ${statusFilter === status
           ? "bg-[#2F4138] text-white"
           : "bg-[#2F4138]/5 text-[#2F4138] hover:bg-[#2F4138]/10"
@@ -110,10 +113,10 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-8 h-8 text-[#2F4138] animate-spin" />
-          <p className="text-[#2F4138]">Loading orders...</p>
+      <div className="flex items-center justify-center h-48 sm:h-64">
+        <div className="flex flex-col items-center space-y-3 sm:space-y-4 p-4">
+          <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#2F4138] animate-spin" />
+          <p className="text-[#2F4138] text-sm sm:text-base">Loading orders...</p>
         </div>
       </div>
     );
@@ -121,116 +124,188 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center space-y-4">
-          <AlertCircle className="w-12 h-12 text-[#2F4138]/50 mx-auto" />
-          <p className="text-[#2F4138] text-lg">{error}</p>
+      <div className="flex items-center justify-center h-48 sm:h-64">
+        <div className="text-center space-y-3 sm:space-y-4 p-4">
+          <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-[#2F4138]/50 mx-auto" />
+          <p className="text-[#2F4138] text-base sm:text-lg">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Filter Section */}
-      <div className="flex items-center space-x-4 mb-8">
-        <Filter className="w-5 h-5 text-[#2F4138]" />
-        <div className="flex space-x-3">
-          {statusGroups.map((status) => (
-            <FilterTabBtn key={status} status={status} />
-          ))}
+      <div className="space-y-3 sm:space-y-0">
+        {/* Desktop Filters */}
+        <div className="hidden sm:flex items-center space-x-4">
+          <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-[#2F4138] flex-shrink-0" />
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {statusGroups.map((status) => (
+              <FilterTabBtn key={status} status={status} />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Filter Toggle */}
+        <div className="sm:hidden">
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-[#2F4138]/5 rounded-lg text-[#2F4138] hover:bg-[#2F4138]/10 transition-colors duration-200"
+          >
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Filter: <span className="capitalize">{statusFilter}</span>
+              </span>
+            </div>
+            <Menu className={`w-4 h-4 transition-transform duration-200 ${showMobileFilters ? 'rotate-90' : ''}`} />
+          </button>
+
+          {/* Mobile Filter Dropdown */}
+          {showMobileFilters && (
+            <div className="mt-2 space-y-2 p-3 bg-white rounded-lg border border-[#2F4138]/10">
+              {statusGroups.map((status) => (
+                <FilterTabBtn key={status} status={status} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl overflow-hidden border border-[#2F4138]/10">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-[#2F4138]/5">
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Order #</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Product Title</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Date</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Total (€)</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Payment Status</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-[#2F4138]">Order Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#2F4138]/10">
-            {visibleOrders.map((o) => (
-              <tr
-                key={o._id}
-                onClick={() => setSelectedOrder(o)}
-                className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
-              >
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {String(o.orderNumber).padStart(3, "0")}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {o.items[0]?.product_id?.title || "—"}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {new Date(o.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {o.totalCost.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 text-sm text-[#2F4138]">
-                  {o.paymentStatus}
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(o.orderStatus)}`}>
-                    {o.orderStatus}
-                  </span>
-                </td>
+      {/* Table Container */}
+      <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden border border-[#2F4138]/10">
+        {/* Mobile Card View */}
+        <div className="sm:hidden">
+          {visibleOrders.map((o) => (
+            <div
+              key={o._id}
+              onClick={() => setSelectedOrder(o)}
+              className="p-4 border-b border-[#2F4138]/10 last:border-b-0 hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-sm font-medium text-[#2F4138]">
+                    Order #{String(o.orderNumber).padStart(3, "0")}
+                  </p>
+                  <p className="text-xs text-[#2F4138]/70 mt-1">
+                    {new Date(o.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(o.orderStatus)}`}>
+                  {o.orderStatus}
+                </span>
+              </div>
+              <p className="text-sm text-[#2F4138] mb-2 truncate">
+                {o.items[0]?.product_id?.title || "—"}
+              </p>
+              <div className="flex justify-between items-center text-xs text-[#2F4138]/70">
+                <span>€{o.totalCost.toFixed(2)}</span>
+                <span>{o.paymentStatus}</span>
+              </div>
+            </div>
+          ))}
+          
+          {visibleOrders.length === 0 && (
+            <div className="p-6 text-center text-[#2F4138]/70">
+              <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No orders found</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#2F4138]/5">
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Order #</th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Product Title</th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Date</th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Total (€)</th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Payment Status</th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-[#2F4138]">Order Status</th>
               </tr>
-            ))}
-            {visibleOrders.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-[#2F4138]/70">
-                  <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  No orders found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#2F4138]/10">
+              {visibleOrders.map((o) => (
+                <tr
+                  key={o._id}
+                  onClick={() => setSelectedOrder(o)}
+                  className="hover:bg-[#2F4138]/5 transition-colors duration-150 cursor-pointer"
+                >
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-[#2F4138]">
+                    {String(o.orderNumber).padStart(3, "0")}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-[#2F4138] max-w-xs truncate">
+                    {o.items[0]?.product_id?.title || "—"}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-[#2F4138]">
+                    {new Date(o.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-[#2F4138]">
+                    {o.totalCost.toFixed(2)}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-[#2F4138]">
+                    {o.paymentStatus}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4">
+                    <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(o.orderStatus)}`}>
+                      {o.orderStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {visibleOrders.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 lg:px-6 py-6 lg:py-8 text-center text-[#2F4138]/70">
+                    <Package className="w-6 h-6 lg:w-8 lg:h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm lg:text-base">No orders found</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-8 space-x-4">
+      <div className="flex flex-col sm:flex-row justify-center items-center mt-6 sm:mt-8 space-y-3 sm:space-y-0 sm:space-x-4">
         <button
           disabled={disablePrev}
           onClick={() => setCurrentPage((p) => p - 1)}
-          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+          className={`w-full sm:w-auto flex items-center justify-center px-4 py-2.5 sm:py-2 rounded-lg sm:rounded-xl transition-colors duration-200 text-sm ${
             disablePrev
               ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
               : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
           }`}
         >
-          <ChevronLeft className="w-5 h-5 mr-1" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
           Previous
         </button>
-           <span className="text-sm text-[#2F4138] font-medium">
+
+        <span className="text-xs sm:text-sm text-[#2F4138] font-medium px-4 py-2">
           Page {currentPage} of {totalPages || 1}
         </span>
+
         <button
           disabled={disableNext}
           onClick={() => setCurrentPage((p) => p + 1)}
-          className={`flex items-center px-4 py-2 rounded-xl transition-colors duration-200 ${
+          className={`w-full sm:w-auto flex items-center justify-center px-4 py-2.5 sm:py-2 rounded-lg sm:rounded-xl transition-colors duration-200 text-sm ${
             disableNext
               ? "bg-[#2F4138]/5 text-[#2F4138]/40 cursor-not-allowed"
               : "bg-[#2F4138]/10 text-[#2F4138] hover:bg-[#2F4138]/20"
           }`}
         >
           Next
-          <ChevronRight className="w-5 h-5 ml-1" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1" />
         </button>
       </div>
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
             <OrderDetailsModal 
               order={selectedOrder} 
               onClose={() => setSelectedOrder(null)} 

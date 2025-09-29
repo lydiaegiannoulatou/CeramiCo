@@ -20,7 +20,8 @@ const AdminCreateWorkshop = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-const baseUrl = import.meta.env.VITE_BASE_URL;
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -141,13 +142,13 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
   };
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Basic Information */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Basic Information</h3>
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">Basic Information</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
                 Workshop Title
@@ -158,15 +159,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Enter workshop title"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Users className="w-4 h-4 inline mr-2" />
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Instructor Name
               </label>
               <input
@@ -175,8 +176,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.instructor}
                 onChange={handleChange}
                 placeholder="Enter instructor name"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
@@ -190,9 +191,9 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Enter workshop description"
-                rows="4"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                rows="3"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base resize-none"
                 required
               />
             </div>
@@ -200,13 +201,13 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         </div>
 
         {/* Schedule and Pricing */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">Schedule and Pricing</h3>
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">Schedule and Pricing</h3>
           
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Start Date
               </label>
               <input
@@ -214,15 +215,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Clock className="w-4 h-4 inline mr-2" />
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Recurring Time
               </label>
               <input
@@ -230,13 +231,13 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="recurringTime"
                 value={formData.recurringTime}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
                 Duration
               </label>
@@ -244,8 +245,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               >
                 <option value="">Select Duration</option>
@@ -263,8 +264,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 name="recurringPattern"
                 value={formData.recurringPattern}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               >
                 <option value="weekly">Weekly</option>
@@ -275,7 +276,7 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
 
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <DollarSign className="w-4 h-4 inline mr-2" />
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Price (€)
               </label>
               <input
@@ -284,15 +285,15 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.price}
                 onChange={handleChange}
                 placeholder="Enter price"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#2F4138] mb-2">
-                <Users className="w-4 h-4 inline mr-2" />
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                 Maximum Spots
               </label>
               <input
@@ -301,8 +302,8 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
                 value={formData.maxSpots}
                 onChange={handleChange}
                 placeholder="Enter maximum spots"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-[#2F4138]/10 
-                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-white border border-[#2F4138]/10 
+                  placeholder:text-[#2F4138]/50 focus:outline-none focus:ring-2 focus:ring-[#2F4138]/20 text-sm sm:text-base"
                 required
               />
             </div>
@@ -310,31 +311,31 @@ const baseUrl = import.meta.env.VITE_BASE_URL;
         </div>
 
         {/* Image Upload */}
-        <div className="bg-[#2F4138]/5 rounded-xl p-6">
-          <h3 className="text-lg font-medium text-[#2F4138] mb-4">
-            <Image className="w-4 h-4 inline mr-2" />
+        <div className="bg-[#2F4138]/5 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-medium text-[#2F4138] mb-3 sm:mb-4">
+            <Image className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Workshop Image
           </h3>
           <CloudinaryUpload onImagesUploaded={handleImageUpload} />
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end pt-4">
+        <div className="flex flex-col sm:flex-row justify-end pt-4 gap-3">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center px-6 py-3 bg-[#2F4138] text-white rounded-xl
+            className="w-full sm:w-auto flex items-center justify-center px-4 sm:px-6 py-3 bg-[#2F4138] text-white rounded-lg sm:rounded-xl
               hover:bg-[#3A4F44] disabled:bg-[#2F4138]/20 disabled:cursor-not-allowed
-              transition-colors duration-200"
+              transition-colors duration-200 text-sm sm:text-base"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                 Creating Workshop...
               </>
             ) : (
               <>
-                <Send className="w-5 h-5 mr-2" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Create Workshop
               </>
             )}
